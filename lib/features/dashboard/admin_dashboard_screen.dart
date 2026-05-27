@@ -911,29 +911,36 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '$_greeting, $capitalizedName',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize:
-                                        isDesktop(context) ? 28.sp : 22.sp,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.onSurface,
-                                    letterSpacing: -0.5,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$_greeting, $capitalizedName',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize:
+                                          isDesktop(context) ? 28.sp : 22.sp,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.onSurface,
+                                      letterSpacing: -0.5,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                Text(
-                                  'Morning Shift • Orderlyy Operating Pulse',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12.sp,
-                                    color: AppTheme.secondary,
-                                    fontWeight: FontWeight.w500,
+                                  Text(
+                                    'Morning Shift • Orderlyy Operating Pulse',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 12.sp,
+                                      color: AppTheme.secondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                            SizedBox(width: 8.w),
 
                             // Store Status Toggle Pill
                             GestureDetector(
