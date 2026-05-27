@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,8 +12,12 @@ import '../../core/theme/app_theme.dart';
 import '../orders/admin_orders_screen.dart';
 import '../analytics/analytics_screen.dart';
 
-// ── Bottom Nav State ──────────────────────────────────────────────────────────
+// ── State Providers ──────────────────────────────────────────────────────────
 final currentNavIndexProvider = StateProvider<int>((ref) => 0);
+final storeOpenProvider = StateProvider<bool>((ref) => true);
+
+// ── Responsive Layout Breakpoint ──────────────────────────────────────────────
+bool isDesktop(BuildContext context) => MediaQuery.of(context).size.width >= 960;
 
 // ── Root Shell ────────────────────────────────────────────────────────────────
 class AdminDashboardScreen extends ConsumerWidget {
@@ -21,16 +26,42 @@ class AdminDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navIndex = ref.watch(currentNavIndexProvider);
+    final desktop = isDesktop(context);
+
+    final List<Widget> screens = const [
+      _DashboardHome(),
+      AdminOrdersScreen(),
+      AnalyticsScreen(),
+      _MoreTab(),
+    ];
+
+    if (desktop) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Row(
+          children: [
+            const _DesktopSidebar(),
+            const VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: AppTheme.surfaceContainerHigh,
+            ),
+            Expanded(
+              child: IndexedStack(
+                index: navIndex,
+                children: screens,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: IndexedStack(
         index: navIndex,
-        children: const [
-          _DashboardHome(),
-          AdminOrdersScreen(),
-          AnalyticsScreen(),
-          _MoreTab(),
-        ],
+        children: screens,
       ),
       bottomNavigationBar: _BottomNav(
         currentIndex: navIndex,
@@ -40,7 +71,250 @@ class AdminDashboardScreen extends ConsumerWidget {
   }
 }
 
-// ── Bottom Navigation Bar ─────────────────────────────────────────────────────
+// ── Desktop Left Sidebar Navigation ───────────────────────────────────────────
+class _DesktopSidebar extends ConsumerWidget {
+  const _DesktopSidebar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navIndex = ref.watch(currentNavIndexProvider);
+    final user = ref.watch(currentUserProvider);
+    final email = user?.email ?? 'chef.alex@orderlli.com';
+    final initial = email.isNotEmpty ? email[0].toUpperCase() : 'A';
+    final name = email.split('@').first;
+    final capitalizedName = name.isNotEmpty
+        ? name[0].toUpperCase() + name.substring(1)
+        : 'Chef';
+
+    return Container(
+      width: 240.w,
+      height: double.infinity,
+      color: AppTheme.surfaceContainerLowest,
+      padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Branding
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.store_rounded,
+                  color: AppTheme.primary,
+                  size: 28.r,
+                ),
+                SizedBox(width: 10.w),
+                Text(
+                  'KitchenSync',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 32.h),
+
+          // CORE OPERATIONS
+          _buildSectionHeader('CORE OPERATIONS'),
+          _SidebarItem(
+            icon: Icons.dashboard_rounded,
+            label: 'Dashboard',
+            active: navIndex == 0,
+            onTap: () => ref.read(currentNavIndexProvider.notifier).state = 0,
+          ),
+          _SidebarItem(
+            icon: Icons.receipt_long_rounded,
+            label: 'Live Orders',
+            active: navIndex == 1,
+            onTap: () => ref.read(currentNavIndexProvider.notifier).state = 1,
+          ),
+          _SidebarItem(
+            icon: Icons.bar_chart_rounded,
+            label: 'Analytics',
+            active: navIndex == 2,
+            onTap: () => ref.read(currentNavIndexProvider.notifier).state = 2,
+          ),
+          SizedBox(height: 16.h),
+
+          // STUDIO & SETTINGS
+          _buildSectionHeader('STUDIO CONFIG'),
+          _SidebarItem(
+            icon: Icons.restaurant_menu_rounded,
+            label: 'Menu Manager',
+            onTap: () => context.push('/admin/menu'),
+          ),
+          _SidebarItem(
+            icon: Icons.grid_view_rounded,
+            label: 'Live Floorplan',
+            onTap: () => context.push('/admin/live-floorplan'),
+          ),
+          _SidebarItem(
+            icon: Icons.table_restaurant_rounded,
+            label: 'Tables & QR Builder',
+            onTap: () => context.push('/admin/tables'),
+          ),
+          _SidebarItem(
+            icon: Icons.group_rounded,
+            label: 'Staff & Team',
+            onTap: () => context.push('/admin/staff'),
+          ),
+          _SidebarItem(
+            icon: Icons.people_outline_rounded,
+            label: 'Guest Sessions',
+            onTap: () => context.push('/admin/guest-sessions'),
+          ),
+          const Spacer(),
+
+          // Profile row at bottom
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+            decoration: BoxDecoration(
+              color: AppTheme.background,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18.r,
+                  backgroundColor: AppTheme.primary,
+                  child: Text(
+                    initial,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        capitalizedName,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        email,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.sp,
+                          color: AppTheme.secondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Icon(
+                    Icons.logout_rounded,
+                    color: AppTheme.error,
+                    size: 18.r,
+                  ),
+                  onPressed: () async {
+                    final authService = ref.read(authServiceProvider);
+                    await authService.signOut();
+                    if (context.mounted) context.go('/admin/login');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: EdgeInsets.only(left: 8.w, bottom: 8.h, top: 8.h),
+      child: Text(
+        title,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 9.sp,
+          fontWeight: FontWeight.w800,
+          color: AppTheme.secondary,
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    this.active = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8.r),
+          child: AnimatedContainer(
+            duration: 150.ms,
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: active
+                  ? AppTheme.primaryContainer.withValues(alpha: 0.08)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: active ? AppTheme.primary : AppTheme.secondary,
+                  size: 20.r,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.sp,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                      color: active ? AppTheme.primary : AppTheme.onSurface,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Mobile Bottom Navigation Bar ──────────────────────────────────────────────
 class _BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -56,17 +330,17 @@ class _BottomNav extends StatelessWidget {
     ];
 
     return Container(
-      height: 72.h + MediaQuery.of(context).padding.bottom,
+      height: 64.h + MediaQuery.of(context).padding.bottom,
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
         border: Border(
-          top: BorderSide(color: AppTheme.surfaceContainerHigh, width: 1),
+          top: BorderSide(color: AppTheme.surfaceContainerHigh, width: 1.w),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Color(0x06000000),
             blurRadius: 16,
-            offset: const Offset(0, -4),
+            offset: Offset(0, -4),
           ),
         ],
       ),
@@ -80,48 +354,37 @@ class _BottomNav extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => onTap(i),
                 behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: 200.ms,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: 200.ms,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 14.w,
-                          vertical: 5.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: active
-                              ? AppTheme.primaryContainer.withValues(
-                                  alpha: 0.12,
-                                )
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Icon(
-                          item.icon,
-                          color: active
-                              ? AppTheme.primaryContainer
-                              : AppTheme.secondary,
-                          size: 22.r,
-                        ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: 150.ms,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 4.h,
                       ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        item.label,
-                        style: GoogleFonts.inter(
-                          fontSize: 10.sp,
-                          fontWeight: active
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: active
-                              ? AppTheme.primaryContainer
-                              : AppTheme.secondary,
-                        ),
+                      decoration: BoxDecoration(
+                        color: active
+                            ? AppTheme.primaryContainer.withValues(alpha: 0.08)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
-                    ],
-                  ),
+                      child: Icon(
+                        item.icon,
+                        color: active ? AppTheme.primary : AppTheme.secondary,
+                        size: 22.r,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      item.label,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.sp,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                        color: active ? AppTheme.primary : AppTheme.secondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -132,105 +395,109 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-// ── More Tab ──────────────────────────────────────────────────────────────────
+// ── Mobile More / Management Tab ──────────────────────────────────────────────
 class _MoreTab extends ConsumerWidget {
   const _MoreTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final email = user?.email ?? 'admin@orderlli.com';
+    final email = user?.email ?? 'chef.alex@orderlli.com';
     final initial = email.isNotEmpty ? email[0].toUpperCase() : 'A';
+    final name = email.split('@').first;
+    final capitalizedName = name.isNotEmpty
+        ? name[0].toUpperCase() + name.substring(1)
+        : 'Chef';
 
     final tiles = [
       (
         icon: Icons.business_rounded,
         label: 'Organization',
-        sub: 'Tenant & Branches',
+        sub: 'Tenant & branches',
         route: '/admin/organization',
         color: const Color(0xFF0369A1),
       ),
       (
         icon: Icons.restaurant_menu_rounded,
-        label: 'Menu',
+        label: 'Menu Catalog',
         sub: 'Items & categories',
         route: '/admin/menu',
-        color: const Color(0xFFC0272D),
+        color: AppTheme.primary,
       ),
       (
-        icon: Icons.table_restaurant_rounded,
-        label: 'Tables',
-        sub: 'QR & layout config',
+        icon: Icons.grid_view_rounded,
+        label: 'Live Floorplan',
+        sub: 'Dining room & patio',
+        route: '/admin/live-floorplan',
+        color: const Color(0xFF0F766E),
+      ),
+      (
+        icon: Icons.qr_code_rounded,
+        label: 'Tables & QR',
+        sub: 'Floorplan designer',
         route: '/admin/tables',
         color: const Color(0xFF0F766E),
       ),
       (
         icon: Icons.group_rounded,
-        label: 'Staff',
-        sub: 'Team management',
+        label: 'Staff Directory',
+        sub: 'Team & active shifts',
         route: '/admin/staff',
         color: const Color(0xFF2563EB),
       ),
       (
         icon: Icons.people_outline_rounded,
-        label: 'Sessions',
-        sub: 'Active guest sessions',
+        label: 'Live Sessions',
+        sub: 'Active diner carts',
         route: '/admin/guest-sessions',
         color: const Color(0xFFD97706),
       ),
       (
         icon: Icons.devices_rounded,
-        label: 'Devices',
-        sub: 'POS & KDS monitors',
+        label: 'Device Manager',
+        sub: 'KDS & terminal sync',
         route: '/admin/devices',
         color: const Color(0xFF4B5563),
       ),
       (
         icon: Icons.monetization_on_rounded,
-        label: 'Pricing',
-        sub: 'Base & overrides',
+        label: 'Dynamic Pricing',
+        sub: 'Happy hour & shifts',
         route: '/admin/pricing',
         color: const Color(0xFF16A34A),
       ),
       (
         icon: Icons.percent_rounded,
-        label: 'Taxes',
+        label: 'Tax Matrix',
         sub: 'Vat & service rules',
         route: '/admin/taxes',
         color: const Color(0xFFF59E0B),
       ),
       (
         icon: Icons.alt_route_rounded,
-        label: 'Overrides',
+        label: 'Inheritance',
         sub: 'Branch inheritance',
         route: '/admin/overrides',
         color: const Color(0xFF0D9488),
       ),
       (
         icon: Icons.receipt_long_rounded,
-        label: 'Audit Logs',
-        sub: 'Immutable operations',
+        label: 'Audit Log Ledger',
+        sub: 'Immutable audit trail',
         route: '/admin/audit',
         color: const Color(0xFF4F46E5),
       ),
       (
         icon: Icons.sync_problem_rounded,
-        label: 'OCC Simulator',
-        sub: 'Resolve conflicts',
+        label: 'OCC Resolution',
+        sub: 'Resolve sync logs',
         route: '/admin/occ-conflict',
         color: const Color(0xFFE11D48),
       ),
       (
-        icon: Icons.person_rounded,
-        label: 'Profile',
-        sub: 'Account settings',
-        route: '/admin/profile',
-        color: const Color(0xFF7C3AED),
-      ),
-      (
         icon: Icons.settings_rounded,
-        label: 'Settings',
-        sub: 'App preferences',
+        label: 'App Settings',
+        sub: 'Theme & config',
         route: '/admin/settings',
         color: AppTheme.secondary,
       ),
@@ -240,33 +507,24 @@ class _MoreTab extends ConsumerWidget {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
           slivers: [
-            // ── Header ──────────────────────────────────────────────────────
+            // Header Profile row
             SliverToBoxAdapter(
               child: Container(
                 color: AppTheme.surfaceContainerLowest,
-                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 24.h),
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
                 child: Row(
                   children: [
-                    Container(
-                      width: 52.r,
-                      height: 52.r,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFC0272D), Color(0xFF7F1D1D)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          initial,
-                          style: GoogleFonts.inter(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                    CircleAvatar(
+                      radius: 24.r,
+                      backgroundColor: AppTheme.primary,
+                      child: Text(
+                        initial,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -276,16 +534,16 @@ class _MoreTab extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Admin',
-                            style: GoogleFonts.inter(
+                            capitalizedName,
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 16.sp,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                               color: AppTheme.onSurface,
                             ),
                           ),
                           Text(
                             email,
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 12.sp,
                               color: AppTheme.secondary,
                             ),
@@ -317,9 +575,9 @@ class _MoreTab extends ConsumerWidget {
                           SizedBox(width: 5.w),
                           Text(
                             'ONLINE',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 9.sp,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                               color: const Color(0xFF10B981),
                               letterSpacing: 0.8,
                             ),
@@ -332,95 +590,97 @@ class _MoreTab extends ConsumerWidget {
               ),
             ),
 
+            // Grid items
             SliverPadding(
-              padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 100.h),
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // ── Section label ──────────────────────────────────────────
                   Text(
-                    'MANAGEMENT',
-                    style: GoogleFonts.inter(
+                    'MANAGEMENT CONSOLE',
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 10.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: AppTheme.secondary,
                       letterSpacing: 1.2,
                     ),
                   ),
-                  SizedBox(height: 10.h),
+                  SizedBox(height: 12.h),
 
-                  // ── 2×2 tile grid ──────────────────────────────────────────
-                  GridView.count(
+                  GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12.w,
-                    mainAxisSpacing: 12.h,
-                    childAspectRatio: 1.55,
-                    children: tiles.asMap().entries.map((e) {
-                      final t = e.value;
+                    itemCount: tiles.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12.w,
+                      mainAxisSpacing: 12.h,
+                      childAspectRatio: 1.5,
+                    ),
+                    itemBuilder: (context, idx) {
+                      final t = tiles[idx];
                       return GestureDetector(
-                            onTap: () => context.push(t.route),
-                            child: Container(
-                              padding: EdgeInsets.all(16.r),
-                              decoration: BoxDecoration(
-                                color: AppTheme.surfaceContainerLowest,
-                                borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(
-                                  color: AppTheme.surfaceContainerHigh,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 36.r,
-                                    height: 36.r,
-                                    decoration: BoxDecoration(
-                                      color: t.color.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(10.r),
-                                    ),
-                                    child: Icon(
-                                      t.icon,
-                                      color: t.color,
-                                      size: 18.r,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    t.label,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.onSurface,
-                                    ),
-                                  ),
-                                  Text(
-                                    t.sub,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10.sp,
-                                      color: AppTheme.secondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        onTap: () => context.push(t.route),
+                        child: Container(
+                          padding: EdgeInsets.all(12.r),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(
+                              color: AppTheme.surfaceContainerHigh,
+                              width: 1.w,
                             ),
-                          )
-                          .animate(delay: Duration(milliseconds: 60 * e.key))
-                          .fadeIn(duration: 300.ms)
-                          .slideY(begin: 0.08);
-                    }).toList(),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x03000000),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 32.r,
+                                height: 32.r,
+                                decoration: BoxDecoration(
+                                  color: t.color.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                child: Icon(
+                                  t.icon,
+                                  color: t.color,
+                                  size: 18.r,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                t.label,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                t.sub,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.sp,
+                                  color: AppTheme.secondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
 
-                  SizedBox(height: 28.h),
+                  SliverToBoxAdapter(child: SizedBox(height: 24.h)),
 
-                  // ── Sign out ───────────────────────────────────────────────
+                  // Sign out button
                   GestureDetector(
                     onTap: () async {
                       final authService = ref.read(authServiceProvider);
@@ -431,7 +691,7 @@ class _MoreTab extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(vertical: 14.h),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF2F2),
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
                           color: AppTheme.error.withValues(alpha: 0.15),
                         ),
@@ -447,7 +707,7 @@ class _MoreTab extends ConsumerWidget {
                           SizedBox(width: 8.w),
                           Text(
                             'Sign Out',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.error,
@@ -467,7 +727,7 @@ class _MoreTab extends ConsumerWidget {
   }
 }
 
-// ── Dashboard Home Tab ────────────────────────────────────────────────────────
+// ── Tenant Home Command Center (Primary Tab) ──────────────────────────────────
 class _DashboardHome extends ConsumerStatefulWidget {
   const _DashboardHome();
 
@@ -509,7 +769,14 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final email = user?.email ?? 'chef.alex@orderlli.com';
+    final name = email.split('@').first;
+    final capitalizedName = name.isNotEmpty
+        ? name[0].toUpperCase() + name.substring(1)
+        : 'Chef Alex';
+
     final ordersAsync = ref.watch(ordersStreamProvider);
+    final isStoreOpen = ref.watch(storeOpenProvider);
 
     return ordersAsync.when(
       error: (err, _) => Scaffold(
@@ -517,7 +784,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
         body: Center(
           child: Text(
             'Sync Error: $err',
-            style: GoogleFonts.inter(color: AppTheme.error),
+            style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
           ),
         ),
       ),
@@ -530,332 +797,429 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
       data: (allOrders) {
         final today = _todayOrders(allOrders);
         final totalSales = today.fold<double>(0, (s, o) => s + o.totalAmount);
-        final totalOrders = today.length;
-        final totalCustomers = today.map((o) => o.tableId).toSet().length;
-        final avgOrder = totalOrders > 0 ? totalSales / totalOrders : 0.0;
+        final activeDinersCount = today.map((o) => o.tableId).toSet().length;
 
         const activeStatuses = [
           OrderStatus.pending,
           OrderStatus.preparing,
           OrderStatus.ready,
         ];
-        final urgentOrders = allOrders
+        final unresolvedOrders = allOrders
             .where((o) => activeStatuses.contains(o.status))
             .toList();
 
-        // Status counts for the strip
-        final pendingCount = allOrders
-            .where((o) => o.status == OrderStatus.pending)
-            .length;
-        final preparingCount = allOrders
-            .where((o) => o.status == OrderStatus.preparing)
-            .length;
-        final readyCount = allOrders
-            .where((o) => o.status == OrderStatus.ready)
-            .length;
-
-        // Live orders feed (non-served, non-cancelled, newest first)
-        final liveOrders =
-            allOrders
-                .where(
-                  (o) =>
-                      o.status != OrderStatus.served &&
-                      o.status != OrderStatus.cancelled,
-                )
-                .toList()
-              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        // Feed orders (live processing, max 3)
+        final liveOrders = allOrders
+            .where(
+              (o) =>
+                  o.status != OrderStatus.served &&
+                  o.status != OrderStatus.cancelled,
+            )
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
         final feedOrders = liveOrders.take(3).toList();
 
-        return SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // ── App Bar ────────────────────────────────────────────────────
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: AppTheme.surfaceContainerLowest,
-                elevation: 0,
-                toolbarHeight: 64.h,
-                surfaceTintColor: Colors.transparent,
-                automaticallyImplyLeading: false,
-                bottom: PreferredSize(
-                  preferredSize: Size.fromHeight(1),
-                  child: Container(
-                    height: 1,
-                    color: AppTheme.surfaceContainerHigh,
-                  ),
-                ),
-                title: Row(
-                  children: [
-                    Container(
-                      width: 36.r,
-                      height: 36.r,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFC0272D), Color(0xFF7F1D1D)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          appBar: isDesktop(context)
+              ? null
+              : AppBar(
+                  backgroundColor: AppTheme.surfaceContainerLowest,
+                  elevation: 0,
+                  toolbarHeight: 56.h,
+                  automaticallyImplyLeading: false,
+                  title: Row(
+                    children: [
+                      Icon(
+                        Icons.store_rounded,
+                        color: AppTheme.primary,
+                        size: 24.r,
                       ),
-                      child: Center(
-                        child: Text(
-                          (() {
-                            final e = user?.email ?? '';
-                            return e.isNotEmpty ? e[0].toUpperCase() : 'A';
-                          })(),
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'KitchenSync',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primary,
                         ),
                       ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const Spacer(),
+                      // Bell icon
+                      Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Text(
-                            '$_greeting 👋',
-                            style: GoogleFonts.inter(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w700,
+                          IconButton(
+                            icon: Icon(
+                              Icons.notifications_outlined,
                               color: AppTheme.onSurface,
+                              size: 22.r,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'The Grand Spice',
-                            style: GoogleFonts.inter(
-                              fontSize: 10.sp,
-                              color: AppTheme.secondary,
+                            onPressed: () => _showNotifications(
+                              context,
+                              unresolvedOrders,
                             ),
                           ),
+                          if (unresolvedOrders.isNotEmpty)
+                            Positioned(
+                              top: 10.h,
+                              right: 10.w,
+                              child: Container(
+                                width: 8.r,
+                                height: 8.r,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.error,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppTheme.surfaceContainerLowest,
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
+                    ],
+                  ),
+                  bottom: PreferredSize(
+                    preferredSize: Size.fromHeight(1.h),
+                    child: Divider(
+                      height: 1.h,
+                      thickness: 1.h,
+                      color: AppTheme.surfaceContainerHigh,
                     ),
-                    // Notification bell
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.notifications_outlined,
-                            color: AppTheme.onSurface,
-                            size: 22.r,
-                          ),
-                          onPressed: () =>
-                              _showNotifications(context, urgentOrders),
-                        ),
-                        if (urgentOrders.isNotEmpty)
-                          Positioned(
-                            top: 12.h,
-                            right: 12.w,
-                            child: Container(
-                              width: 8.r,
-                              height: 8.r,
-                              decoration: BoxDecoration(
-                                color: AppTheme.error,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppTheme.surfaceContainerLowest,
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 100.h),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // ── Hero Revenue Card ──────────────────────────────────────
-                    _HeroRevenueCard(
-                      value: _fmtCurrency(totalSales),
-                      orders: totalOrders,
-                      customers: totalCustomers,
-                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.08),
-                    SizedBox(height: 16.h),
-
-                    // ── Status Strip ───────────────────────────────────────────
-                    _StatusStrip(
-                      pending: pendingCount,
-                      preparing: preparingCount,
-                      ready: readyCount,
-                    ).animate(delay: 100.ms).fadeIn(duration: 350.ms),
-                    SizedBox(height: 20.h),
-
-                    // ── KPI Row ────────────────────────────────────────────────
-                    _KpiRow(
-                      avgOrder: avgOrder,
-                      totalOrders: totalOrders,
-                      totalCustomers: totalCustomers,
-                    ).animate(delay: 150.ms).fadeIn(duration: 350.ms),
-                    SizedBox(height: 24.h),
-
-                    // ── Quick Actions ──────────────────────────────────────────
-                    _QuickActionsRow(
-                      onOrders: () =>
-                          ref.read(currentNavIndexProvider.notifier).state = 1,
-                      onAnalytics: () =>
-                          ref.read(currentNavIndexProvider.notifier).state = 2,
-                      onMenu: () => context.push('/admin/menu'),
-                      onStaff: () => context.push('/admin/staff'),
-                    ).animate(delay: 200.ms).fadeIn(duration: 350.ms),
-                    SizedBox(height: 24.h),
-
-                    // ── Live Orders Feed ───────────────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+          body: SafeArea(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Riverpod stream triggers auto update
+              },
+              color: AppTheme.primary,
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktop(context) ? 32.w : 16.w,
+                      vertical: 24.h,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // ── Store Header + Greeting ───────────────────────────
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Live Orders',
-                              style: GoogleFonts.inter(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.onSurface,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$_greeting, $capitalizedName',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize:
+                                        isDesktop(context) ? 28.sp : 22.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.onSurface,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                Text(
+                                  'Morning Shift • Orderlyy Operating Pulse',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12.sp,
+                                    color: AppTheme.secondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 8.w),
-                            if (liveOrders.isNotEmpty)
-                              Container(
+
+                            // Store Status Toggle Pill
+                            GestureDetector(
+                              onTap: () {
+                                ref.read(storeOpenProvider.notifier).state =
+                                    !isStoreOpen;
+                              },
+                              child: AnimatedContainer(
+                                duration: 200.ms,
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: 7.w,
-                                  vertical: 2.h,
+                                  horizontal: 14.w,
+                                  vertical: 8.h,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryContainer.withValues(
-                                    alpha: 0.1,
+                                  color: AppTheme.surfaceContainerLowest,
+                                  borderRadius: BorderRadius.circular(30.r),
+                                  border: Border.all(
+                                    color: isStoreOpen
+                                        ? AppTheme.primaryContainer
+                                            .withValues(alpha: 0.3)
+                                        : AppTheme.surfaceContainerHigh,
+                                    width: 1.5.w,
                                   ),
-                                  borderRadius: BorderRadius.circular(20.r),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x04000000),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                                child: Text(
-                                  '${liveOrders.length}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.primaryContainer,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: 200.ms,
+                                      width: 8.r,
+                                      height: 8.r,
+                                      decoration: BoxDecoration(
+                                        color: isStoreOpen
+                                            ? AppTheme.primary
+                                            : AppTheme.secondary,
+                                        shape: BoxShape.circle,
+                                        boxShadow: isStoreOpen
+                                            ? [
+                                                BoxShadow(
+                                                  color: AppTheme.primary
+                                                      .withValues(alpha: 0.5),
+                                                  blurRadius: 6,
+                                                  spreadRadius: 1,
+                                                )
+                                              ]
+                                            : null,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      isStoreOpen
+                                          ? 'Service Open'
+                                          : 'Service Closed',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.onSurface,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            ),
                           ],
                         ),
-                        TextButton(
-                          onPressed: () =>
-                              ref
-                                      .read(currentNavIndexProvider.notifier)
-                                      .state =
-                                  1,
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.primaryContainer,
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                          ),
-                          child: Text(
-                            'See All →',
-                            style: GoogleFonts.inter(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primaryContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
+                        SizedBox(height: 24.h),
 
-                    if (feedOrders.isEmpty)
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 28.h),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(16.r),
+                        // ── Real-Time Pulse Cards Grid ────────────────────────
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final cols = isDesktop(context) ? 4 : 2;
+                            return GridView.count(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisCount: cols,
+                              crossAxisSpacing: 12.w,
+                              mainAxisSpacing: 12.h,
+                              childAspectRatio: isDesktop(context) ? 1.6 : 1.3,
+                              children: [
+                                _PulseCard(
+                                  title: 'Active Diners',
+                                  value: '$activeDinersCount',
+                                  subtitle: '+4 since last hour',
+                                  icon: Icons.groups_rounded,
+                                  color: AppTheme.primary,
+                                ),
+                                _PulseCard(
+                                  title: "Today's GMV",
+                                  value: _fmtCurrency(totalSales),
+                                  subtitle: '↑ 12% vs yesterday',
+                                  icon: Icons.payments_rounded,
+                                  color: AppTheme.primary,
+                                ),
+                                _PulseCard(
+                                  title: 'Avg. Turn Time',
+                                  value: '42m',
+                                  subtitle: 'On target',
+                                  icon: Icons.timer_rounded,
+                                  color: Colors.teal,
+                                  isBadge: true,
+                                ),
+                                _PulseCard(
+                                  title: 'Unresolved Issues',
+                                  value: '${unresolvedOrders.length}',
+                                  subtitle: 'Requires attention',
+                                  icon: Icons.warning_amber_rounded,
+                                  color: AppTheme.error,
+                                  isError: true,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline_rounded,
-                              size: 36.r,
-                              color: const Color(0xFF10B981),
-                            ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              'All caught up!',
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.secondary,
+                        SizedBox(height: 24.h),
+
+                        // ── Main Split Section (Alerts + Sparkline) ───────────
+                        if (isDesktop(context))
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: _buildUrgentActionCenter(context),
                               ),
-                            ),
-                            Text(
-                              'No active orders right now',
-                              style: GoogleFonts.inter(
-                                fontSize: 12.sp,
-                                color: AppTheme.secondary,
+                              SizedBox(width: 24.w),
+                              Expanded(
+                                flex: 3,
+                                child: _buildRevenuePulseChart(),
                               ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      ...feedOrders.asMap().entries.map((e) {
-                        final o = e.value;
-                        return Padding(
-                              padding: EdgeInsets.only(bottom: 10.h),
-                              child: _LiveOrderCard(order: o),
-                            )
-                            .animate(delay: Duration(milliseconds: 60 * e.key))
-                            .fadeIn(duration: 300.ms)
-                            .slideY(begin: 0.06);
-                      }),
-                  ]),
-                ),
+                            ],
+                          )
+                        else ...[
+                          _buildUrgentActionCenter(context),
+                          SizedBox(height: 24.h),
+                          _buildRevenuePulseChart(),
+                        ],
+                        SizedBox(height: 24.h),
+
+                        // ── Quick-Access Launchpad ────────────────────────────
+                        _buildQuickActionsLaunchpad(context, ref),
+                        SizedBox(height: 28.h),
+
+                        // ── Live Order List Feed ──────────────────────────────
+                        _buildLiveOrdersList(context, ref, feedOrders, liveOrders),
+                      ]),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
     );
   }
-}
 
-// ── Hero Revenue Card ─────────────────────────────────────────────────────────
-class _HeroRevenueCard extends StatelessWidget {
-  final String value;
-  final int orders;
-  final int customers;
-  const _HeroRevenueCard({
-    required this.value,
-    required this.orders,
-    required this.customers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  // ── Urgent Action Center Builder ────────────────────────────────────────────
+  Widget _buildUrgentActionCenter(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(22.r),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFC0272D), Color(0xFF7F1D1D)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFFC0272D).withValues(alpha: 0.3),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: Color(0x03000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceContainerLowest,
+              border: Border(
+                bottom: BorderSide(
+                  color: AppTheme.surfaceContainerHigh,
+                  width: 1.w,
+                ),
+              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Urgent Action Center',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.onSurface,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryContainer.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    '3 Items',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Alert Items List
+          Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Column(
+              children: [
+                // Alert 1
+                _AlertItem(
+                  icon: Icons.receipt_outlined,
+                  title: 'Table 8 requested bill',
+                  subtitle: '5 mins ago • Server: Maria',
+                  actionText: 'Review Bill',
+                  onTap: () {
+                    ref.read(currentNavIndexProvider.notifier).state = 1;
+                  },
+                ),
+                SizedBox(height: 12.h),
+
+                // Alert 2
+                _AlertItem(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'Reconciliation Mismatch',
+                  subtitle: 'Table 12 • \$4.50 discrepancy',
+                  actionText: 'Resolve',
+                  isWarning: true,
+                  onTap: () {
+                    // Navigate to reconciliation disputes
+                    context.push('/admin/occ-conflict');
+                  },
+                ),
+                SizedBox(height: 12.h),
+
+                // Alert 3
+                _AlertItem(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Ribeye Steak out of stock',
+                  subtitle: 'Inventory alert • POS updated',
+                  actionText: 'Update Menu',
+                  isSecondary: true,
+                  onTap: () {
+                    context.push('/admin/menu');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Revenue Pulse Chart Builder ─────────────────────────────────────────────
+  Widget _buildRevenuePulseChart() {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x03000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -865,371 +1229,145 @@ class _HeroRevenueCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "TODAY'S REVENUE",
-                style: GoogleFonts.inter(
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.65),
-                  letterSpacing: 1.2,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Revenue Pulse',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    'Today vs Yesterday (Hourly Performance)',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.sp,
+                      color: AppTheme.secondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20.r),
+              IconButton(
+                icon: Icon(
+                  Icons.more_vert_rounded,
+                  color: AppTheme.secondary,
+                  size: 20.r,
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_up_rounded,
-                      color: Colors.white,
-                      size: 13.r,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '+10.5%',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+                onPressed: () {},
               ),
             ],
           ),
-          SizedBox(height: 10.h),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 42.sp,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: -1.5,
-                height: 1.0,
+          SizedBox(height: 20.h),
+
+          // Custom Chart Canvas
+          Container(
+            height: 200.h,
+            width: double.infinity,
+            padding: EdgeInsets.only(left: 32.w, right: 16.w, bottom: 20.h),
+            decoration: BoxDecoration(
+              color: AppTheme.background,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: AppTheme.surfaceContainerHigh,
+                width: 1.w,
               ),
             ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            'vs. yesterday',
-            style: GoogleFonts.inter(
-              fontSize: 11.sp,
-              color: Colors.white.withValues(alpha: 0.5),
+            child: Stack(
+              children: [
+                // Custom Paint chart curves
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _RevenueSparklinePainter(
+                      todayData: const [0.15, 0.4, 0.3, 0.65, 0.85, 0.72, 0.95],
+                      yesterdayData: const [
+                        0.25,
+                        0.35,
+                        0.45,
+                        0.38,
+                        0.55,
+                        0.62,
+                        0.7
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Y-Axis Labels overlay
+                Positioned(
+                  left: -24.w,
+                  top: 8.h,
+                  bottom: 24.h,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildAxisLabel('₹30k'),
+                      _buildAxisLabel('₹20k'),
+                      _buildAxisLabel('₹10k'),
+                      _buildAxisLabel('0'),
+                    ],
+                  ),
+                ),
+
+                // X-Axis Labels overlay
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: -16.h,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildAxisLabel('8 AM'),
+                      _buildAxisLabel('11 AM'),
+                      _buildAxisLabel('2 PM'),
+                      _buildAxisLabel('5 PM'),
+                      _buildAxisLabel('Now'),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 18.h),
-          // Mini stats row
-          Row(
-            children: [
-              _HeroStat(label: 'Orders', value: '$orders'),
-              Container(
-                width: 1,
-                height: 28.h,
-                color: Colors.white.withValues(alpha: 0.2),
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-              ),
-              _HeroStat(label: 'Tables', value: '$customers'),
-              Container(
-                width: 1,
-                height: 28.h,
-                color: Colors.white.withValues(alpha: 0.2),
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-              ),
-              _HeroStat(label: 'Avg Time', value: '18m'),
-            ],
           ),
         ],
       ),
     );
   }
-}
 
-class _HeroStat extends StatelessWidget {
-  final String label;
-  final String value;
-  const _HeroStat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 10.sp,
-            color: Colors.white.withValues(alpha: 0.6),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Status Strip ──────────────────────────────────────────────────────────────
-class _StatusStrip extends StatelessWidget {
-  final int pending;
-  final int preparing;
-  final int ready;
-  const _StatusStrip({
-    required this.pending,
-    required this.preparing,
-    required this.ready,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _StatusChip(
-          label: 'PENDING',
-          count: pending,
-          color: const Color(0xFFF59E0B),
-          icon: Icons.hourglass_top_rounded,
-        ),
-        SizedBox(width: 8.w),
-        _StatusChip(
-          label: 'PREPARING',
-          count: preparing,
-          color: const Color(0xFF3B82F6),
-          icon: Icons.local_fire_department_rounded,
-        ),
-        SizedBox(width: 8.w),
-        _StatusChip(
-          label: 'READY',
-          count: ready,
-          color: const Color(0xFF10B981),
-          icon: Icons.check_circle_outline_rounded,
-        ),
-      ],
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
-  final IconData icon;
-  const _StatusChip({
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 16.r),
-            SizedBox(width: 6.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count',
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w800,
-                    color: color,
-                    height: 1.0,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 8.sp,
-                    fontWeight: FontWeight.w600,
-                    color: color.withValues(alpha: 0.8),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+  Widget _buildAxisLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 9.sp,
+        fontWeight: FontWeight.w700,
+        color: AppTheme.secondary.withValues(alpha: 0.7),
       ),
     );
   }
-}
 
-// ── KPI Row ───────────────────────────────────────────────────────────────────
-class _KpiRow extends StatelessWidget {
-  final double avgOrder;
-  final int totalOrders;
-  final int totalCustomers;
-  const _KpiRow({
-    required this.avgOrder,
-    required this.totalOrders,
-    required this.totalCustomers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _KpiCard(
-          label: 'AVG ORDER',
-          value: avgOrder >= 1000
-              ? '₹${(avgOrder / 1000).toStringAsFixed(1)}k'
-              : '₹${avgOrder.toStringAsFixed(0)}',
-          icon: Icons.shopping_bag_outlined,
-          color: const Color(0xFF8B5CF6),
-        ),
-        SizedBox(width: 10.w),
-        _KpiCard(
-          label: 'ORDERS',
-          value: '$totalOrders',
-          icon: Icons.receipt_long_outlined,
-          color: const Color(0xFF06B6D4),
-        ),
-        SizedBox(width: 10.w),
-        _KpiCard(
-          label: 'TABLES',
-          value: '$totalCustomers',
-          icon: Icons.table_restaurant_outlined,
-          color: const Color(0xFF10B981),
-        ),
-      ],
-    );
-  }
-}
-
-class _KpiCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  const _KpiCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(14.r),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppTheme.surfaceContainerHigh),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 30.r,
-              height: 30.r,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(icon, color: color, size: 15.r),
-            ),
-            SizedBox(height: 10.h),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.onSurface,
-                  height: 1.0,
-                ),
-              ),
-            ),
-            SizedBox(height: 2.h),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 8.sp,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.secondary,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Quick Actions Row ─────────────────────────────────────────────────────────
-class _QuickActionsRow extends StatelessWidget {
-  final VoidCallback onOrders;
-  final VoidCallback onAnalytics;
-  final VoidCallback onMenu;
-  final VoidCallback onStaff;
-  const _QuickActionsRow({
-    required this.onOrders,
-    required this.onAnalytics,
-    required this.onMenu,
-    required this.onStaff,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  // ── Quick Actions Launchpad Builder ─────────────────────────────────────────
+  Widget _buildQuickActionsLaunchpad(BuildContext context, WidgetRef ref) {
     final actions = [
       (
-        icon: Icons.receipt_long_rounded,
-        label: 'Orders',
-        color: const Color(0xFFC0272D),
-        onTap: onOrders,
-      ),
-      (
-        icon: Icons.bar_chart_rounded,
-        label: 'Analytics',
-        color: const Color(0xFF2563EB),
-        onTap: onAnalytics,
-      ),
-      (
         icon: Icons.restaurant_menu_rounded,
-        label: 'Menu',
-        color: const Color(0xFF7C3AED),
-        onTap: onMenu,
+        label: 'Edit Menu',
+        onTap: () => context.push('/admin/menu')
       ),
       (
-        icon: Icons.group_rounded,
-        label: 'Staff',
-        color: const Color(0xFF059669),
-        onTap: onStaff,
+        icon: Icons.local_offer_outlined,
+        label: 'Add Discount',
+        onTap: () => context.push('/admin/pricing')
+      ),
+      (
+        icon: Icons.table_restaurant_rounded,
+        label: 'Live Floor',
+        onTap: () => context.push('/admin/live-floorplan')
+      ),
+      (
+        icon: Icons.qr_code_rounded,
+        label: 'Export QR',
+        onTap: () => context.push('/admin/tables')
       ),
     ];
 
@@ -1237,10 +1375,10 @@ class _QuickActionsRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Access',
-          style: GoogleFonts.inter(
+          'Quick Actions',
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 16.sp,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             color: AppTheme.onSurface,
           ),
         ),
@@ -1248,37 +1386,53 @@ class _QuickActionsRow extends StatelessWidget {
         Row(
           children: actions.map((a) {
             return Expanded(
-              child: GestureDetector(
-                onTap: a.onTap,
-                child: Container(
-                  margin: EdgeInsets.only(right: a == actions.last ? 0 : 8.w),
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceContainerLowest,
-                    borderRadius: BorderRadius.circular(14.r),
-                    border: Border.all(color: AppTheme.surfaceContainerHigh),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40.r,
-                        height: 40.r,
-                        decoration: BoxDecoration(
-                          color: a.color.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(a.icon, color: a.color, size: 20.r),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: a == actions.last ? 0 : 10.w,
+                ),
+                child: InkWell(
+                  onTap: a.onTap,
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: AppTheme.surfaceContainerHigh,
+                        width: 1.w,
                       ),
-                      SizedBox(height: 6.h),
-                      Text(
-                        a.label,
-                        style: GoogleFonts.inter(
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.onSurface,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x02000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 20.r,
+                          backgroundColor: AppTheme.background,
+                          child: Icon(
+                            a.icon,
+                            color: AppTheme.primary,
+                            size: 20.r,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          a.label,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1288,28 +1442,454 @@ class _QuickActionsRow extends StatelessWidget {
       ],
     );
   }
+
+  // ── Live Orders List Builder ────────────────────────────────────────────────
+  Widget _buildLiveOrdersList(
+    BuildContext context,
+    WidgetRef ref,
+    List<OrderDto> feedOrders,
+    List<OrderDto> liveOrders,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Live Orders Feed',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.onSurface,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                if (liveOrders.isNotEmpty)
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryContainer.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Text(
+                      '${liveOrders.length}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            TextButton(
+              onPressed: () {
+                ref.read(currentNavIndexProvider.notifier).state = 1;
+              },
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'See All Feed →',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+
+        if (feedOrders.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 36.h),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 40.r,
+                  color: Colors.teal,
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  'All caught up!',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.onSurface,
+                  ),
+                ),
+                Text(
+                  'No active operational orders right now.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.sp,
+                    color: AppTheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...feedOrders.asMap().entries.map((e) {
+            final o = e.value;
+            return Padding(
+              padding: EdgeInsets.only(bottom: 10.h),
+              child: _LiveOrderCard(order: o),
+            )
+                .animate(delay: Duration(milliseconds: 60 * e.key))
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.05);
+          }),
+      ],
+    );
+  }
 }
 
-// ── Live Order Card ───────────────────────────────────────────────────────────
+// ── Pulse Card ────────────────────────────────────────────────────────────────
+class _PulseCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final bool isError;
+  final bool isBadge;
+
+  const _PulseCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    this.isError = false,
+    this.isBadge = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isError) {
+      return Container(
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: AppTheme.errorContainer.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: AppTheme.error.withValues(alpha: 0.2),
+            width: 1.w,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x02000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 32.r,
+                height: 32.r,
+                decoration: BoxDecoration(
+                  color: AppTheme.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppTheme.error, size: 16.r),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.error,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  value,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.error,
+                    height: 1.1,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10.sp,
+                    color: AppTheme.error.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppTheme.surfaceContainerHigh,
+          width: 1.w,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x02000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: 0,
+            top: 0,
+            child: CircleAvatar(
+              radius: 16.r,
+              backgroundColor: AppTheme.background,
+              child: Icon(
+                icon,
+                color: color,
+                size: 16.r,
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 9.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.secondary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                value,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.onSurface,
+                  height: 1.1,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              if (isBadge)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9.sp,
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+              else
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10.sp,
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Alert Item Widget ────────────────────────────────────────────────────────
+class _AlertItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String actionText;
+  final VoidCallback onTap;
+  final bool isWarning;
+  final bool isSecondary;
+
+  const _AlertItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.actionText,
+    required this.onTap,
+    this.isWarning = false,
+    this.isSecondary = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Color bgCircle = AppTheme.background;
+    Color iconCol = AppTheme.secondary;
+    Color borderCol = AppTheme.surfaceContainerHigh;
+
+    if (isWarning) {
+      bgCircle = AppTheme.errorContainer;
+      iconCol = AppTheme.error;
+      borderCol = AppTheme.error.withValues(alpha: 0.1);
+    }
+
+    return Container(
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: isWarning
+            ? AppTheme.errorContainer.withValues(alpha: 0.15)
+            : AppTheme.background,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: borderCol, width: 1.w),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 18.r,
+            backgroundColor: bgCircle,
+            child: Icon(icon, color: iconCol, size: 18.r),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.onSurface,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.sp,
+                    color: AppTheme.secondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    onPressed: onTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isSecondary
+                          ? AppTheme.surfaceContainerLowest
+                          : AppTheme.primaryContainer,
+                      foregroundColor: isSecondary
+                          ? AppTheme.onSurface
+                          : AppTheme.onPrimary,
+                      elevation: 0,
+                      minimumSize: Size(110.w, 32.h),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 6.h,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.r),
+                        side: isSecondary
+                            ? BorderSide(
+                                color: AppTheme.surfaceContainerHigh,
+                                width: 1.w,
+                              )
+                            : BorderSide.none,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          actionText,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          isSecondary
+                              ? Icons.edit_rounded
+                              : Icons.chevron_right_rounded,
+                          size: 14.r,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Live Order Card Widget ────────────────────────────────────────────────────
 class _LiveOrderCard extends StatelessWidget {
   final OrderDto order;
   const _LiveOrderCard({required this.order});
 
   Color get _statusColor => switch (order.status) {
-    OrderStatus.pending => const Color(0xFFF59E0B),
-    OrderStatus.preparing => const Color(0xFF3B82F6),
-    OrderStatus.ready => const Color(0xFF10B981),
-    OrderStatus.confirmed => const Color(0xFF8B5CF6),
-    _ => AppTheme.secondary,
-  };
+        OrderStatus.pending => const Color(0xFFF59E0B),
+        OrderStatus.preparing => const Color(0xFF3B82F6),
+        OrderStatus.ready => const Color(0xFF10B981),
+        OrderStatus.confirmed => const Color(0xFF8B5CF6),
+        _ => AppTheme.secondary,
+      };
 
   String get _statusLabel => switch (order.status) {
-    OrderStatus.pending => 'PENDING',
-    OrderStatus.preparing => 'PREPARING',
-    OrderStatus.ready => 'READY',
-    OrderStatus.confirmed => 'CONFIRMED',
-    _ => order.status.name.toUpperCase(),
-  };
+        OrderStatus.pending => 'PENDING',
+        OrderStatus.preparing => 'PREPARING',
+        OrderStatus.ready => 'READY',
+        OrderStatus.confirmed => 'CONFIRMED',
+        _ => order.status.name.toUpperCase(),
+      };
 
   String get _timeAgo {
     final diff = DateTime.now().difference(order.createdAt.toLocal());
@@ -1324,9 +1904,9 @@ class _LiveOrderCard extends StatelessWidget {
     final itemSummary = order.items.isEmpty
         ? 'No items'
         : order.items
-              .take(2)
-              .map((i) => '${i.menuItemName} ×${i.quantity}')
-              .join('  ·  ');
+            .take(2)
+            .map((i) => '${i.menuItemName} ×${i.quantity}')
+            .join('  ·  ');
     final hasMore = order.items.length > 2;
 
     return Container(
@@ -1337,7 +1917,7 @@ class _LiveOrderCard extends StatelessWidget {
         border: Border.all(color: _statusColor.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: _statusColor.withValues(alpha: 0.06),
+            color: _statusColor.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1346,34 +1926,28 @@ class _LiveOrderCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left accent + table badge
-          Column(
-            children: [
-              Container(
-                width: 44.r,
-                height: 44.r,
-                decoration: BoxDecoration(
-                  color: _statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12.r),
+          Container(
+            width: 44.r,
+            height: 44.r,
+            decoration: BoxDecoration(
+              color: _statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Center(
+              child: Text(
+                order.tableLabel.length > 4
+                    ? order.tableLabel.substring(0, 4)
+                    : order.tableLabel,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w800,
+                  color: _statusColor,
                 ),
-                child: Center(
-                  child: Text(
-                    order.tableLabel.length > 4
-                        ? order.tableLabel.substring(0, 4)
-                        : order.tableLabel,
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w800,
-                      color: _statusColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+                textAlign: TextAlign.center,
               ),
-            ],
+            ),
           ),
           SizedBox(width: 12.w),
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1390,19 +1964,16 @@ class _LiveOrderCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Status chip
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 3.h,
-                      ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                       decoration: BoxDecoration(
-                        color: _statusColor.withValues(alpha: 0.1),
+                        color: _statusColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
                         _statusLabel,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 9.sp,
                           fontWeight: FontWeight.w800,
                           color: _statusColor,
@@ -1415,14 +1986,15 @@ class _LiveOrderCard extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   '$itemSummary${hasMore ? '  +${order.items.length - 2} more' : ''}',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 12.sp,
                     color: AppTheme.secondary,
+                    fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 6.h),
+                SizedBox(height: 8.h),
                 Row(
                   children: [
                     Icon(
@@ -1430,12 +2002,13 @@ class _LiveOrderCard extends StatelessWidget {
                       size: 11.r,
                       color: AppTheme.secondary,
                     ),
-                    SizedBox(width: 3.w),
+                    SizedBox(width: 4.w),
                     Text(
                       _timeAgo,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 10.sp,
                         color: AppTheme.secondary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const Spacer(),
@@ -1443,8 +2016,8 @@ class _LiveOrderCard extends StatelessWidget {
                       '₹${order.totalAmount.toStringAsFixed(0)}',
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 13.sp,
-                        fontWeight: FontWeight.w700,
-                        color: isUrgent ? AppTheme.error : AppTheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        color: isUrgent ? AppTheme.primary : AppTheme.onSurface,
                       ),
                     ),
                   ],
@@ -1488,13 +2061,9 @@ class _NotificationSheet extends StatelessWidget {
           SizedBox(height: 20.h),
           Row(
             children: [
-              Container(
-                width: 36.r,
-                height: 36.r,
-                decoration: BoxDecoration(
-                  color: AppTheme.error.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
+              CircleAvatar(
+                radius: 18.r,
+                backgroundColor: AppTheme.error.withValues(alpha: 0.1),
                 child: Icon(
                   Icons.notifications_active_rounded,
                   color: AppTheme.error,
@@ -1504,9 +2073,9 @@ class _NotificationSheet extends StatelessWidget {
               SizedBox(width: 12.w),
               Text(
                 'Needs Attention',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: AppTheme.onSurface,
                 ),
               ),
@@ -1519,8 +2088,8 @@ class _NotificationSheet extends StatelessWidget {
                 ),
                 child: Text(
                   '${urgentOrders.length}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13.sp,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.error,
                   ),
@@ -1535,9 +2104,10 @@ class _NotificationSheet extends StatelessWidget {
               child: Center(
                 child: Text(
                   'No urgent alerts ✅',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 14.sp,
                     color: AppTheme.secondary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -1589,7 +2159,7 @@ class _NotificationSheet extends StatelessWidget {
                             children: [
                               Text(
                                 'Table ${o.tableLabel} — ${o.status.name.toUpperCase()}',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.onSurface,
@@ -1597,7 +2167,7 @@ class _NotificationSheet extends StatelessWidget {
                               ),
                               Text(
                                 '₹${o.totalAmount.toStringAsFixed(0)} · ${o.items.length} items',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11.sp,
                                   color: AppTheme.secondary,
                                 ),
@@ -1619,5 +2189,181 @@ class _NotificationSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Custom Sparkline Area Painter (Today vs Yesterday) ────────────────────────
+class _RevenueSparklinePainter extends CustomPainter {
+  final List<double> todayData;
+  final List<double> yesterdayData;
+
+  _RevenueSparklinePainter({
+    required this.todayData,
+    required this.yesterdayData,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (todayData.isEmpty || yesterdayData.isEmpty) return;
+
+    final width = size.width;
+    final height = size.height;
+
+    // Draw grid background lines
+    final gridPaint = Paint()
+      ..color = AppTheme.surfaceContainer
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i <= 3; i++) {
+      final y = (height / 3) * i;
+      canvas.drawLine(Offset(0, y), Offset(width, y), gridPaint);
+    }
+
+    // Yesterday: Dashed Grey Path (using bezier curve points)
+    final yesterdayPath = Path();
+    final yesterdayPoints = _getCurvePoints(yesterdayData, width, height);
+
+    yesterdayPath.moveTo(yesterdayPoints.first.dx, yesterdayPoints.first.dy);
+    for (int i = 0; i < yesterdayPoints.length - 1; i++) {
+      final p1 = yesterdayPoints[i];
+      final p2 = yesterdayPoints[i + 1];
+      final controlX = p1.dx + (p2.dx - p1.dx) / 2;
+      yesterdayPath.cubicTo(
+        controlX,
+        p1.dy,
+        controlX,
+        p2.dy,
+        p2.dx,
+        p2.dy,
+      );
+    }
+
+    // Draw Yesterday's dashed path
+    _drawDashedPath(
+      canvas,
+      yesterdayPath,
+      AppTheme.secondary.withValues(alpha: 0.5),
+      1.5,
+    );
+
+    // Today: Smooth Solid Red Bezier Curve + Red Gradient Fill
+    final todayPoints = _getCurvePoints(todayData, width, height);
+    final todayPath = Path();
+    final areaPath = Path();
+
+    todayPath.moveTo(todayPoints.first.dx, todayPoints.first.dy);
+    areaPath.moveTo(todayPoints.first.dx, height);
+    areaPath.lineTo(todayPoints.first.dx, todayPoints.first.dy);
+
+    for (int i = 0; i < todayPoints.length - 1; i++) {
+      final p1 = todayPoints[i];
+      final p2 = todayPoints[i + 1];
+      final controlX = p1.dx + (p2.dx - p1.dx) / 2;
+
+      todayPath.cubicTo(
+        controlX,
+        p1.dy,
+        controlX,
+        p2.dy,
+        p2.dx,
+        p2.dy,
+      );
+
+      areaPath.cubicTo(
+        controlX,
+        p1.dy,
+        controlX,
+        p2.dy,
+        p2.dx,
+        p2.dy,
+      );
+    }
+
+    areaPath.lineTo(width, height);
+    areaPath.close();
+
+    // 1. Draw Today's Area Gradient fill underneath the line
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          AppTheme.primary.withValues(alpha: 0.16),
+          AppTheme.primary.withValues(alpha: 0.0),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, width, height))
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(areaPath, fillPaint);
+
+    // 2. Draw Today's Solid Stroke Curve
+    final strokePaint = Paint()
+      ..color = AppTheme.primary
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawPath(todayPath, strokePaint);
+
+    // 3. Draw a glowing dot on the latest today data point
+    if (todayPoints.isNotEmpty) {
+      final lastPoint = todayPoints.last;
+      final glowPaint = Paint()
+        ..color = AppTheme.primary.withValues(alpha: 0.25)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastPoint, 8, glowPaint);
+
+      final dotPaint = Paint()
+        ..color = AppTheme.primary
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastPoint, 4, dotPaint);
+
+      final dotCenterPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastPoint, 1.5, dotCenterPaint);
+    }
+  }
+
+  // Calculate pixel coordinates mapping values to canvas coordinates
+  List<Offset> _getCurvePoints(List<double> data, double width, double height) {
+    final List<Offset> points = [];
+    final step = width / (data.length - 1);
+    for (int i = 0; i < data.length; i++) {
+      final x = step * i;
+      // Invert Y coordinate so 1.0 (max) is at the top of the canvas
+      final y = height - (data[i] * (height - 20)) - 10;
+      points.add(Offset(x, y));
+    }
+    return points;
+  }
+
+  // Draws a dashed line along a path
+  void _drawDashedPath(
+      Canvas canvas, Path path, Color color, double strokeWidth) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    const dashWidth = 4.0;
+    const dashSpace = 4.0;
+
+    for (final pathMetric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < pathMetric.length) {
+        final len = math.min(dashWidth, pathMetric.length - distance);
+        final segment = pathMetric.extractPath(distance, distance + len);
+        canvas.drawPath(segment, paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RevenueSparklinePainter oldDelegate) {
+    return oldDelegate.todayData != todayData ||
+        oldDelegate.yesterdayData != yesterdayData;
   }
 }

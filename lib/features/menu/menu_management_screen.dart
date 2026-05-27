@@ -8,21 +8,37 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/auth/mock_auth_provider.dart';
 import '../../core/data/dtos/menu_dto.dart';
 import '../../core/providers/menu_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/uuid.dart';
+import 'presentation/screens/item_detail_screen.dart';
+import 'presentation/screens/modifier_matrix_screen.dart';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const _kPrimary = Color(0xFFC0272D);
-const _kCategories = [
-  'ALL',
-  'STARTERS',
-  'MAINS',
-  'SIDES',
-  'DESSERTS',
-  'BEVERAGES',
-];
+// ── Local Mock States for Interactive Operations ─────────────────────────────
+final expandedCategoriesProvider = StateProvider<Map<String, bool>>((ref) => {
+      'cat-001': false,
+      'cat-002': true, // Expanded by default to match HTML
+      'cat-003': false,
+      'cat-004': false,
+      'cat-005': false,
+    });
 
-// ── Screen ────────────────────────────────────────────────────────────────────
+final categoryVisibilityProvider = StateProvider<Map<String, bool>>((ref) => {
+      'cat-001': true,
+      'cat-002': true,
+      'cat-003': true,
+      'cat-004': false, // Hidden by default to match HTML
+      'cat-005': true,
+    });
+
+final categorySchedulesProvider = StateProvider<Map<String, String?>>((ref) => {
+      'cat-001': null, // All Day
+      'cat-002': '11:00 AM - 10:00 PM',
+      'cat-003': null,
+      'cat-004': null,
+      'cat-005': null,
+    });
+
 class MenuManagementScreen extends ConsumerStatefulWidget {
   const MenuManagementScreen({super.key});
 
@@ -32,495 +48,713 @@ class MenuManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
-  int _catIndex = 0;
-  String _search = '';
-  final _searchCtrl = TextEditingController();
+  // Category Details Mapping
+  final Map<String, String> _categoryNames = {
+    'cat-001': 'Appetizers',
+    'cat-002': 'Mains',
+    'cat-003': 'Sides',
+    'cat-004': 'Drinks',
+    'cat-005': 'Desserts',
+  };
+
+  // Drag-and-drop simulated indices mapping
+  late List<String> _categoryOrder;
 
   @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _categoryOrder = ['cat-001', 'cat-002', 'cat-003', 'cat-004', 'cat-005'];
   }
 
-  List<MenuItemDto> _filtered(List<MenuItemDto> items) {
-    var list = items;
-    if (_catIndex > 0) {
-      final cat = _kCategories[_catIndex];
-      list = list
-          .where(
-            (i) =>
-                i.name.toUpperCase().contains(cat) ||
-                i.categoryId.toUpperCase().contains(cat),
-          )
-          .toList();
-    }
-    if (_search.isNotEmpty) {
-      list = list
-          .where((i) => i.name.toLowerCase().contains(_search.toLowerCase()))
-          .toList();
-    }
-    return list;
-  }
-
-  Future<void> _toggleAvailability(MenuItemDto item) async {
-    final newVal = !item.isAvailable;
+  Future<void> _toggleItemAvailability(MenuItemDto item) async {
+    final currentVal = item.isAvailable;
     try {
-      await ref.read(toggleMenuItemAvailabilityProvider)(item.id, newVal);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update availability: $e'),
-            backgroundColor: _kPrimary,
+      await ref.read(toggleMenuItemAvailabilityProvider)(item.id, !currentVal);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${item.name} is now ${!currentVal ? 'Available' : 'Sold Out'}',
           ),
-        );
-      }
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: !currentVal ? AppColors.success : AppTheme.error,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update availability: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppTheme.error,
+        ),
+      );
     }
   }
 
-  void _showEditSheet(BuildContext context, MenuItemDto? item) {
-    showModalBottomSheet(
+  void _showAddCategorySheet(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _MenuItemSheet(item: item),
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surfaceContainerLowest,
+          title: Text(
+            'Add Menu Category',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: GoogleFonts.plusJakartaSans(),
+            decoration: InputDecoration(
+              hintText: 'e.g. Chef Specials',
+              hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  final newId = 'cat-00${_categoryOrder.length + 1}';
+                  setState(() {
+                    _categoryNames[newId] = name;
+                    _categoryOrder.add(newId);
+                    ref.read(expandedCategoriesProvider.notifier).state = {
+                      ...ref.read(expandedCategoriesProvider),
+                      newId: false,
+                    };
+                    ref.read(categoryVisibilityProvider.notifier).state = {
+                      ...ref.read(categoryVisibilityProvider),
+                      newId: true,
+                    };
+                  });
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Category "$name" created successfully.'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryContainer,
+              ),
+              child: Text(
+                'Create',
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showItemEditSheet(BuildContext context, MenuItemDto? item, String defaultCatId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ItemDetailScreen(item: item, defaultCategoryId: defaultCatId),
+      ),
+    );
+  }
+
+  void _showScheduleDialog(BuildContext context, String catId, String catName) {
+    final schedules = ref.read(categorySchedulesProvider);
+    final currentSchedule = schedules[catId];
+    final controller = TextEditingController(text: currentSchedule ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surfaceContainerLowest,
+          title: Text(
+            'Schedule $catName',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Set automated active hours or dayparting rules (e.g. 11:00 AM - 10:00 PM). Leave empty for All Day availability.',
+                style: AppTheme.bodySm,
+              ),
+              SizedBox(height: 12.h),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                style: GoogleFonts.plusJakartaSans(fontSize: 13.sp),
+                decoration: InputDecoration(
+                  hintText: 'e.g. 11:00 AM - 10:00 PM',
+                  hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Clear schedule
+                ref.read(categorySchedulesProvider.notifier).state = {
+                  ...ref.read(categorySchedulesProvider),
+                  catId: null,
+                };
+                Navigator.pop(ctx);
+              },
+              child: Text(
+                'Clear Schedule',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final schedule = controller.text.trim();
+                ref.read(categorySchedulesProvider.notifier).state = {
+                  ...ref.read(categorySchedulesProvider),
+                  catId: schedule.isEmpty ? null : schedule,
+                };
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryContainer,
+              ),
+              child: Text(
+                'Save',
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final menuAsync = ref.watch(menuItemsStreamProvider);
+    final menuItemsAsync = ref.watch(menuItemsStreamProvider);
+    final expandedCategories = ref.watch(expandedCategoriesProvider);
+    final categoryVisibility = ref.watch(categoryVisibilityProvider);
+    final categorySchedules = ref.watch(categorySchedulesProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFB),
+      backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: menuAsync.when(
-          error: (err, _) => Center(
-            child: Text(
-              'Failed to load menu: $err',
-              style: GoogleFonts.inter(color: AppTheme.error),
-            ),
-          ),
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: _kPrimary)),
-          data: (allItems) {
-            final filtered = _filtered(allItems);
-            return CustomScrollView(
-              slivers: [
-                // ── App Bar ───────────────────────────────────────────────────
-                SliverAppBar(
-                  pinned: true,
-                  backgroundColor: Colors.white,
-                  surfaceTintColor: Colors.transparent,
-                  elevation: 1,
-                  toolbarHeight: 64.h,
-                  shadowColor: const Color(0xFFE2E8F0),
-                  automaticallyImplyLeading: false,
-                  title: Row(
-                    children: [
-                      Text(
-                        'Orderlli',
-                        style: GoogleFonts.inter(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w900,
-                          color: _kPrimary,
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Container(
-                        width: 1.w,
-                        height: 20.h,
-                        color: const Color(0xFFE2E8F0),
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        'Menu',
-                        style: GoogleFonts.inter(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 3.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _kPrimary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Text(
-                          '${allItems.length}',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w700,
-                            color: _kPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.add_rounded,
-                        color: _kPrimary,
-                        size: 24.r,
-                      ),
-                      onPressed: () => _showEditSheet(context, null),
-                    ),
-                  ],
-                  bottom: PreferredSize(
-                    preferredSize: Size.fromHeight(108.h),
+        child: Column(
+          children: [
+            // Header block
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Search
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
-                          child: TextField(
-                            controller: _searchCtrl,
-                            onChanged: (v) => setState(() => _search = v),
-                            style: GoogleFonts.inter(
-                              fontSize: 13.sp,
-                              color: const Color(0xFF0F172A),
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Search menu items...',
-                              hintStyle: GoogleFonts.inter(
-                                fontSize: 13.sp,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search_rounded,
-                                color: const Color(0xFF94A3B8),
-                                size: 20.r,
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFFF8FAFB),
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 0.h,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                                borderSide: const BorderSide(color: _kPrimary),
-                              ),
-                            ),
+                        Text(
+                          'Menu Manager',
+                          style: AppTheme.headlineLg.copyWith(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        // Category tabs
-                        SizedBox(
-                          height: 44.h,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: EdgeInsets.symmetric(horizontal: 12.w),
-                            itemCount: _kCategories.length,
-                            itemBuilder: (context, i) {
-                              final active = _catIndex == i;
-                              return GestureDetector(
-                                onTap: () => setState(() => _catIndex = i),
-                                child: AnimatedContainer(
-                                  duration: 200.ms,
-                                  margin: EdgeInsets.only(right: 8.w),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 14.w,
-                                    vertical: 8.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: active
-                                        ? _kPrimary
-                                        : const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(20.r),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      _kCategories[i],
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: active
-                                            ? Colors.white
-                                            : const Color(0xFF64748B),
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                        SizedBox(height: 2.h),
+                        Text(
+                          'Organize categories, items, and availability.',
+                          style: AppTheme.bodySm.copyWith(
+                            color: AppTheme.secondary,
+                            fontSize: 12.sp,
                           ),
                         ),
-                        SizedBox(height: 8.h),
                       ],
                     ),
                   ),
-                ),
+                  SizedBox(width: 8.w),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ModifierMatrixScreen(),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.tune_rounded, size: 16.r, color: AppTheme.primary),
+                    label: Text(
+                      'Modifier Studio',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11.sp,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
+                      minimumSize: Size(125.w, 38.h),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddCategorySheet(context),
+                    icon: Icon(Icons.add_rounded, size: 16.r, color: Colors.white),
+                    label: Text(
+                      'Add Category',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryContainer,
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(120.w, 38.h),
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                // ── Body ──────────────────────────────────────────────────────
-                if (filtered.isEmpty)
-                  SliverFillRemaining(
-                    child: Center(
+            Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+
+            // Categories tree area
+            Expanded(
+              child: menuItemsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+                error: (err, stack) => Center(
+                  child: Text(
+                    'Failed to load menu: $err',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
+                  ),
+                ),
+                data: (menuItems) {
+                  // Render drag-and-drop category editor list
+                  return ReorderableListView.builder(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
+                    itemCount: _categoryOrder.length,
+                    onReorder: (oldIdx, newIdx) {
+                      setState(() {
+                        if (newIdx > oldIdx) newIdx -= 1;
+                        final item = _categoryOrder.removeAt(oldIdx);
+                        _categoryOrder.insert(newIdx, item);
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      final catId = _categoryOrder[index];
+                      final catName = _categoryNames[catId] ?? 'Category';
+                      final isExpanded = expandedCategories[catId] ?? false;
+                      final isVisible = categoryVisibility[catId] ?? true;
+                      final schedule = categorySchedules[catId];
+
+                      // Group items under this category
+                      final catItems = menuItems.where((i) {
+                        // Map standard DTO category IDs to our local categories
+                        final itemCat = i.categoryId.toLowerCase();
+                        if (catId == 'cat-001' && (itemCat.contains('start') || itemCat == 'cat-001')) return true;
+                        if (catId == 'cat-002' && (itemCat.contains('main') || itemCat == 'cat-002')) return true;
+                        if (catId == 'cat-003' && (itemCat.contains('side') || itemCat == 'cat-003')) return true;
+                        if (catId == 'cat-004' && (itemCat.contains('bev') || itemCat == 'cat-004')) return true;
+                        if (catId == 'cat-005' && (itemCat.contains('dessert') || itemCat == 'cat-005')) return true;
+                        return itemCat == catId;
+                      }).toList();
+
+                      return _buildCategoryAccordionCard(
+                        key: ValueKey(catId),
+                        catId: catId,
+                        catName: catName,
+                        items: catItems,
+                        isExpanded: isExpanded,
+                        isVisible: isVisible,
+                        schedule: schedule,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Accordion Category Card Widget ──────────────────────────────────────────
+  Widget _buildCategoryAccordionCard({
+    required Key key,
+    required String catId,
+    required String catName,
+    required List<MenuItemDto> items,
+    required bool isExpanded,
+    required bool isVisible,
+    required String? schedule,
+  }) {
+    final double opacity = isVisible ? 1.0 : 0.75;
+    final String displayTitle = isVisible ? catName : '$catName (Hidden)';
+
+    return Opacity(
+      key: key,
+      opacity: opacity,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(
+            color: isExpanded
+                ? AppTheme.primaryContainer.withValues(alpha: 0.2)
+                : AppTheme.surfaceContainerHigh,
+            width: isExpanded ? 1.5.w : 1.w,
+          ),
+          boxShadow: isExpanded ? AppTheme.crimsonShadowLight : const [],
+        ),
+        child: Column(
+          children: [
+            // Accordion Title Bar
+            InkWell(
+              onTap: () {
+                ref.read(expandedCategoriesProvider.notifier).state = {
+                  ...ref.read(expandedCategoriesProvider),
+                  catId: !isExpanded,
+                };
+              },
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                child: Row(
+                  children: [
+                    // Drag handle
+                    Icon(
+                      Icons.drag_indicator_rounded,
+                      color: AppTheme.secondary,
+                      size: 20.r,
+                    ),
+                    SizedBox(width: 8.w),
+
+                    // Info Column
+                    Expanded(
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.restaurant_menu_outlined,
-                            size: 64.r,
-                            color: const Color(
-                              0xFFCBD5E1,
-                            ).withValues(alpha: 0.6),
-                          ),
-                          SizedBox(height: 16.h),
                           Text(
-                            'No items found',
-                            style: GoogleFonts.inter(
-                              fontSize: 16.sp,
-                              color: const Color(0xFF94A3B8),
+                            displayTitle,
+                            style: AppTheme.titleMd.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: isVisible ? (isExpanded ? AppTheme.primary : AppTheme.onSurface) : AppTheme.secondary,
+                            ),
+                          ),
+                          Text(
+                            '${items.length} Items • ${schedule == null ? 'All Day' : 'Scheduled'}',
+                            style: AppTheme.bodySm.copyWith(
+                              fontSize: 10.sp,
+                              color: AppTheme.secondary.withValues(alpha: 0.8),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  )
-                else
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, i) {
-                        return _MenuItemCard(
-                              item: filtered[i],
-                              onToggle: () => _toggleAvailability(filtered[i]),
-                              onTap: () => _showEditSheet(context, filtered[i]),
-                            )
-                            .animate(delay: Duration(milliseconds: 40 * i))
-                            .fadeIn(duration: 300.ms)
-                            .slideY(begin: 0.1, curve: Curves.easeOut);
-                      }, childCount: filtered.length),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
 
-// ── Menu Item Card ────────────────────────────────────────────────────────────
-class _MenuItemCard extends StatelessWidget {
-  final MenuItemDto item;
-  final VoidCallback onToggle;
-  final VoidCallback onTap;
-
-  const _MenuItemCard({
-    required this.item,
-    required this.onToggle,
-    required this.onTap,
-  });
-
-  Color get _catColor {
-    final cat = item.categoryId.toUpperCase();
-    if (cat.contains('START') || cat == 'CAT-001') {
-      return const Color(0xFFF59E0B);
-    }
-    if (cat.contains('MAIN') || cat == 'CAT-002') return _kPrimary;
-    if (cat.contains('DESSERT') || cat == 'CAT-005') {
-      return const Color(0xFFEC4899);
-    }
-    if (cat.contains('BEV') || cat == 'CAT-004') {
-      return const Color(0xFF3B82F6);
-    }
-    if (cat.contains('BREAD') || cat == 'CAT-003') {
-      return const Color(0xFF10B981);
-    }
-    return const Color(0xFF64748B);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 10.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8.r,
-              offset: Offset(0, 2.h),
-            ),
-          ],
-        ),
-        child: Opacity(
-          opacity: item.isAvailable ? 1.0 : 0.6,
-          child: Row(
-            children: [
-              // Image placeholder or network image
-              Container(
-                width: 60.r,
-                height: 60.r,
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12.r),
-                  image: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(item.imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: item.imageUrl == null || item.imageUrl!.isEmpty
-                    ? Icon(
-                        Icons.restaurant_rounded,
-                        color: AppTheme.secondary.withValues(alpha: 0.5),
-                        size: 24.r,
-                      )
-                    : null,
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                    // Actions block
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: GoogleFonts.inter(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0F172A),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          '₹${item.price.toStringAsFixed(0)}',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w700,
-                            color: _kPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 7.w,
-                            vertical: 2.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _catColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            item.categoryId.toUpperCase(),
-                            style: GoogleFonts.inter(
-                              fontSize: 9.sp,
-                              fontWeight: FontWeight.w700,
-                              color: _catColor,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        if (item.isVegetarian) ...[
-                          SizedBox(width: 6.w),
-                          Container(
-                            width: 14.r,
-                            height: 14.r,
+                        // Schedule Badge / Trigger
+                        GestureDetector(
+                          onTap: () => _showScheduleDialog(context, catId, catName),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                             decoration: BoxDecoration(
-                              border: Border.all(
-                                color: const Color(0xFF16A34A),
-                                width: 1.5,
-                              ),
-                              borderRadius: BorderRadius.circular(2.r),
+                              color: schedule != null
+                                  ? AppTheme.primaryContainer.withValues(alpha: 0.1)
+                                  : AppTheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(6.r),
+                              border: schedule != null
+                                  ? Border.all(
+                                      color: AppTheme.primaryContainer.withValues(alpha: 0.2),
+                                      width: 1.w,
+                                    )
+                                  : null,
                             ),
-                            child: Center(
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.schedule_rounded,
+                                  size: 11.r,
+                                  color: schedule != null ? AppTheme.primary : AppTheme.secondary,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  schedule ?? 'Schedule',
+                                  style: AppTheme.labelSm.copyWith(
+                                    fontSize: 8.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: schedule != null ? AppTheme.primary : AppTheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+
+                        // Visibility Toggle
+                        GestureDetector(
+                          onTap: () {
+                            ref.read(categoryVisibilityProvider.notifier).state = {
+                              ...ref.read(categoryVisibilityProvider),
+                              catId: !isVisible,
+                            };
+                          },
+                          child: AnimatedContainer(
+                            duration: 200.ms,
+                            width: 38.w,
+                            height: 20.h,
+                            decoration: BoxDecoration(
+                              color: isVisible ? AppTheme.primaryContainer : AppTheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: AnimatedAlign(
+                              duration: 200.ms,
+                              alignment: isVisible ? Alignment.centerRight : Alignment.centerLeft,
                               child: Container(
-                                width: 7.r,
-                                height: 7.r,
+                                margin: EdgeInsets.all(2.r),
+                                width: 16.r,
+                                height: 16.r,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF16A34A),
+                                  color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
                               ),
                             ),
                           ),
-                        ],
+                        ),
+                        SizedBox(width: 8.w),
+
+                        // Expand indicator
+                        Icon(
+                          isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                          color: isExpanded ? AppTheme.primary : AppTheme.secondary,
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: 8.w),
-              // Availability toggle
-              GestureDetector(
-                onTap: onToggle,
-                child: AnimatedContainer(
-                  duration: 200.ms,
-                  width: 44.w,
-                  height: 24.h,
-                  decoration: BoxDecoration(
-                    color: item.isAvailable
-                        ? _kPrimary
-                        : const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(2.r),
-                    child: AnimatedAlign(
-                      duration: 200.ms,
-                      alignment: item.isAvailable
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
+            ),
+
+            // Nested Expanded Items List
+            if (isExpanded) ...[
+              Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+              Container(
+                color: AppTheme.surfaceContainerLow.withValues(alpha: 0.4),
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+                child: Column(
+                  children: [
+                    if (items.isEmpty)
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24.h),
+                        child: Text(
+                          'No items in this category. Tap below to add.',
+                          style: AppTheme.bodySm.copyWith(fontStyle: FontStyle.italic),
+                        ),
+                      )
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: items.length,
+                        separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                        itemBuilder: (context, i) {
+                          final item = items[i];
+                          return _buildNestedItemRow(item, catId);
+                        },
+                      ),
+                    SizedBox(height: 12.h),
+
+                    // Add Item Button in this category
+                    InkWell(
+                      onTap: () => _showItemEditSheet(context, null, catId),
+                      borderRadius: BorderRadius.circular(8.r),
                       child: Container(
-                        width: 20.r,
-                        height: 20.r,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppTheme.primaryContainer.withValues(alpha: 0.2),
+                            style: BorderStyle.solid,
+                          ),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_rounded, size: 14.r, color: AppTheme.primary),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Add Item to $catName',
+                              style: AppTheme.labelSm.copyWith(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Nested Category Item Row Widget ─────────────────────────────────────────
+  Widget _buildNestedItemRow(MenuItemDto item, String catId) {
+    IconData itemIcon = Icons.lunch_dining_rounded;
+    if (catId == 'cat-004') itemIcon = Icons.local_cafe_rounded;
+    if (catId == 'cat-005') itemIcon = Icons.icecream_rounded;
+    if (catId == 'cat-001') itemIcon = Icons.bakery_dining_rounded;
+
+    return Opacity(
+      opacity: item.isAvailable ? 1.0 : 0.6,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
+        ),
+        child: Row(
+          children: [
+            // Reorder item indicator
+            Icon(
+              Icons.drag_indicator_rounded,
+              color: AppTheme.surfaceContainerHighest,
+              size: 16.r,
+            ),
+            SizedBox(width: 6.w),
+
+            // Circle icon / Image preview
+            Container(
+              width: 32.r,
+              height: 32.r,
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(6.r),
+                image: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(item.imageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: item.imageUrl == null || item.imageUrl!.isEmpty
+                  ? Icon(
+                      itemIcon,
+                      size: 16.r,
+                      color: AppTheme.secondary,
+                    )
+                  : null,
+            ),
+            SizedBox(width: 10.w),
+
+            // Item Metadata Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: AppTheme.bodyMd.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.sp,
+                      color: item.isAvailable ? AppTheme.onSurface : AppTheme.secondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    item.isAvailable ? '₹${item.price.toStringAsFixed(2)}' : '₹${item.price.toStringAsFixed(2)} (Sold Out)',
+                    style: AppTheme.bodySm.copyWith(
+                      fontSize: 10.sp,
+                      color: item.isAvailable ? AppTheme.primary : AppTheme.secondary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Interactive availability slider
+            GestureDetector(
+              onTap: () => _toggleItemAvailability(item),
+              child: AnimatedContainer(
+                duration: 200.ms,
+                width: 32.w,
+                height: 18.h,
+                decoration: BoxDecoration(
+                  color: item.isAvailable ? AppTheme.primaryContainer : AppTheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(9.r),
+                ),
+                child: AnimatedAlign(
+                  duration: 200.ms,
+                  alignment: item.isAvailable ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: EdgeInsets.all(1.5.r),
+                    width: 15.r,
+                    height: 15.r,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            SizedBox(width: 8.w),
+
+            // Edit Item button
+            IconButton(
+              icon: Icon(Icons.edit_outlined, size: 16.r, color: AppTheme.secondary),
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: () => _showItemEditSheet(context, item, catId),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Add / Edit Bottom Sheet ───────────────────────────────────────────────────
+// ── Detail Edit/Add Item Sheet ────────────────────────────────────────────────
 class _MenuItemSheet extends ConsumerStatefulWidget {
   final MenuItemDto? item;
-  const _MenuItemSheet({this.item});
+  final String defaultCategoryId;
+  const _MenuItemSheet({this.item, required this.defaultCategoryId});
 
   @override
   ConsumerState<_MenuItemSheet> createState() => _MenuItemSheetState();
@@ -529,14 +763,15 @@ class _MenuItemSheet extends ConsumerStatefulWidget {
 class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
-  final _customCatCtrl = TextEditingController();
-  String _category = 'MAINS';
+  final _prepTimeCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+
+  late String _categoryId;
   bool _available = true;
   bool _isVegetarian = false;
   bool _isSaving = false;
   XFile? _pickedImage;
   String? _currentImageUrl;
-  bool _useCustomCat = false;
 
   @override
   void initState() {
@@ -544,47 +779,20 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     final item = widget.item;
     _nameCtrl.text = item?.name ?? '';
     _priceCtrl.text = item != null ? item.price.toStringAsFixed(0) : '';
+    _prepTimeCtrl.text = item != null ? item.prepTimeMinutes.toString() : '15';
+    _descCtrl.text = item?.description ?? '';
     _available = item?.isAvailable ?? true;
     _isVegetarian = item?.isVegetarian ?? false;
     _currentImageUrl = item?.imageUrl;
-
-    // Map categoryId to display category
-    final catId = item?.categoryId.toUpperCase() ?? '';
-    _category = _catIdToLabel(catId);
-    if (!_kCategories.contains(_category) && _category != 'ALL') {
-      _useCustomCat = true;
-      _customCatCtrl.text = _category;
-      _category = 'OTHER';
-    }
-  }
-
-  String _catIdToLabel(String catId) {
-    return switch (catId) {
-      'CAT-001' => 'STARTERS',
-      'CAT-002' => 'MAINS',
-      'CAT-003' => 'SIDES',
-      'CAT-004' => 'BEVERAGES',
-      'CAT-005' => 'DESSERTS',
-      _ => catId.isNotEmpty ? catId : 'MAINS',
-    };
-  }
-
-  String _catLabelToId(String label) {
-    return switch (label) {
-      'STARTERS' => 'cat-001',
-      'MAINS' => 'cat-002',
-      'SIDES' => 'cat-003',
-      'BEVERAGES' => 'cat-004',
-      'DESSERTS' => 'cat-005',
-      _ => 'cat-002',
-    };
+    _categoryId = item?.categoryId ?? widget.defaultCategoryId;
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _priceCtrl.dispose();
-    _customCatCtrl.dispose();
+    _prepTimeCtrl.dispose();
+    _descCtrl.dispose();
     super.dispose();
   }
 
@@ -597,20 +805,11 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     if (image != null) setState(() => _pickedImage = image);
   }
 
-  // Image upload is intentionally a no-op in mock mode.
-  // The SupabaseMenuRepository will handle actual storage upload when wired.
-  Future<String?> _resolveImageUrl() async {
-    if (_pickedImage == null) return _currentImageUrl;
-    // TODO: delegate to repository image upload when SupabaseMenuRepository
-    // is implemented. For now, return the existing URL unchanged.
-    return _currentImageUrl;
-  }
-
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an item name')),
+        const SnackBar(content: Text('Please enter an item name'), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -618,28 +817,21 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     setState(() => _isSaving = true);
     try {
       final appContext = ref.read(appContextProvider);
-      final tenantId = appContext?.tenant.id ?? '';
-      if (tenantId.isEmpty) {
-        throw Exception('Tenant context is not yet loaded.');
-      }
-      final imageUrl = await _resolveImageUrl();
-      final categoryLabel = _useCustomCat
-          ? _customCatCtrl.text.trim().toUpperCase()
-          : _category;
-      final categoryId = _catLabelToId(categoryLabel);
+      final tenantId = appContext?.tenant.id ?? 'tenant-mock';
 
       if (widget.item == null) {
         // Create
         final newItem = MenuItemDto(
           id: UuidGenerator.generateRuntimeId(prefix: 'menu-item'),
           tenantId: tenantId,
-          categoryId: categoryId,
+          categoryId: _categoryId,
           name: name,
+          description: _descCtrl.text.trim(),
           price: double.tryParse(_priceCtrl.text) ?? 0,
-          imageUrl: imageUrl,
+          imageUrl: _pickedImage != null ? _pickedImage!.path : _currentImageUrl,
           isAvailable: _available,
           isVegetarian: _isVegetarian,
-          prepTimeMinutes: 15,
+          prepTimeMinutes: int.tryParse(_prepTimeCtrl.text) ?? 15,
           tags: [],
         );
         await ref.read(createMenuItemProvider)(newItem);
@@ -648,14 +840,14 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
         final updated = MenuItemDto(
           id: widget.item!.id,
           tenantId: widget.item!.tenantId,
-          categoryId: categoryId,
+          categoryId: _categoryId,
           name: name,
-          description: widget.item!.description,
+          description: _descCtrl.text.trim(),
           price: double.tryParse(_priceCtrl.text) ?? widget.item!.price,
-          imageUrl: imageUrl,
+          imageUrl: _pickedImage != null ? _pickedImage!.path : _currentImageUrl,
           isAvailable: _available,
           isVegetarian: _isVegetarian,
-          prepTimeMinutes: widget.item!.prepTimeMinutes,
+          prepTimeMinutes: int.tryParse(_prepTimeCtrl.text) ?? widget.item!.prepTimeMinutes,
           tags: widget.item!.tags,
         );
         await ref.read(updateMenuItemProvider)(updated);
@@ -666,7 +858,8 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving: $e'),
-            backgroundColor: _kPrimary,
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -681,10 +874,9 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceContainerLowest,
         title: const Text('Delete Item?'),
-        content: Text(
-          'Are you sure you want to delete "${widget.item!.name}"?',
-        ),
+        content: Text('Are you sure you want to delete "${widget.item!.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -708,7 +900,8 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error deleting: $e'),
-            backgroundColor: _kPrimary,
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -723,261 +916,156 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surfaceContainerLowest,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 32.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Handle
               Center(
                 child: Container(
-                  margin: EdgeInsets.only(top: 12.h),
+                  margin: EdgeInsets.only(bottom: 16.h),
                   width: 40.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: AppTheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(2.r),
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.item == null ? 'Add Menu Item' : 'Edit Item',
-                      style: GoogleFonts.inter(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
-                      ),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.item == null ? 'Add Menu Item' : 'Edit Item',
+                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  if (widget.item != null)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22.r),
+                      onPressed: _delete,
                     ),
-                    SizedBox(height: 20.h),
-                    _field('Item Name', _nameCtrl, 'e.g. Butter Chicken'),
-                    SizedBox(height: 12.h),
-                    _field(
-                      'Price',
-                      _priceCtrl,
-                      'e.g. 350',
-                      type: TextInputType.number,
-                    ),
-                    SizedBox(height: 16.h),
-                    // Image Picker
-                    Text(
-                      'Item Image',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        height: 120.h,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFB),
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: _pickedImage != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12.r),
-                                child: Image.file(
-                                  File(_pickedImage!.path),
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : _currentImageUrl != null &&
-                                  _currentImageUrl!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12.r),
-                                child: Image.network(
-                                  _currentImageUrl!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Column(
+                ],
+              ),
+              SizedBox(height: 16.h),
+
+              // Item Name field
+              _buildField('Item Name', _nameCtrl, 'e.g. Classic Cheeseburger'),
+              SizedBox(height: 12.h),
+
+              // Row for Price + Prep time
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildField('Price (₹)', _priceCtrl, 'e.g. 14.99', type: TextInputType.number),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: _buildField('Prep Time (Mins)', _prepTimeCtrl, 'e.g. 15', type: TextInputType.number),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+
+              // Description
+              _buildField('Description', _descCtrl, 'Enter food descriptions, allergy info...', maxLines: 2),
+              SizedBox(height: 16.h),
+
+              // Image Selector
+              Text(
+                'Item Image',
+                style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
+              ),
+              SizedBox(height: 6.h),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 110.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(color: AppTheme.surfaceContainerHigh),
+                  ),
+                  child: _pickedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10.r),
+                          child: Image.file(
+                            File(_pickedImage!.path),
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : _currentImageUrl != null && _currentImageUrl!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(10.r),
+                              child: _currentImageUrl!.startsWith('/') || _currentImageUrl!.contains('cache')
+                                  ? Image.file(File(_currentImageUrl!), fit: BoxFit.cover)
+                                  : Image.network(_currentImageUrl!, fit: BoxFit.cover),
+                            )
+                          : Center(
+                              child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.add_a_photo_outlined,
-                                    color: const Color(0xFF94A3B8),
-                                    size: 32.r,
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Text(
-                                    'Tap to upload image',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12.sp,
-                                      color: const Color(0xFF94A3B8),
-                                    ),
-                                  ),
+                                  Icon(Icons.add_a_photo_outlined, size: 24.r, color: AppTheme.secondary),
+                                  SizedBox(height: 4.h),
+                                  Text('Add Food Photo', style: AppTheme.bodySm),
                                 ],
                               ),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'Category',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Wrap(
-                      spacing: 8.w,
-                      runSpacing: 6.h,
-                      children: [..._kCategories.skip(1), 'OTHER'].map((cat) {
-                        final active = _category == cat;
-                        return GestureDetector(
-                          onTap: () => setState(() {
-                            _category = cat;
-                            _useCustomCat = (cat == 'OTHER');
-                          }),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 6.h,
                             ),
-                            decoration: BoxDecoration(
-                              color: active
-                                  ? _kPrimary
-                                  : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(20.r),
-                            ),
-                            child: Text(
-                              cat,
-                              style: GoogleFonts.inter(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w700,
-                                color: active
-                                    ? Colors.white
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    if (_useCustomCat) ...[
-                      SizedBox(height: 12.h),
-                      _field('Custom Category', _customCatCtrl, 'e.g. BREAD'),
-                    ],
-                    SizedBox(height: 16.h),
-                    // Vegetarian toggle
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Vegetarian',
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A),
-                          ),
-                        ),
-                        Transform.scale(
-                          scale: 0.8.r,
-                          child: Switch(
-                            value: _isVegetarian,
-                            onChanged: (v) => setState(() => _isVegetarian = v),
-                            activeThumbColor: const Color(0xFF16A34A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Available toggle
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Available',
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A),
-                          ),
-                        ),
-                        Transform.scale(
-                          scale: 0.8.r,
-                          child: Switch(
-                            value: _available,
-                            onChanged: (v) => setState(() => _available = v),
-                            activeThumbColor: _kPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20.h),
-                    // Action buttons
-                    Row(
-                      children: [
-                        if (widget.item != null) ...[
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _delete,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: _kPrimary,
-                                side: const BorderSide(color: _kPrimary),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 14.h),
-                              ),
-                              child: Text(
-                                'Delete',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                        ],
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: _isSaving ? null : _save,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _kPrimary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 14.h),
-                              elevation: 0,
-                            ),
-                            child: _isSaving
-                                ? SizedBox(
-                                    width: 20.r,
-                                    height: 20.r,
-                                    child: const CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                                    'Save Item',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
+              ),
+              SizedBox(height: 16.h),
+
+              // Dietary + Stock options
+              SwitchListTile(
+                title: Text('Vegetarian Diet', style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700)),
+                subtitle: Text('Displays green vegetarian icon to guests', style: AppTheme.bodySm),
+                value: _isVegetarian,
+                activeColor: AppTheme.primary,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (val) => setState(() => _isVegetarian = val),
+              ),
+
+              SwitchListTile(
+                title: Text('Currently Available', style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700)),
+                subtitle: Text('Instantly toggles visibility on diner devices', style: AppTheme.bodySm),
+                value: _available,
+                activeColor: AppTheme.primary,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (val) => setState(() => _available = val),
+              ),
+              SizedBox(height: 24.h),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                      ),
+                      child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryContainer,
+                      ),
+                      child: _isSaving
+                          ? SizedBox(width: 20.r, height: 20.r, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text('Save Item', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -986,55 +1074,34 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     );
   }
 
-  Widget _field(
+  Widget _buildField(
     String label,
     TextEditingController ctrl,
     String hint, {
-    TextInputType? type,
+    TextInputType type = TextInputType.text,
+    int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF64748B),
-          ),
+          style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
         ),
         SizedBox(height: 6.h),
         TextField(
           controller: ctrl,
           keyboardType: type,
-          style: GoogleFonts.inter(
-            fontSize: 14.sp,
-            color: const Color(0xFF0F172A),
-          ),
+          maxLines: maxLines,
+          style: GoogleFonts.plusJakartaSans(fontSize: 13.sp),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(
-              fontSize: 14.sp,
-              color: const Color(0xFFCBD5E1),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF8FAFB),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 14.w,
-              vertical: 12.h,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: _kPrimary, width: 2),
-            ),
+            hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 13.sp),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: maxLines > 1 ? 12.h : 8.h),
+            isDense: true,
           ),
         ),
       ],

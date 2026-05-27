@@ -20,6 +20,7 @@ import '../../features/staff/staff_management_screen.dart';
 import '../../features/debug/debug_screen.dart';
 import '../../features/pricing/pricing_management_screen.dart';
 import '../../features/tables_infrastructure/presentation/screens/table_infrastructure_screen.dart';
+import '../../features/tables_infrastructure/presentation/screens/live_floorplan_screen.dart';
 import '../../features/organization/presentation/screens/organization_dashboard_screen.dart';
 import '../../features/runtime_monitoring/presentation/screens/guest_sessions_screen.dart';
 import '../../features/runtime_monitoring/presentation/screens/device_management_screen.dart';
@@ -149,6 +150,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/admin/dashboard',
           '/admin/orders',
           '/admin/tables',
+          '/admin/live-floorplan',
           '/admin/menu',
           '/admin/analytics',
           '/admin/inventory',
@@ -269,6 +271,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/tables',
             name: 'admin-tables',
             builder: (context, state) => const TableInfrastructureScreen(),
+          ),
+          GoRoute(
+            path: '/admin/live-floorplan',
+            name: 'admin-live-floorplan',
+            builder: (context, state) => const LiveFloorplanScreen(),
           ),
           GoRoute(
             path: '/admin/analytics',

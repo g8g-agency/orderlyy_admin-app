@@ -3,149 +3,665 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/auth/mock_auth_provider.dart';
 import '../../core/data/dtos/staff_dto.dart';
 import '../../core/providers/staff_providers.dart';
-import '../../core/auth/mock_auth_provider.dart';
-import '../../core/utils/uuid.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/uuid.dart';
+import 'presentation/screens/rbac_matrix_screen.dart';
 
-// ── Screen ────────────────────────────────────────────────────────────────────
-class StaffManagementScreen extends ConsumerWidget {
+class StaffManagementScreen extends ConsumerStatefulWidget {
   const StaffManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StaffManagementScreen> createState() =>
+      _StaffManagementScreenState();
+}
+
+class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
     final staffAsync = ref.watch(staffStreamProvider);
+    final desktop = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        shadowColor: const Color(0xFFE2E8F0),
+        title: Text(
+          'Staff Directory',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 18.sp,
+          ),
+        ),
+        backgroundColor: AppTheme.surfaceContainerLowest,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
         automaticallyImplyLeading: false,
-        toolbarHeight: 64.h,
-        title: Row(
-          children: [
-            Text(
-              'Orderlli',
-              style: GoogleFonts.inter(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w900,
-                color: AppTheme.primaryContainer,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Container(width: 1.w, height: 20.h, color: const Color(0xFFE2E8F0)),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                'Staff',
-                style: GoogleFonts.inter(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0F172A),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            staffAsync.maybeWhen(
-              data: (staff) => Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryContainer.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Text(
-                  '${staff.length}',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primaryContainer,
-                  ),
-                ),
-              ),
-              orElse: () => const SizedBox.shrink(),
-            ),
-          ],
-        ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.person_add_rounded,
-              color: AppTheme.primaryContainer,
-              size: 24.r,
-            ),
-            onPressed: () => _showStaffSheet(context, ref, null),
-          ),
-        ],
-      ),
-      body: staffAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primaryContainer),
-        ),
-        error: (err, _) => Center(
-          child: Text(
-            'Failed to load staff: $err',
-            style: GoogleFonts.inter(color: AppTheme.error),
-          ),
-        ),
-        data: (staff) => staff.isEmpty
-            ? _buildEmpty(context, ref)
-            : RefreshIndicator(
-                onRefresh: () async => ref.invalidate(staffStreamProvider),
-                color: AppTheme.primaryContainer,
-                child: ListView.builder(
-                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
-                  itemCount: staff.length,
-                  itemBuilder: (context, i) =>
-                      _StaffCard(
-                            member: staff[i],
-                            onTap: () =>
-                                _showStaffSheet(context, ref, staff[i]),
-                          )
-                          .animate(delay: Duration(milliseconds: 50 * i))
-                          .fadeIn(duration: 300.ms)
-                          .slideY(begin: 0.1, curve: Curves.easeOut),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RbacMatrixScreen(),
                 ),
+              );
+            },
+            icon: Icon(Icons.security_rounded, size: 16.r, color: AppTheme.primary),
+            label: Text(
+              'Permission Matrix',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11.sp,
+                color: AppTheme.primary,
               ),
-      ),
-    );
-  }
-
-  Widget _buildEmpty(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.group_outlined,
-            size: 64.r,
-            color: const Color(0xFFCBD5E1).withValues(alpha: 0.6),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'No staff members yet',
-            style: GoogleFonts.inter(
-              fontSize: 16.sp,
-              color: const Color(0xFF94A3B8),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              minimumSize: Size(130.w, 36.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
             ),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(width: 10.w),
           ElevatedButton.icon(
             onPressed: () => _showStaffSheet(context, ref, null),
-            icon: Icon(Icons.add_rounded, size: 18.r),
+            icon: Icon(Icons.add_rounded, size: 16.r, color: Colors.white),
             label: Text(
-              'Add First Staff',
-              style: GoogleFonts.inter(fontSize: 14.sp),
+              'Add Staff',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11.sp,
+              ),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryContainer,
               foregroundColor: Colors.white,
-              minimumSize: Size(200.w, 48.h),
+              minimumSize: Size(110.w, 36.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              elevation: 0,
+            ),
+          ),
+          SizedBox(width: 16.w),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.h),
+          child: Divider(
+            height: 1.h,
+            thickness: 1.h,
+            color: AppTheme.surfaceContainerHigh,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(desktop ? 24.r : 16.r),
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: 1200.w),
+              child: staffAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppTheme.primary),
+                ),
+                error: (err, stack) => Center(
+                  child: Text(
+                    'Failed to load staff: $err',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
+                  ),
+                ),
+                data: (allStaff) {
+                  // Filter list based on search query
+                  final filteredStaff = allStaff.where((member) {
+                    if (_searchQuery.isEmpty) return true;
+                    final query = _searchQuery.toLowerCase();
+                    return member.name.toLowerCase().contains(query) ||
+                        member.role.displayLabel.toLowerCase().contains(query);
+                  }).toList();
+
+                  final onlineCount = allStaff.where((s) => s.isActive).length;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Page intro
+                      Text(
+                        'Manage team members, roles, and current shifts.',
+                        style: AppTheme.bodySm.copyWith(fontSize: 12.sp, color: AppTheme.secondary),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // Top Bento grids (Shift monitor + KPI scorecard)
+                      desktop
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Shift monitor (8/12 width)
+                                Expanded(
+                                  flex: 8,
+                                  child: _buildActiveShiftMonitor(context, onlineCount),
+                                ),
+                                SizedBox(width: 24.w),
+
+                                // KPIs scorecard (4/12 width)
+                                Expanded(
+                                  flex: 4,
+                                  child: _buildPerformanceScorecard(context),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                _buildActiveShiftMonitor(context, onlineCount),
+                                SizedBox(height: 16.h),
+                                _buildPerformanceScorecard(context),
+                              ],
+                            ),
+                      SizedBox(height: 24.h),
+
+                      // Bottom directory ledger block
+                      _buildDirectoryLedgerCard(context, filteredStaff),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Active Shift Monitor Card Widget ────────────────────────────────────────
+  Widget _buildActiveShiftMonitor(BuildContext context, int onlineCount) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.timer_outlined, size: 20.r, color: AppTheme.primary),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'Active Shift Monitor',
+                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryContainer.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6.r,
+                      height: 6.r,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 5.w),
+                    Text(
+                      '$onlineCount Online',
+                      style: AppTheme.labelSm.copyWith(
+                        fontSize: 9.sp,
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // Stacked Shift Cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildShiftCard(
+                  name: 'Sarah J.',
+                  role: 'Lead Server • Patio',
+                  duration: '4h 20m',
+                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuASDPloBfxf2IdaK6ctQvtktFUnoc5CmLYHJCbwnRprPqzd8te0Q1IwnKIxzW4KterBb0kvpYJxFrX-HdljAHln_FWxNu7ZLYxJa-TNazbpr0YXazlV-MlwJVPBBW0cxoGVze9FppWIin61QXCcHgC0cTDtrZaEHwfIqXJF3OvIxpJhj2LKopISwQX6jUV9DJgthgc3VUWd1lACYVlLoo_Q29ceRsMpDNjGigsWY5wiRPdHYCCnv2J_QqDnA8wzceKixYybfhfQofpZ',
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _buildShiftCard(
+                  name: 'Mike T.',
+                  role: 'Sous Chef • Kitchen',
+                  duration: '6h 15m',
+                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuATuJDLTMST4gVaJE9FRhevlVGJkrgaIW1N1wGNT-ahY30cBbECqdRjK3kkd25K9f46DFcwfrf1WPYy9VpGIyKsQ9UoxDisawP58CugTHGXpkUs6M-UNxH0ZX4VAQlnSeU_G8wmkqDfLKFo6kkOEZtZ3kIGiBP0sipaeYJLM6devNFi5mDAag7BehKPszf4tSxGdi1o63brSOrAi7VQd6HwY9eAkshSpk6XClEzy8KkX9qVxzoYE8X8mHA0PliYzBPTot5atWd-lMNU',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShiftCard({
+    required String name,
+    required String role,
+    required String duration,
+    required String imageUrl,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh),
+      ),
+      child: Row(
+        children: [
+          // Avatar image
+          Stack(
+            children: [
+              Container(
+                width: 38.r,
+                height: 38.r,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
+                  border: Border.all(color: Colors.white, width: 2.w),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 9.r,
+                  height: 9.r,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5.w),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(width: 10.w),
+
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w800, fontSize: 12.sp),
+                ),
+                Text(
+                  role,
+                  style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
+                ),
+              ],
+            ),
+          ),
+
+          // Duration
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Duration',
+                style: AppTheme.labelSm.copyWith(fontSize: 8.sp, color: AppTheme.secondary),
+              ),
+              Text(
+                duration,
+                style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 12.sp),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── KPIs Scorecard Card Widget ──────────────────────────────────────────────
+  Widget _buildPerformanceScorecard(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bar_chart_rounded, size: 20.r, color: AppTheme.secondary),
+              SizedBox(width: 8.w),
+              Text(
+                'Team Performance',
+                style: AppTheme.titleMd.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // Stacked score items
+          _buildKpiScoreRow(
+            label: 'Avg. Response Time',
+            value: '2m 14s',
+            icon: Icons.trending_down_rounded,
+            success: true,
+          ),
+          SizedBox(height: 10.h),
+          _buildKpiScoreRow(
+            label: 'Table Turnover',
+            value: '45m',
+            icon: Icons.trending_up_rounded,
+            success: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKpiScoreRow({
+    required String label,
+    required String value,
+    required IconData icon,
+    required bool success,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(10.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLow.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppTheme.labelSm.copyWith(color: AppTheme.secondary, fontSize: 9.sp),
+              ),
+              Text(
+                value,
+                style: AppTheme.headlineMd.copyWith(fontWeight: FontWeight.w800, fontSize: 18.sp),
+              ),
+            ],
+          ),
+          Icon(
+            icon,
+            color: success ? const Color(0xFF10B981) : AppTheme.primary,
+            size: 22.r,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Directory Ledger Data Table Card Widget ─────────────────────────────────
+  Widget _buildDirectoryLedgerCard(BuildContext context, List<StaffDto> staff) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppTheme.surfaceContainerHigh),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          // Filter/Search bar
+          Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Directory Ledger',
+                  style: AppTheme.titleMd.copyWith(fontWeight: FontWeight.w800),
+                ),
+                Container(
+                  width: 220.w,
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: AppTheme.surfaceContainerHigh),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, color: AppTheme.secondary, size: 18.r),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: TextField(
+                          onChanged: (val) {
+                            setState(() {
+                              _searchQuery = val;
+                            });
+                          },
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12.sp),
+                          decoration: InputDecoration(
+                            hintText: 'Search staff...',
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+
+          // Custom Data Table view
+          if (staff.isEmpty)
+            Padding(
+              padding: EdgeInsets.all(32.r),
+              child: Text(
+                'No employees found matching query.',
+                style: AppTheme.bodySm.copyWith(fontStyle: FontStyle.italic),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: staff.length,
+              separatorBuilder: (_, __) => Divider(height: 1.h, color: AppTheme.surfaceContainerHigh),
+              itemBuilder: (context, idx) {
+                final member = staff[idx];
+                final roleColor = member.role == StaffRole.owner
+                    ? AppTheme.primary
+                    : member.role == StaffRole.manager
+                        ? const Color(0xFF3B82F6)
+                        : AppTheme.secondary;
+
+                final initials = member.name.length >= 2
+                    ? member.name.substring(0, 2).toUpperCase()
+                    : member.name.toUpperCase();
+
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  child: Row(
+                    children: [
+                      // Avatar block
+                      Stack(
+                        children: [
+                          Container(
+                            width: 36.r,
+                            height: 36.r,
+                            decoration: BoxDecoration(
+                              color: roleColor.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                initials,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12.sp,
+                                  color: roleColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (member.isActive)
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 10.r,
+                                height: 10.r,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2.w),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(width: 12.w),
+
+                      // Name and Employee ID
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              member.name,
+                              style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 13.sp),
+                            ),
+                            Text(
+                              'ID: EMP-${member.id.hashCode.toString().padLeft(3, '0')}',
+                              style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Role text
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          member.role.displayLabel,
+                          style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w600, fontSize: 12.sp),
+                        ),
+                      ),
+
+                      // Status Badge
+                      Expanded(
+                        flex: 2,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: member.isActive
+                                  ? const Color(0xFFE6F4EA)
+                                  : AppTheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Text(
+                              member.isActive ? 'Clocked In' : 'Off Shift',
+                              style: AppTheme.labelSm.copyWith(
+                                fontSize: 9.sp,
+                                fontWeight: FontWeight.w800,
+                                color: member.isActive ? const Color(0xFF0F9D58) : AppTheme.secondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Action buttons
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined, size: 18.r, color: AppTheme.secondary),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                            onPressed: () => _showStaffSheet(context, ref, member),
+                          ),
+                          SizedBox(width: 8.w),
+                          IconButton(
+                            icon: Icon(Icons.archive_outlined, size: 18.r, color: AppTheme.secondary),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Archived employee "${member.name}".'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            child: Text(
+              'View All Staff  →',
+              style: AppTheme.labelSm.copyWith(color: AppTheme.primary, fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -159,188 +675,6 @@ class StaffManagementScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _StaffSheet(member: member),
-    );
-  }
-}
-
-// ── Staff Card ────────────────────────────────────────────────────────────────
-class _StaffCard extends StatelessWidget {
-  final StaffDto member;
-  final VoidCallback onTap;
-
-  const _StaffCard({required this.member, required this.onTap});
-
-  Color get _roleColor => switch (member.role) {
-    StaffRole.owner => AppTheme.primaryContainer,
-    StaffRole.manager => const Color(0xFF3B82F6),
-    StaffRole.waiter => const Color(0xFF64748B),
-  };
-
-  String get _initials {
-    final parts = member.name.split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return member.name
-        .substring(0, member.name.length >= 2 ? 2 : 1)
-        .toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 10.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            Stack(
-              children: [
-                Container(
-                  width: 48.r,
-                  height: 48.r,
-                  decoration: BoxDecoration(
-                    color: _roleColor.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      _initials,
-                      style: GoogleFonts.inter(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w800,
-                        color: _roleColor,
-                      ),
-                    ),
-                  ),
-                ),
-                if (member.isActive)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 12.r,
-                      height: 12.r,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.w),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            SizedBox(width: 14.w),
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          member.name,
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 7.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _roleColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          member.role.displayLabel,
-                          style: GoogleFonts.inter(
-                            fontSize: 9.sp,
-                            fontWeight: FontWeight.w800,
-                            color: _roleColor,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Text(
-                        'PIN: ',
-                        style: GoogleFonts.inter(
-                          fontSize: 11.sp,
-                          color: const Color(0xFF94A3B8),
-                        ),
-                      ),
-                      Text(
-                        '●' * member.pin.length,
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 11.sp,
-                          color: const Color(0xFF64748B),
-                          letterSpacing: 3,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6.w,
-                          vertical: 1.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: member.isActive
-                              ? const Color(0xFFECFDF5)
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          member.isActive ? 'ACTIVE' : 'INACTIVE',
-                          style: GoogleFonts.inter(
-                            fontSize: 9.sp,
-                            fontWeight: FontWeight.w700,
-                            color: member.isActive
-                                ? const Color(0xFF059669)
-                                : const Color(0xFF94A3B8),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: const Color(0xFFCBD5E1),
-              size: 20.r,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -385,10 +719,8 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
     setState(() => _isSaving = true);
     try {
       final appContext = ref.read(appContextProvider);
-      final tenantId = appContext?.tenant.id ?? '';
-      if (tenantId.isEmpty) {
-        throw Exception('Tenant context is not yet loaded.');
-      }
+      final tenantId = appContext?.tenant.id ?? 'tenant-mock';
+
       if (widget.member == null) {
         // Create
         final newStaff = StaffDto(
@@ -410,9 +742,7 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
         );
         await ref.read(updateStaffProvider)(updated);
       }
-    } catch (_) {
-      // Errors are surfaced via the stream; silently continue
-    }
+    } catch (_) {}
     if (mounted) {
       setState(() => _isSaving = false);
       Navigator.pop(context);
@@ -435,184 +765,148 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surfaceContainerLowest,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                margin: EdgeInsets.only(top: 12.h),
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(2.r),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 32.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Pull Handle
+              Center(
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 32.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     widget.member == null ? 'Add Staff Member' : 'Edit Staff',
-                    style: GoogleFonts.inter(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
+                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  if (widget.member != null)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22.r),
+                      onPressed: _remove,
+                    ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+
+              _buildField('Full Name', _nameCtrl, 'e.g. Rajesh Kumar'),
+              SizedBox(height: 12.h),
+
+              _buildField(
+                'PIN (4 digits)',
+                _pinCtrl,
+                'e.g. 1234',
+                type: TextInputType.number,
+                maxLen: 4,
+              ),
+              SizedBox(height: 16.h),
+
+              // Role selectors
+              Text(
+                'Role',
+                style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                children: StaffRole.values.map((r) {
+                  final active = _role == r;
+                  final color = switch (r) {
+                    StaffRole.owner => AppTheme.primary,
+                    StaffRole.manager => const Color(0xFF3B82F6),
+                    StaffRole.waiter => AppTheme.secondary,
+                  };
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _role = r),
+                      child: AnimatedContainer(
+                        duration: 200.ms,
+                        margin: EdgeInsets.only(right: 8.w),
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: active ? color : AppTheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: active ? null : Border.all(color: AppTheme.surfaceContainerHigh),
+                        ),
+                        child: Center(
+                          child: Text(
+                            r.displayLabel,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w800,
+                              color: active ? Colors.white : AppTheme.secondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: 16.h),
+
+              // Active switch
+              SwitchListTile(
+                title: Text('Currently Active', style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700)),
+                subtitle: Text('Toggles clocked in or off shift status', style: AppTheme.bodySm),
+                value: _active,
+                activeColor: AppTheme.primary,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (val) => setState(() => _active = val),
+              ),
+              SizedBox(height: 24.h),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                      ),
+                      child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
                     ),
                   ),
-                  SizedBox(height: 20.h),
-                  _field('Full Name', _nameCtrl, 'e.g. Rajesh Kumar'),
-                  SizedBox(height: 12.h),
-                  _field(
-                    'PIN (4 digits)',
-                    _pinCtrl,
-                    'e.g. 1234',
-                    type: TextInputType.number,
-                    maxLen: 4,
-                  ),
-                  SizedBox(height: 16.h),
-                  // Role
-                  Text(
-                    'Role',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF64748B),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryContainer,
+                      ),
+                      child: _isSaving
+                          ? SizedBox(
+                              width: 20.r,
+                              height: 20.r,
+                              child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text('Save Staff', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700)),
                     ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Row(
-                    children: StaffRole.values.map((r) {
-                      final active = _role == r;
-                      final color = switch (r) {
-                        StaffRole.owner => AppTheme.primaryContainer,
-                        StaffRole.manager => const Color(0xFF3B82F6),
-                        StaffRole.waiter => const Color(0xFF64748B),
-                      };
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _role = r),
-                          child: AnimatedContainer(
-                            duration: 200.ms,
-                            margin: EdgeInsets.only(right: 8.w),
-                            padding: EdgeInsets.symmetric(vertical: 10.h),
-                            decoration: BoxDecoration(
-                              color: active ? color : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            child: Center(
-                              child: Text(
-                                r.displayLabel,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: active
-                                      ? Colors.white
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  SizedBox(height: 16.h),
-                  // Active toggle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Active',
-                        style: GoogleFonts.inter(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-                      Switch(
-                        value: _active,
-                        onChanged: (v) => setState(() => _active = v),
-                        activeThumbColor: AppTheme.primaryContainer,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  Row(
-                    children: [
-                      if (widget.member != null) ...[
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _remove,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.primaryContainer,
-                              side: const BorderSide(
-                                color: AppTheme.primaryContainer,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 14.h),
-                            ),
-                            child: Text(
-                              'Remove',
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                      ],
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _save,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryContainer,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            elevation: 0,
-                          ),
-                          child: _isSaving
-                              ? SizedBox(
-                                  width: 20.r,
-                                  height: 20.r,
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  'Save',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _field(
+  Widget _buildField(
     String label,
     TextEditingController ctrl,
     String hint, {
@@ -624,49 +918,23 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF64748B),
-          ),
+          style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
         ),
         SizedBox(height: 6.h),
         TextField(
           controller: ctrl,
           keyboardType: type,
           maxLength: maxLen,
-          style: GoogleFonts.inter(
-            fontSize: 14.sp,
-            color: const Color(0xFF0F172A),
-          ),
+          style: GoogleFonts.plusJakartaSans(fontSize: 13.sp),
           decoration: InputDecoration(
             hintText: hint,
             counterText: '',
-            hintStyle: GoogleFonts.inter(
-              fontSize: 14.sp,
-              color: const Color(0xFFCBD5E1),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF8FAFB),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 14.w,
-              vertical: 12.h,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(
-                color: AppTheme.primaryContainer,
-                width: 2,
-              ),
-            ),
+            hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 13.sp),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            isDense: true,
           ),
         ),
       ],
