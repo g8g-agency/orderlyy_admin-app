@@ -65,8 +65,6 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
     final limit = _getSlaLimit(order);
 
     if (elapsedMins >= limit + 5) {
-      // Trigger haptic pulses asynchronously for Stage 3 SLA breaches
-      HapticFeedback.vibrate();
       return OrderSlaStatus.stage3;
     } else if (elapsedMins >= limit + 1) {
       return OrderSlaStatus.stage2;
@@ -332,9 +330,10 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                 ),
               ],
             ),
-            child: card,
+            child: child,
           );
         },
+        child: card,
       );
     }
 

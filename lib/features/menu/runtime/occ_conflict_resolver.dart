@@ -105,7 +105,6 @@ class OccConflictResolver {
 
         if (localChanged && serverChanged) {
           // Both changed. Check field-level overlap.
-          final Map<String, dynamic> mergedProps = {};
           
           bool mergeField<T>(String field, T baseVal, T localVal, T serverVal) {
             if (localVal != baseVal && serverVal != baseVal && localVal != serverVal) {
@@ -131,13 +130,6 @@ class OccConflictResolver {
           final useLocalAvail = mergeField('isAvailable', baseItem.isAvailable, localItem.isAvailable, serverItem.isAvailable);
 
           // Modifiers (List comparison)
-          bool listEquals(List a, List b) {
-            if (a.length != b.length) return false;
-            for (int i = 0; i < a.length; i++) {
-              if (a[i] != b[i]) return false;
-            }
-            return true;
-          }
           final useLocalMods = mergeField('modifierGroupIds', 
             baseItem.modifierGroupIds.join(','), 
             localItem.modifierGroupIds.join(','), 

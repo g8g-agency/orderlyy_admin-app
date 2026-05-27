@@ -244,8 +244,10 @@ void main() {
 
         final result = resolver.resolveSnapshotConflict(
           localOptimistic: localOptimistic,
-          serverAuthoritative: baseSnapshot.copyWith(snapshotVersion: 'v2'),
-          expectedBaseVersion: 'v2',
+          serverAuthoritative: baseSnapshot.copyWith(snapshotVersion: '2'),
+          expectedBaseRevision: 2,
+          deviceId: 'test_device',
+          sessionId: 'test_session',
         );
 
         expect(result.hasConflict, isFalse);
@@ -255,7 +257,7 @@ void main() {
               .isAvailable,
           isFalse,
         );
-        expect(result.reconciledState.snapshotVersion, 'v2');
+        expect(result.reconciledState.snapshotVersion, '2');
       },
     );
 
@@ -275,13 +277,15 @@ void main() {
             baseSnapshot.items[0],
             baseSnapshot.items[1].copyWith(isAvailable: false),
           ],
-          snapshotVersion: 'v3',
+          snapshotVersion: '3',
         );
 
         final result = resolver.resolveSnapshotConflict(
           localOptimistic: localOptimistic,
           serverAuthoritative: serverAuthoritative,
-          expectedBaseVersion: 'v2', // local was edited based on v2
+          expectedBaseRevision: 2, // local was edited based on v2
+          deviceId: 'test_device',
+          sessionId: 'test_session',
           baseSnapshot: baseSnapshot,
         );
 
@@ -299,7 +303,7 @@ void main() {
               .isAvailable,
           isFalse,
         );
-        expect(result.reconciledState.snapshotVersion, 'v3');
+        expect(result.reconciledState.snapshotVersion, '3');
       },
     );
   });
