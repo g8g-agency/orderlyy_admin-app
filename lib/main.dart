@@ -14,6 +14,8 @@ import 'core/providers/repository_providers.dart';
 import 'core/storage/local_storage.dart';
 import 'core/storage/hive_storage.dart';
 
+import 'core/constants/supabase_constants.dart';
+
 // ── Mock mode: Supabase.initialize() is intentionally removed. ────────────────
 // The app is fully decoupled from the backend during this phase.
 // See: core/providers/repository_providers.dart for wiring.
@@ -61,8 +63,8 @@ Future<void> main() async {
   }
 
   // Supabase initialization with Secure Token Storage
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://placeholder.supabase.co');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'placeholder-key');
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: SupabaseConstants.supabaseUrl);
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: SupabaseConstants.supabaseAnonKey);
   
   await Supabase.initialize(
     url: supabaseUrl,

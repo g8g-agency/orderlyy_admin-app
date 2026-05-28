@@ -41,7 +41,7 @@ import '../data/repositories/offline_first_orders_repository.dart';
 
 // ── Feature flag ──────────────────────────────────────────────────────────────
 // Toggle this to switch between mock and live repositories.
-const bool kUseMockRepositories = true;
+const bool kUseMockRepositories = false;
 
 // ── SharedPreferences Provider ────────────────────────────────────────────────
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {

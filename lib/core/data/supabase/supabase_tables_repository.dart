@@ -10,10 +10,10 @@ class SupabaseTablesRepository implements TablesRepository {
   @override
   Future<List<RestaurantTableDto>> getTables(String tenantId) async {
     final response = await _client
-        .from('tables')
+        .from('restaurant_tables')
         .select()
         .eq('tenant_id', tenantId)
-        .order('label', ascending: true);
+        .order('table_num', ascending: true);
 
     return (response as List)
         .map((json) => RestaurantTableDto.fromJson(json))
@@ -23,7 +23,7 @@ class SupabaseTablesRepository implements TablesRepository {
   @override
   Future<RestaurantTableDto?> getTableById(String tableId) async {
     final response = await _client
-        .from('tables')
+        .from('restaurant_tables')
         .select()
         .eq('id', tableId)
         .maybeSingle();
@@ -35,7 +35,7 @@ class SupabaseTablesRepository implements TablesRepository {
   @override
   Future<RestaurantTableDto> createTable(RestaurantTableDto table) async {
     final response = await _client
-        .from('tables')
+        .from('restaurant_tables')
         .insert(table.toJson())
         .select()
         .single();
@@ -50,11 +50,10 @@ class SupabaseTablesRepository implements TablesRepository {
     String? activeOrderId,
   }) async {
     final response = await _client
-        .from('tables')
+        .from('restaurant_tables')
         .update({
           'status': newStatus.name,
           'active_order_id': activeOrderId,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', tableId)
         .select()
@@ -65,16 +64,16 @@ class SupabaseTablesRepository implements TablesRepository {
 
   @override
   Future<void> deleteTable(String tableId) async {
-    await _client.from('tables').delete().eq('id', tableId);
+    await _client.from('restaurant_tables').delete().eq('id', tableId);
   }
 
   @override
   Stream<List<RestaurantTableDto>> watchTables(String tenantId) {
     return _client
-        .from('tables')
+        .from('restaurant_tables')
         .stream(primaryKey: ['id'])
         .eq('tenant_id', tenantId)
-        .order('label', ascending: true)
+        .order('table_num', ascending: true)
         .map((event) => event.map((json) => RestaurantTableDto.fromJson(json)).toList());
   }
 }

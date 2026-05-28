@@ -60,22 +60,23 @@ class RestaurantTableDto {
       RestaurantTableDto(
         id: json['id'] as String,
         tenantId: json['tenant_id'] as String,
-        label: json['label'] as String,
-        capacity: json['capacity'] as int,
-        status: TableStatus.fromString(json['status'] as String),
+        label: (json['label'] ?? json['table_num'] ?? '') as String,
+        capacity: json['capacity'] as int? ?? 4,
+        status: TableStatus.fromString((json['status'] ?? 'available') as String),
         activeOrderId: json['active_order_id'] as String?,
-        section: json['section'] as String?,
-        updatedAt: DateTime.parse(json['updated_at'] as String),
+        section: (json['section'] ?? json['floor']?.toString()) as String?,
+        updatedAt: DateTime.parse(json['updated_at'] ?? json['created_at'] ?? DateTime.now().toUtc().toIso8601String()),
       );
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'tenant_id': tenantId,
-    'label': label,
+    'table_num': label,
     'capacity': capacity,
     'status': status.name,
     'active_order_id': activeOrderId,
-    'section': section,
+    'floor': int.tryParse(section ?? '1') ?? 1,
+    'created_at': updatedAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
   };
 
