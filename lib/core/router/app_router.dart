@@ -8,7 +8,7 @@ import '../../features/auth/admin_login_screen.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../features/auth/subscription_expired_screen.dart';
 import '../../features/auth/account_suspended_screen.dart';
-import '../../features/onboarding/onboarding_wizard_screen.dart';
+import '../../features/onboarding/presentation/screens/setup_dashboard_screen.dart';
 import '../../features/dashboard/admin_dashboard_screen.dart';
 import '../../features/profile/admin_profile_screen.dart';
 import '../../features/inventory/inventory_screen.dart';
@@ -235,7 +235,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
-        builder: (context, state) => const OnboardingWizardScreen(),
+        builder: (context, state) => const SetupDashboardScreen(),
       ),
 
       // ── Admin App ───────────────────────────────────────────────────────

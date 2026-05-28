@@ -4,6 +4,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:talker_dio_logger/talker_dio_logger.dart';
 import '../config/app_config.dart';
 import '../../shared/models/failures.dart'; // Contains ServerException, NetworkException, etc.
+import '../providers/repository_providers.dart';
 import 'dio_retry_interceptor.dart';
 
 class DioClient {
@@ -32,13 +33,17 @@ class DioClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           try {
-            final session = Supabase.instance.client.auth.currentSession;
-            if (session != null) {
-              final token = session.accessToken;
-              options.headers['Authorization'] = 'Bearer $token';
+            if (kUseMockRepositories) {
+              options.headers['Authorization'] = 'Bearer mock-jwt-token';
+            } else {
+              final session = Supabase.instance.client.auth.currentSession;
+              if (session != null) {
+                final token = session.accessToken;
+                options.headers['Authorization'] = 'Bearer $token';
+              }
             }
           } catch (_) {
-            // Supabase not initialized or running in Mock mode
+            // Fallback for uninitialized Supabase
             options.headers['Authorization'] = 'Bearer mock-jwt-token';
           }
           return handler.next(options);
@@ -119,6 +124,26 @@ class DioClient {
   }) async {
     try {
       return await _dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,

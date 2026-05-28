@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../data/dtos/table_dto.dart';
 import '../../data/repositories/table_infrastructure_repository.dart';
 import '../state/table_infrastructure_providers.dart';
@@ -123,11 +124,14 @@ class TableInfrastructureScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Text(
-          'Floorplan Editor & QR Builder',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w800,
-            fontSize: 18.sp,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'Tables & QR',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 18.sp,
+            ),
           ),
         ),
         backgroundColor: AppTheme.surfaceContainerLowest,
@@ -463,14 +467,17 @@ class TableInfrastructureScreen extends ConsumerWidget {
   }
 
   void _addLibraryTable(BuildContext context, WidgetRef ref, String shapeType) {
-    // Generate a quick mock table ID and position
-    final id = 'table-mock-${DateTime.now().millisecond}';
-    final label = 'T-${math.Random().nextInt(20) + 20}';
-    ref.read(tablePositionsProvider.notifier).addPosition(id, 0.4, 0.4);
+    final label = shapeType == 'Round' ? 'R-${math.Random().nextInt(20) + 1}' 
+        : shapeType == 'Rectangle' ? 'T-${math.Random().nextInt(20) + 1}' 
+        : 'B-${math.Random().nextInt(20) + 1}';
+        
+    final capacity = shapeType == 'Round' ? 2 : shapeType == 'Rectangle' ? 4 : 6;
+
+    ref.read(tablesFutureProvider.notifier).addTable(label, capacity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Added new $shapeType Table ($label) to the canvas!'),
+        content: Text('Adding $shapeType Table ($label) to the backend...'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.teal,
       ),
@@ -596,7 +603,7 @@ class TableInfrastructureScreen extends ConsumerWidget {
     double canvasWidth,
     double canvasHeight,
   ) {
-    final isRound = table.label.contains('L') || table.capacity == 2;
+    final isRound = table.tableNumber.contains('L') || table.capacity == 2;
     final size = pos.isSelected ? 100.r : 90.r;
 
     return GestureDetector(
@@ -608,6 +615,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
       },
       onTap: () {
         ref.read(tablePositionsProvider.notifier).selectNode(table.id);
+      },
+      onDoubleTap: () {
+        _showQrCodeDialog(context, ref, table);
       },
       child: Transform.rotate(
         angle: pos.angle,
@@ -643,7 +653,7 @@ class TableInfrastructureScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    table.label,
+                    table.tableNumber,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w800,
@@ -702,6 +712,30 @@ class TableInfrastructureScreen extends ConsumerWidget {
                   bottom: -4.h,
                   right: -4.w,
                   child: _buildHandleDot(),
+                ),
+                Positioned(
+                  top: -16.h,
+                  right: -16.w,
+                  child: GestureDetector(
+                    onTap: () {
+                      ref.read(tablesFutureProvider.notifier).deleteTable(table.id);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Deleting Table ${table.tableNumber}...'),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: AppTheme.error,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(4.r),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.error,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.delete_rounded, color: Colors.white, size: 14.r),
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -777,6 +811,146 @@ class TableInfrastructureScreen extends ConsumerWidget {
       builder: (_) {
         return _MassQrBuilderPanel();
       },
+    );
+  }
+
+  // ── Single QR Code Dialog ──────────────────────────────────────────────────
+  void _showQrCodeDialog(BuildContext context, WidgetRef ref, TableDto table) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return _SingleQrCodeDialog(table: table);
+      },
+    );
+  }
+}
+
+class _SingleQrCodeDialog extends ConsumerStatefulWidget {
+  final TableDto table;
+  const _SingleQrCodeDialog({required this.table});
+
+  @override
+  ConsumerState<_SingleQrCodeDialog> createState() => _SingleQrCodeDialogState();
+}
+
+class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
+  bool _isLoading = false;
+  String? _qrToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchOrRotateToken();
+  }
+
+  Future<void> _fetchOrRotateToken({bool forceRotate = false}) async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(tableInfrastructureRepositoryProvider);
+      if (forceRotate || widget.table.qrCodeToken == null || widget.table.qrCodeToken!.isEmpty) {
+        _qrToken = await repo.rotateQrCode(widget.table.id);
+      } else {
+        // Technically backend rotation is the easiest way to generate one if it's missing,
+        // but we'll use the existing token if present unless force rotate is true.
+        _qrToken = widget.table.qrCodeToken;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading QR: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final domain = 'https://tableos.app/table';
+    final qrData = _qrToken != null ? '$domain/$_qrToken' : '';
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Table ${widget.table.tableNumber} QR Code',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16.sp),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, size: 20.r, color: AppTheme.secondary),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_isLoading)
+            SizedBox(
+              width: 200.r,
+              height: 200.r,
+              child: const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+            )
+          else if (_qrToken != null)
+            Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: AppTheme.surfaceContainerHigh),
+              ),
+              child: QrImageView(
+                data: qrData,
+                version: QrVersions.auto,
+                size: 200.r,
+                backgroundColor: Colors.white,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Colors.black87,
+                ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Colors.black87,
+                ),
+              ),
+            )
+          else
+            const Text('No QR Token available.'),
+          SizedBox(height: 16.h),
+          Text(
+            'Token: ${_qrToken ?? 'N/A'}',
+            style: GoogleFonts.jetBrainsMono(fontSize: 10.sp, color: AppTheme.secondary),
+          ),
+          SizedBox(height: 24.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : () => _fetchOrRotateToken(forceRotate: true),
+                icon: Icon(Icons.refresh_rounded, size: 16.r),
+                label: const Text('Rotate Token'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.error,
+                  side: const BorderSide(color: AppTheme.error),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              ElevatedButton.icon(
+                onPressed: _qrToken == null ? null : () {},
+                icon: Icon(Icons.download_rounded, size: 16.r),
+                label: const Text('Download'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1004,7 +1178,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                               ),
                               SizedBox(width: 10.w),
                               Text(
-                                'Section: ${t.sectionId} • Table ${t.label}',
+                                'Section: ${t.sectionId} • Table ${t.tableNumber}',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12.sp,
                                   fontWeight: FontWeight.w700,
