@@ -7,6 +7,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/auth/mock_auth_provider.dart';
 import '../../core/data/dtos/settings_dto.dart';
 import '../../core/providers/settings_providers.dart';
+import '../../core/providers/orders_providers.dart';
+import '../../core/providers/menu_providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -111,16 +113,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() => _isSaving = true);
     try {
-      // TODO: Implement deleteAllOrders in OrdersRepository and use ref.read(deleteAllOrdersProvider)
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Reset orders requires backend integration in OrdersRepository.',
+      final profile = await ref.read(userProfileProvider.future);
+      final tenantId = profile?['tenant_id'];
+      if (tenantId != null) {
+        await ref.read(deleteAllOrdersProvider)(tenantId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('All orders have been reset successfully.'),
+              backgroundColor: Colors.green,
             ),
-          ),
-        );
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -145,16 +149,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() => _isSaving = true);
     try {
-      // TODO: Implement deleteAllMenuItems in MenuRepository and use ref.read(deleteAllMenuItemsProvider)
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Clear menu requires backend integration in MenuRepository.',
+      final profile = await ref.read(userProfileProvider.future);
+      final tenantId = profile?['tenant_id'];
+      if (tenantId != null) {
+        await ref.read(deleteAllMenuItemsProvider)(tenantId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('All menu items have been cleared successfully.'),
+              backgroundColor: Colors.green,
             ),
-          ),
-        );
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -1,6 +1,6 @@
 // lib/features/menu/presentation/state/menu_providers.dart
 import 'dart:async';
-import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -294,87 +294,4 @@ final menuAvailabilityPollingProvider = Provider.autoDispose<void>((ref) {
   // Supervisory only: no availability polling required for client sessions.
 });
 
-class _AvailabilityPollingScheduler {
-  static const Duration _baseInterval = Duration(seconds: 15);
-  static const Duration _maxRetryBackoff = Duration(seconds: 60);
 
-  final MenuRepository repository;
-  final NetworkInfo networkInfo;
-  final MenuSnapshotNotifier notifier;
-  final Talker talker;
-  final String branchId;
-  final Random _random = Random.secure();
-
-  bool _disposed = false;
-  bool _inFlight = false;
-  int _revision = 0;
-  int _retryCount = 0;
-  Timer? _timer;
-
-  _AvailabilityPollingScheduler({
-    required this.repository,
-    required this.networkInfo,
-    required this.notifier,
-    required this.talker,
-    required this.branchId,
-  });
-
-  void start() {
-    _scheduleNext(const Duration(milliseconds: 200));
-  }
-
-  void dispose() {
-    _disposed = true;
-    _timer?.cancel();
-    _timer = null;
-  }
-
-  void _scheduleNext(Duration delay) {
-    if (_disposed) return;
-    _timer?.cancel();
-    _timer = Timer(delay, _runPoll);
-  }
-
-  Duration _nextHealthyInterval() {
-    final jitterSeconds = 2 + _random.nextInt(4); // 2-5s
-    final subtract = _random.nextBool();
-    final jitter = Duration(seconds: jitterSeconds);
-    return subtract ? (_baseInterval - jitter) : (_baseInterval + jitter);
-  }
-
-  Duration _nextRetryInterval() {
-    final exp = 1 << _retryCount.clamp(0, 5);
-    final backoff = Duration(seconds: 2 * exp);
-    final bounded = backoff > _maxRetryBackoff ? _maxRetryBackoff : backoff;
-    final jitterMs = _random.nextInt(1200);
-    return bounded + Duration(milliseconds: jitterMs);
-  }
-
-  Future<void> _runPoll() async {
-    if (_disposed || _inFlight) return;
-    _inFlight = true;
-    try {
-      final isConnected = await networkInfo.isConnected;
-      if (!isConnected) {
-        _retryCount = (_retryCount + 1).clamp(0, 8);
-        _scheduleNext(_nextRetryInterval());
-        return;
-      }
-
-      final availability = await repository.getItemAvailability(branchId: branchId);
-      _revision += 1;
-      notifier.reconcileAvailability(
-        authoritativeAvailability: availability,
-        revision: _revision,
-      );
-      _retryCount = 0;
-      _scheduleNext(_nextHealthyInterval());
-    } catch (error) {
-      _retryCount = (_retryCount + 1).clamp(0, 8);
-      talker.warning('[MenuPolling] Poll failed, scheduling retry: $error');
-      _scheduleNext(_nextRetryInterval());
-    } finally {
-      _inFlight = false;
-    }
-  }
-}

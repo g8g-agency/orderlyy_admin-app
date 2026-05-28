@@ -17,7 +17,9 @@ class ModifierMatrixScreen extends ConsumerStatefulWidget {
 class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
   // Details Inputs
   final _internalNameCtrl = TextEditingController(text: 'Steak Temperatures');
-  final _customerNameCtrl = TextEditingController(text: 'How would you like that cooked?');
+  final _customerNameCtrl = TextEditingController(
+    text: 'How would you like that cooked?',
+  );
 
   // Rules States
   String _requirement = 'Required';
@@ -144,13 +146,21 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, size: 22.r, color: AppTheme.secondary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            size: 22.r,
+            color: AppTheme.secondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           OutlinedButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.delete_outline_rounded, size: 16.r, color: AppTheme.primary),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              size: 16.r,
+              color: AppTheme.primary,
+            ),
             label: Text(
               'Discard Draft',
               style: GoogleFonts.plusJakartaSans(
@@ -163,7 +173,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               side: const BorderSide(color: AppTheme.primary),
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               minimumSize: Size(110.w, 36.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
             ),
           ),
           SizedBox(width: 10.w),
@@ -183,7 +195,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 14.w),
               minimumSize: Size(150.w, 36.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
               elevation: 0,
             ),
           ),
@@ -223,7 +237,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           flex: 4,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [_buildItemMapperCard(context, selectedCount)],
+                            children: [
+                              _buildItemMapperCard(context, selectedCount),
+                            ],
                           ),
                         ),
                       ],
@@ -258,7 +274,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -266,7 +282,11 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.info_outline_rounded, size: 18.r, color: AppTheme.primary),
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 18.r,
+                  color: AppTheme.primary,
+                ),
                 SizedBox(width: 8.w),
                 Text(
                   'Group Details',
@@ -281,11 +301,19 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildStudioField('Internal Name', _internalNameCtrl, 'e.g. Steak Temps'),
+                  child: _buildStudioField(
+                    'Internal Name',
+                    _internalNameCtrl,
+                    'e.g. Steak Temps',
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: _buildStudioField('Customer Facing Name', _customerNameCtrl, 'e.g. Choose Temperature'),
+                  child: _buildStudioField(
+                    'Customer Facing Name',
+                    _customerNameCtrl,
+                    'e.g. Choose Temperature',
+                  ),
                 ),
               ],
             ),
@@ -305,7 +333,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -316,11 +344,17 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.rule_rounded, size: 18.r, color: AppTheme.primary),
+                    Icon(
+                      Icons.rule_rounded,
+                      size: 18.r,
+                      color: AppTheme.primary,
+                    ),
                     SizedBox(width: 8.w),
                     Text(
                       'Selection Rules',
-                      style: AppTheme.titleMd.copyWith(fontWeight: FontWeight.w800),
+                      style: AppTheme.titleMd.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -374,7 +408,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                       children: [
                         Text(
                           'Requirement',
-                          style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
+                          style: AppTheme.labelSm.copyWith(
+                            color: AppTheme.secondary,
+                          ),
                         ),
                         SizedBox(height: 4.h),
                         Container(
@@ -382,15 +418,23 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: AppTheme.surfaceContainerHigh),
+                            border: Border.all(
+                              color: AppTheme.surfaceContainerHigh,
+                            ),
                           ),
                           child: DropdownButton<String>(
                             value: _requirement,
                             isExpanded: true,
                             underline: const SizedBox(),
                             items: const [
-                              DropdownMenuItem(value: 'Required', child: Text('Required')),
-                              DropdownMenuItem(value: 'Optional', child: Text('Optional')),
+                              DropdownMenuItem(
+                                value: 'Required',
+                                child: Text('Required'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Optional',
+                                child: Text('Optional'),
+                              ),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -413,7 +457,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                       children: [
                         Text(
                           'Min Selections',
-                          style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
+                          style: AppTheme.labelSm.copyWith(
+                            color: AppTheme.secondary,
+                          ),
                         ),
                         SizedBox(height: 4.h),
                         _buildSelectionsCounter(
@@ -436,7 +482,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                       children: [
                         Text(
                           'Max Selections',
-                          style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
+                          style: AppTheme.labelSm.copyWith(
+                            color: AppTheme.secondary,
+                          ),
                         ),
                         SizedBox(height: 4.h),
                         _buildSelectionsCounter(
@@ -469,7 +517,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -480,11 +528,17 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.list_alt_rounded, size: 18.r, color: AppTheme.primary),
+                    Icon(
+                      Icons.list_alt_rounded,
+                      size: 18.r,
+                      color: AppTheme.primary,
+                    ),
                     SizedBox(width: 8.w),
                     Text(
                       'Modifier Options',
-                      style: AppTheme.titleMd.copyWith(fontWeight: FontWeight.w800),
+                      style: AppTheme.titleMd.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -492,7 +546,11 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                   onTap: _addOption,
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline_rounded, size: 16.r, color: AppTheme.primary),
+                      Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 16.r,
+                        color: AppTheme.primary,
+                      ),
                       SizedBox(width: 3.w),
                       Text(
                         'Add Option',
@@ -518,7 +576,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                   flex: 5,
                   child: Text(
                     'Name',
-                    style: AppTheme.labelSm.copyWith(fontSize: 9.sp, color: AppTheme.secondary),
+                    style: AppTheme.labelSm.copyWith(
+                      fontSize: 9.sp,
+                      color: AppTheme.secondary,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -526,7 +587,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                   flex: 3,
                   child: Text(
                     'Extra Cost',
-                    style: AppTheme.labelSm.copyWith(fontSize: 9.sp, color: AppTheme.secondary),
+                    style: AppTheme.labelSm.copyWith(
+                      fontSize: 9.sp,
+                      color: AppTheme.secondary,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -535,7 +599,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                   alignment: Alignment.center,
                   child: Text(
                     'Default',
-                    style: AppTheme.labelSm.copyWith(fontSize: 9.sp, color: AppTheme.secondary),
+                    style: AppTheme.labelSm.copyWith(
+                      fontSize: 9.sp,
+                      color: AppTheme.secondary,
+                    ),
                   ),
                 ),
                 SizedBox(width: 32.w), // Delete button placeholder
@@ -548,23 +615,35 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _options.length,
-              separatorBuilder: (_, __) => SizedBox(height: 8.h),
+              separatorBuilder: (_, _) => SizedBox(height: 8.h),
               itemBuilder: (context, i) {
                 final option = _options[i];
-                final nameCtrl = TextEditingController(text: option['name'] as String);
-                final priceCtrl = TextEditingController(text: (option['price'] as double).toStringAsFixed(2));
+                final nameCtrl = TextEditingController(
+                  text: option['name'] as String,
+                );
+                final priceCtrl = TextEditingController(
+                  text: (option['price'] as double).toStringAsFixed(2),
+                );
 
                 return Container(
                   padding: EdgeInsets.symmetric(vertical: 4.h),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceContainerLow.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: AppTheme.surfaceContainerHigh.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: AppTheme.surfaceContainerHigh.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
                   ),
                   child: Row(
                     children: [
                       // Drag handle
-                      Icon(Icons.drag_indicator_rounded, color: AppTheme.surfaceContainerHighest, size: 18.r),
+                      Icon(
+                        Icons.drag_indicator_rounded,
+                        color: AppTheme.surfaceContainerHighest,
+                        size: 18.r,
+                      ),
                       SizedBox(width: 6.w),
 
                       // Name Textfield
@@ -575,7 +654,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(color: AppTheme.surfaceContainerHigh),
+                            border: Border.all(
+                              color: AppTheme.surfaceContainerHigh,
+                            ),
                           ),
                           child: TextField(
                             controller: nameCtrl,
@@ -603,20 +684,31 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(color: AppTheme.surfaceContainerHigh),
+                            border: Border.all(
+                              color: AppTheme.surfaceContainerHigh,
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Text('₹', style: AppTheme.bodySm.copyWith(color: AppTheme.secondary, fontSize: 10.sp)),
+                              Text(
+                                '₹',
+                                style: AppTheme.bodySm.copyWith(
+                                  color: AppTheme.secondary,
+                                  fontSize: 10.sp,
+                                ),
+                              ),
                               SizedBox(width: 4.w),
                               Expanded(
                                 child: TextField(
                                   controller: priceCtrl,
                                   keyboardType: TextInputType.number,
                                   onChanged: (val) {
-                                    option['price'] = double.tryParse(val) ?? option['price'];
+                                    option['price'] =
+                                        double.tryParse(val) ?? option['price'];
                                   },
-                                  style: GoogleFonts.plusJakartaSans(fontSize: 12.sp),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12.sp,
+                                  ),
                                   decoration: const InputDecoration(
                                     border: InputBorder.none,
                                     enabledBorder: InputBorder.none,
@@ -638,8 +730,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                         alignment: Alignment.center,
                         child: Radio<int>(
                           value: i,
+                          // ignore: deprecated_member_use
                           groupValue: _defaultOptionIndex,
                           activeColor: AppTheme.primary,
+                          // ignore: deprecated_member_use
                           onChanged: (val) {
                             setState(() {
                               _defaultOptionIndex = val;
@@ -650,7 +744,11 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
 
                       // Delete action
                       IconButton(
-                        icon: Icon(Icons.close_rounded, size: 16.r, color: AppTheme.secondary),
+                        icon: Icon(
+                          Icons.close_rounded,
+                          size: 16.r,
+                          color: AppTheme.secondary,
+                        ),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
                         onPressed: () => _removeOption(i),
@@ -680,13 +778,16 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.primaryContainer.withValues(alpha: 0.1), width: 1.w),
+        border: Border.all(
+          color: AppTheme.primaryContainer.withValues(alpha: 0.1),
+          width: 1.w,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -705,7 +806,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
           SizedBox(height: 2.h),
           Text(
             'Select menu items to apply this modifier group to.',
-            style: AppTheme.bodySm.copyWith(fontSize: 11.sp, color: AppTheme.secondary),
+            style: AppTheme.bodySm.copyWith(
+              fontSize: 11.sp,
+              color: AppTheme.secondary,
+            ),
           ),
           SizedBox(height: 12.h),
 
@@ -719,7 +823,11 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.search_rounded, color: AppTheme.secondary, size: 18.r),
+                Icon(
+                  Icons.search_rounded,
+                  color: AppTheme.secondary,
+                  size: 18.r,
+                ),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: TextField(
@@ -750,7 +858,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
             children: [
               Text(
                 '$selectedCount Items Selected',
-                style: AppTheme.labelSm.copyWith(color: AppTheme.secondary, fontWeight: FontWeight.w700),
+                style: AppTheme.labelSm.copyWith(
+                  color: AppTheme.secondary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               GestureDetector(
                 onTap: () {
@@ -773,13 +884,15 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
           SizedBox(height: 10.h),
 
           // Categorized Checklist Area
-          Container(
+          SizedBox(
             height: 260.h,
             child: filteredItems.isEmpty
                 ? Center(
                     child: Text(
                       'No matching menu items.',
-                      style: AppTheme.bodySm.copyWith(fontStyle: FontStyle.italic),
+                      style: AppTheme.bodySm.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -791,7 +904,8 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                       final menu = _itemMenus[itemName] ?? 'Standard Menu';
 
                       // Render category headers when category transitions
-                      bool showHeader = idx == 0 ||
+                      bool showHeader =
+                          idx == 0 ||
                           _itemCategories[filteredItems[idx - 1]] != category;
 
                       return Column(
@@ -801,7 +915,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                             if (idx > 0) SizedBox(height: 8.h),
                             Container(
                               width: double.infinity,
-                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 4.h,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppTheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(4.r),
@@ -821,7 +938,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           CheckboxListTile(
                             title: Text(
                               itemName,
-                              style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 12.sp),
+                              style: AppTheme.bodyMd.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12.sp,
+                              ),
                             ),
                             subtitle: Text(
                               menu,
@@ -853,7 +973,9 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -875,7 +997,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
     );
   }
 
-  Widget _buildSelectionsCounter({required int value, required ValueChanged<int> onChanged}) {
+  Widget _buildSelectionsCounter({
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.w),
       decoration: BoxDecoration(
@@ -911,7 +1036,11 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
     );
   }
 
-  Widget _buildStudioField(String label, TextEditingController ctrl, String hint) {
+  Widget _buildStudioField(
+    String label,
+    TextEditingController ctrl,
+    String hint,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -925,11 +1054,30 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
           style: GoogleFonts.plusJakartaSans(fontSize: 12.sp),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 12.sp),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
-            contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+            hintStyle: GoogleFonts.plusJakartaSans(
+              color: AppTheme.secondary,
+              fontSize: 12.sp,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppTheme.primary),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 10.w,
+              vertical: 8.h,
+            ),
             isDense: true,
           ),
         ),

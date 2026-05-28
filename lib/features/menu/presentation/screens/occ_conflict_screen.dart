@@ -86,7 +86,7 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final burgerBase = _baseSnapshot.items[0];
+
     final burgerLocal = _localOptimistic.items[0];
     final burgerServer = _serverAuthoritative.items[0];
 

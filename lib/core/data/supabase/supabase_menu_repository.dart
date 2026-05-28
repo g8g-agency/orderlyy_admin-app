@@ -96,6 +96,11 @@ class SupabaseMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<void> deleteAllMenuItems(String tenantId) async {
+    await _client.from('menu_items').delete().eq('tenant_id', tenantId);
+  }
+
+  @override
   Future<void> toggleItemAvailability(String itemId, bool isAvailable) async {
     await _client
         .from('menu_items')

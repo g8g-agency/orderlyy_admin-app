@@ -57,60 +57,87 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
   }
 
   double get _currentVatRate {
-    final rule = _taxRules.firstWhere((r) => r['category'] == _selectedCategory);
+    final rule = _taxRules.firstWhere(
+      (r) => r['category'] == _selectedCategory,
+    );
     return rule['vatRate'] as double;
   }
 
   double get _currentServiceChargeRate {
-    final rule = _taxRules.firstWhere((r) => r['category'] == _selectedCategory);
+    final rule = _taxRules.firstWhere(
+      (r) => r['category'] == _selectedCategory,
+    );
     return rule['serviceChargeRate'] as double;
   }
 
   double get _calculatedVat => _inputAmount * (_currentVatRate / 100);
-  double get _calculatedServiceCharge => _inputAmount * (_currentServiceChargeRate / 100);
-  double get _calculatedGross => _inputAmount + _calculatedVat + _calculatedServiceCharge;
+  double get _calculatedServiceCharge =>
+      _inputAmount * (_currentServiceChargeRate / 100);
+  double get _calculatedGross =>
+      _inputAmount + _calculatedVat + _calculatedServiceCharge;
 
   void _editTaxRule(int index) {
     final rule = _taxRules[index];
     final vatCtrl = TextEditingController(text: rule['vatRate'].toString());
-    final scCtrl = TextEditingController(text: rule['serviceChargeRate'].toString());
+    final scCtrl = TextEditingController(
+      text: rule['serviceChargeRate'].toString(),
+    );
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceContainerLowest,
-        title: Text('Edit Tax Rule', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Edit Tax Rule',
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(rule['category'] as String,
-                style: GoogleFonts.inter(fontSize: 14.sp, color: AppTheme.secondary)),
+            Text(
+              rule['category'] as String,
+              style: GoogleFonts.inter(
+                fontSize: 14.sp,
+                color: AppTheme.secondary,
+              ),
+            ),
             SizedBox(height: 16.h),
             TextField(
               controller: vatCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: GoogleFonts.jetBrainsMono(),
               decoration: InputDecoration(
                 suffixText: '%',
                 labelText: 'VAT / Sales Tax',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
             ),
             SizedBox(height: 12.h),
             TextField(
               controller: scCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: GoogleFonts.jetBrainsMono(),
               decoration: InputDecoration(
                 suffixText: '%',
                 labelText: 'Service Charge',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL'),
+          ),
           TextButton(
             onPressed: () {
               final newVat = double.tryParse(vatCtrl.text);
@@ -124,7 +151,10 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
               }
               Navigator.pop(ctx);
             },
-            child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'SAVE',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -137,15 +167,23 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceContainerLowest,
-        title: Text('Tax Configuration',
-            style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Tax Configuration',
+          style: GoogleFonts.inter(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppTheme.primaryContainer,
           labelColor: AppTheme.primaryContainer,
           unselectedLabelColor: AppTheme.secondary,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12.sp),
+          labelStyle: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            fontSize: 12.sp,
+          ),
           tabs: const [
             Tab(text: 'Tax Rules'),
             Tab(text: 'Simulator'),
@@ -154,10 +192,7 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildRulesTab(),
-          _buildSimulatorTab(),
-        ],
+        children: [_buildRulesTab(), _buildSimulatorTab()],
       ),
     );
   }
@@ -179,55 +214,80 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
           SizedBox(height: 4.h),
           Text(
             'Define tax categories and service charges applied branch-wide.',
-            style: GoogleFonts.inter(fontSize: 12.sp, color: AppTheme.secondary),
+            style: GoogleFonts.inter(
+              fontSize: 12.sp,
+              color: AppTheme.secondary,
+            ),
           ),
           SizedBox(height: 20.h),
           ...List.generate(_taxRules.length, (i) {
             final rule = _taxRules[i];
             final bool exempt = rule['isExempt'] as bool;
             return Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.all(16.r),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppTheme.surfaceContainerHigh),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          rule['category'] as String,
-                          style: GoogleFonts.inter(fontSize: 15.sp, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8.h),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
+                  margin: EdgeInsets.only(bottom: 12.h),
+                  padding: EdgeInsets.all(16.r),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppTheme.surfaceContainerHigh),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _taxBadge('VAT: ${rule['vatRate']}%',
-                                exempt ? const Color(0xFF64748B) : const Color(0xFFC0272D),
-                                exempt ? const Color(0xFFF1F5F9) : const Color(0xFFFEF2F2)),
-                            _taxBadge('SC: ${rule['serviceChargeRate']}%',
-                                const Color(0xFF16A34A), const Color(0xFFF0FDF4)),
-                            if (exempt)
-                              _taxBadge('EXEMPT', const Color(0xFF64748B), const Color(0xFFF1F5F9)),
+                            Text(
+                              rule['category'] as String,
+                              style: GoogleFonts.inter(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                _taxBadge(
+                                  'VAT: ${rule['vatRate']}%',
+                                  exempt
+                                      ? const Color(0xFF64748B)
+                                      : const Color(0xFFC0272D),
+                                  exempt
+                                      ? const Color(0xFFF1F5F9)
+                                      : const Color(0xFFFEF2F2),
+                                ),
+                                _taxBadge(
+                                  'SC: ${rule['serviceChargeRate']}%',
+                                  const Color(0xFF16A34A),
+                                  const Color(0xFFF0FDF4),
+                                ),
+                                if (exempt)
+                                  _taxBadge(
+                                    'EXEMPT',
+                                    const Color(0xFF64748B),
+                                    const Color(0xFFF1F5F9),
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Color(0xFFC0272D),
+                        ),
+                        onPressed: () => _editTaxRule(i),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.edit_rounded, color: Color(0xFFC0272D)),
-                    onPressed: () => _editTaxRule(i),
-                  ),
-                ],
-              ),
-            ).animate(delay: Duration(milliseconds: 60 * i)).fadeIn(duration: 300.ms).slideY(begin: 0.05);
+                )
+                .animate(delay: Duration(milliseconds: 60 * i))
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.05);
           }),
         ],
       ),
@@ -242,12 +302,18 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
         children: [
           Text(
             'Tax Preview Simulator',
-            style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           SizedBox(height: 4.h),
           Text(
             'Test calculations based on tax regulations.',
-            style: GoogleFonts.inter(fontSize: 12.sp, color: AppTheme.secondary),
+            style: GoogleFonts.inter(
+              fontSize: 12.sp,
+              color: AppTheme.secondary,
+            ),
           ),
           SizedBox(height: 24.h),
 
@@ -262,17 +328,24 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
             child: Column(
               children: [
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: InputDecoration(
                     labelText: 'Simulation Category',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
                   ),
                   isExpanded: true,
                   items: _taxRules
-                      .map((r) => DropdownMenuItem(
-                            value: r['category'] as String,
-                            child: Text(r['category'] as String, overflow: TextOverflow.ellipsis),
-                          ))
+                      .map(
+                        (r) => DropdownMenuItem(
+                          value: r['category'] as String,
+                          child: Text(
+                            r['category'] as String,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
                       .toList(),
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedCategory = val);
@@ -281,7 +354,9 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
                 SizedBox(height: 16.h),
                 TextField(
                   controller: _inputCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600),
                   onChanged: (v) {
                     setState(() => _inputAmount = double.tryParse(v) ?? 0.0);
@@ -289,7 +364,9 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
                   decoration: InputDecoration(
                     prefixText: '₹ ',
                     labelText: 'Simulated net price',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
                   ),
                 ),
               ],
@@ -309,16 +386,27 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
             child: Column(
               children: [
                 _simRow('Net price', _inputAmount),
-                _simRow('VAT (${_currentVatRate.toStringAsFixed(1)}%)', _calculatedVat),
-                _simRow('Service Charge (${_currentServiceChargeRate.toStringAsFixed(1)}%)', _calculatedServiceCharge),
+                _simRow(
+                  'VAT (${_currentVatRate.toStringAsFixed(1)}%)',
+                  _calculatedVat,
+                ),
+                _simRow(
+                  'Service Charge (${_currentServiceChargeRate.toStringAsFixed(1)}%)',
+                  _calculatedServiceCharge,
+                ),
                 SizedBox(height: 12.h),
                 Divider(height: 1, color: AppTheme.surfaceContainerHigh),
                 SizedBox(height: 16.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Gross Price',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                    Text(
+                      'Gross Price',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.sp,
+                      ),
+                    ),
                     Text(
                       '₹${_calculatedGross.toStringAsFixed(2)}',
                       style: GoogleFonts.jetBrainsMono(
@@ -362,14 +450,19 @@ class _TaxManagementScreenState extends State<TaxManagementScreen>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: Text(label,
-                style: GoogleFonts.inter(color: AppTheme.secondary),
-                overflow: TextOverflow.ellipsis),
+            child: Text(
+              label,
+              style: GoogleFonts.inter(color: AppTheme.secondary),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           SizedBox(width: 8.w),
           Text(
             '₹${amount.toStringAsFixed(2)}',
-            style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600, color: AppTheme.onSurface),
+            style: GoogleFonts.jetBrainsMono(
+              fontWeight: FontWeight.w600,
+              color: AppTheme.onSurface,
+            ),
           ),
         ],
       ),

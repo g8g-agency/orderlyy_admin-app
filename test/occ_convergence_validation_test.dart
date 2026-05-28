@@ -84,7 +84,7 @@ void main() {
         }
 
         expect(checksums.length, 1);
-        print('Deterministic Merge Checksum: \${checksums.first}');
+        talker.debug('Deterministic Merge Checksum: \${checksums.first}');
       },
     );
 
@@ -123,7 +123,7 @@ void main() {
           result.reconciledState.items.any((i) => i.id == 'item_burger'),
           isFalse,
         );
-        print('Tombstone precedence enforced safely.');
+        talker.debug('Tombstone precedence enforced safely.');
       },
     );
 
@@ -152,7 +152,7 @@ void main() {
       expect(result.state, OccConflictState.requiresManualReview);
       expect(result.envelope!.conflictFields.contains('ALL'), isTrue);
       expect(result.reconciledState.snapshotVersion, '15');
-      print('Stale write rejected gracefully.');
+      talker.debug('Stale write rejected gracefully.');
     });
 
     test(
@@ -193,7 +193,7 @@ void main() {
         expect(result.envelope!.conflictFields.contains('price'), isTrue);
         expect(result.envelope!.baseRevision, 10);
         expect(result.envelope!.remoteRevision, 11);
-        print('Conflict envelope: \${result.envelope!.conflictFields}');
+        talker.debug('Conflict envelope: \${result.envelope!.conflictFields}');
       },
     );
 
@@ -245,7 +245,7 @@ void main() {
           result2.reconciledState.items[0].price.amountInCents,
         );
 
-        print('Rebuild convergence is deterministic.');
+        talker.debug('Rebuild convergence is deterministic.');
       },
     );
   });

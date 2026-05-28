@@ -172,14 +172,18 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                           final log = _filteredLogs[index];
                           final String scope = log['scope'] as String;
                           Color badgeColor = const Color(0xFF64748B);
-                          if (scope == 'AVAILABILITY')
+                          if (scope == 'AVAILABILITY') {
                             badgeColor = const Color(0xFF16A34A);
-                          if (scope == 'PRICING')
+                          }
+                          if (scope == 'PRICING') {
                             badgeColor = const Color(0xFFC0272D);
-                          if (scope == 'TAXES')
+                          }
+                          if (scope == 'TAXES') {
                             badgeColor = const Color(0xFFF59E0B);
-                          if (scope == 'STAFF')
+                          }
+                          if (scope == 'STAFF') {
                             badgeColor = const Color(0xFF7C3AED);
+                          }
 
                           return Container(
                             padding: EdgeInsets.all(16.r),

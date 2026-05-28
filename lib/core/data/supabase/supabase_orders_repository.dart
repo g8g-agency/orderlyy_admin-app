@@ -93,6 +93,11 @@ class SupabaseOrdersRepository implements OrdersRepository {
   }
 
   @override
+  Future<void> deleteAllOrders(String tenantId) async {
+    await _client.from('orders').delete().eq('tenant_id', tenantId);
+  }
+
+  @override
   Stream<List<OrderDto>> watchOrders(String tenantId) {
     return _client
         .from('orders')

@@ -111,6 +111,13 @@ class MockOrdersRepository implements OrdersRepository {
     await updateOrderStatus(orderId, OrderStatus.cancelled);
   }
 
+  @override
+  Future<void> deleteAllOrders(String tenantId) async {
+    await _ensureLoaded();
+    _orders!.removeWhere((o) => o.tenantId == tenantId);
+    _broadcast();
+  }
+
   // ── Realtime-like stream ──────────────────────────────────────────────────
   @override
   Stream<List<OrderDto>> watchOrders(String tenantId) async* {

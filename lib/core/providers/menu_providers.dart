@@ -57,6 +57,14 @@ final deleteMenuItemProvider = Provider<Future<void> Function(String itemId)>((
   return (itemId) async => repo.deleteMenuItem(itemId);
 });
 
+// ── Delete all menu items ─────────────────────────────────────────────────────
+final deleteAllMenuItemsProvider = Provider<Future<void> Function(String tenantId)>((
+  ref,
+) {
+  final repo = ref.read(menuRepositoryProvider);
+  return (tenantId) async => repo.deleteAllMenuItems(tenantId);
+});
+
 // ── Menu categories ───────────────────────────────────────────────────────────
 final menuCategoriesFutureProvider = FutureProvider<List<MenuCategoryDto>>((
   ref,

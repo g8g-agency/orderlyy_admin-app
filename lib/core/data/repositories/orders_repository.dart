@@ -25,6 +25,8 @@ abstract class OrdersRepository {
 
   Future<void> cancelOrder(String orderId);
 
+  Future<void> deleteAllOrders(String tenantId);
+
   // ── Realtime-like stream (fake events in mock) ────────────────────────────
   Stream<List<OrderDto>> watchOrders(String tenantId);
 

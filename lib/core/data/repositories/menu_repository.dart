@@ -23,6 +23,8 @@ abstract class MenuRepository {
 
   Future<void> deleteMenuItem(String itemId);
 
+  Future<void> deleteAllMenuItems(String tenantId);
+
   Future<void> toggleItemAvailability(String itemId, bool isAvailable);
 
   // ── Realtime-like stream (fake events in mock) ────────────────────────────

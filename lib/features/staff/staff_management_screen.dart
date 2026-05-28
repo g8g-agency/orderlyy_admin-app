@@ -45,12 +45,14 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const RbacMatrixScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const RbacMatrixScreen()),
               );
             },
-            icon: Icon(Icons.security_rounded, size: 16.r, color: AppTheme.primary),
+            icon: Icon(
+              Icons.security_rounded,
+              size: 16.r,
+              color: AppTheme.primary,
+            ),
             label: Text(
               'Permission Matrix',
               style: GoogleFonts.plusJakartaSans(
@@ -60,10 +62,14 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
               ),
             ),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
+              side: BorderSide(
+                color: AppTheme.primaryContainer.withValues(alpha: 0.3),
+              ),
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               minimumSize: Size(130.w, 36.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
             ),
           ),
           SizedBox(width: 10.w),
@@ -132,7 +138,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                       // Page intro
                       Text(
                         'Manage team members, roles, and current shifts.',
-                        style: AppTheme.bodySm.copyWith(fontSize: 12.sp, color: AppTheme.secondary),
+                        style: AppTheme.bodySm.copyWith(
+                          fontSize: 12.sp,
+                          color: AppTheme.secondary,
+                        ),
                       ),
                       SizedBox(height: 16.h),
 
@@ -144,7 +153,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                                 // Shift monitor (8/12 width)
                                 Expanded(
                                   flex: 8,
-                                  child: _buildActiveShiftMonitor(context, onlineCount),
+                                  child: _buildActiveShiftMonitor(
+                                    context,
+                                    onlineCount,
+                                  ),
                                 ),
                                 SizedBox(width: 24.w),
 
@@ -190,7 +202,7 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -202,11 +214,17 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.timer_outlined, size: 20.r, color: AppTheme.primary),
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 20.r,
+                    color: AppTheme.primary,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     'Active Shift Monitor',
-                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                    style: AppTheme.titleLg.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -250,7 +268,8 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                   name: 'Sarah J.',
                   role: 'Lead Server • Patio',
                   duration: '4h 20m',
-                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuASDPloBfxf2IdaK6ctQvtktFUnoc5CmLYHJCbwnRprPqzd8te0Q1IwnKIxzW4KterBb0kvpYJxFrX-HdljAHln_FWxNu7ZLYxJa-TNazbpr0YXazlV-MlwJVPBBW0cxoGVze9FppWIin61QXCcHgC0cTDtrZaEHwfIqXJF3OvIxpJhj2LKopISwQX6jUV9DJgthgc3VUWd1lACYVlLoo_Q29ceRsMpDNjGigsWY5wiRPdHYCCnv2J_QqDnA8wzceKixYybfhfQofpZ',
+                  imageUrl:
+                      'https://lh3.googleusercontent.com/aida-public/AB6AXuASDPloBfxf2IdaK6ctQvtktFUnoc5CmLYHJCbwnRprPqzd8te0Q1IwnKIxzW4KterBb0kvpYJxFrX-HdljAHln_FWxNu7ZLYxJa-TNazbpr0YXazlV-MlwJVPBBW0cxoGVze9FppWIin61QXCcHgC0cTDtrZaEHwfIqXJF3OvIxpJhj2LKopISwQX6jUV9DJgthgc3VUWd1lACYVlLoo_Q29ceRsMpDNjGigsWY5wiRPdHYCCnv2J_QqDnA8wzceKixYybfhfQofpZ',
                 ),
               ),
               SizedBox(width: 12.w),
@@ -259,7 +278,8 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                   name: 'Mike T.',
                   role: 'Sous Chef • Kitchen',
                   duration: '6h 15m',
-                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuATuJDLTMST4gVaJE9FRhevlVGJkrgaIW1N1wGNT-ahY30cBbECqdRjK3kkd25K9f46DFcwfrf1WPYy9VpGIyKsQ9UoxDisawP58CugTHGXpkUs6M-UNxH0ZX4VAQlnSeU_G8wmkqDfLKFo6kkOEZtZ3kIGiBP0sipaeYJLM6devNFi5mDAag7BehKPszf4tSxGdi1o63brSOrAi7VQd6HwY9eAkshSpk6XClEzy8KkX9qVxzoYE8X8mHA0PliYzBPTot5atWd-lMNU',
+                  imageUrl:
+                      'https://lh3.googleusercontent.com/aida-public/AB6AXuATuJDLTMST4gVaJE9FRhevlVGJkrgaIW1N1wGNT-ahY30cBbECqdRjK3kkd25K9f46DFcwfrf1WPYy9VpGIyKsQ9UoxDisawP58CugTHGXpkUs6M-UNxH0ZX4VAQlnSeU_G8wmkqDfLKFo6kkOEZtZ3kIGiBP0sipaeYJLM6devNFi5mDAag7BehKPszf4tSxGdi1o63brSOrAi7VQd6HwY9eAkshSpk6XClEzy8KkX9qVxzoYE8X8mHA0PliYzBPTot5atWd-lMNU',
                 ),
               ),
             ],
@@ -292,7 +312,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                 height: 38.r,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
+                  image: DecorationImage(
+                    image: NetworkImage(imageUrl),
+                    fit: BoxFit.cover,
+                  ),
                   border: Border.all(color: Colors.white, width: 2.w),
                 ),
               ),
@@ -320,12 +343,12 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
               children: [
                 Text(
                   name,
-                  style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w800, fontSize: 12.sp),
+                  style: AppTheme.bodyMd.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.sp,
+                  ),
                 ),
-                Text(
-                  role,
-                  style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
-                ),
+                Text(role, style: AppTheme.bodySm.copyWith(fontSize: 10.sp)),
               ],
             ),
           ),
@@ -336,11 +359,17 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             children: [
               Text(
                 'Duration',
-                style: AppTheme.labelSm.copyWith(fontSize: 8.sp, color: AppTheme.secondary),
+                style: AppTheme.labelSm.copyWith(
+                  fontSize: 8.sp,
+                  color: AppTheme.secondary,
+                ),
               ),
               Text(
                 duration,
-                style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 12.sp),
+                style: AppTheme.bodyMd.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.sp,
+                ),
               ),
             ],
           ),
@@ -362,7 +391,7 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -370,7 +399,11 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.bar_chart_rounded, size: 20.r, color: AppTheme.secondary),
+              Icon(
+                Icons.bar_chart_rounded,
+                size: 20.r,
+                color: AppTheme.secondary,
+              ),
               SizedBox(width: 8.w),
               Text(
                 'Team Performance',
@@ -420,11 +453,17 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             children: [
               Text(
                 label,
-                style: AppTheme.labelSm.copyWith(color: AppTheme.secondary, fontSize: 9.sp),
+                style: AppTheme.labelSm.copyWith(
+                  color: AppTheme.secondary,
+                  fontSize: 9.sp,
+                ),
               ),
               Text(
                 value,
-                style: AppTheme.headlineMd.copyWith(fontWeight: FontWeight.w800, fontSize: 18.sp),
+                style: AppTheme.headlineMd.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18.sp,
+                ),
               ),
             ],
           ),
@@ -450,7 +489,7 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -475,7 +514,11 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.search_rounded, color: AppTheme.secondary, size: 18.r),
+                      Icon(
+                        Icons.search_rounded,
+                        color: AppTheme.secondary,
+                        size: 18.r,
+                      ),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: TextField(
@@ -501,7 +544,11 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
               ],
             ),
           ),
-          Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+          Divider(
+            height: 1.h,
+            thickness: 1.h,
+            color: AppTheme.surfaceContainerHigh,
+          ),
 
           // Custom Data Table view
           if (staff.isEmpty)
@@ -517,21 +564,25 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: staff.length,
-              separatorBuilder: (_, __) => Divider(height: 1.h, color: AppTheme.surfaceContainerHigh),
+              separatorBuilder: (_, _) =>
+                  Divider(height: 1.h, color: AppTheme.surfaceContainerHigh),
               itemBuilder: (context, idx) {
                 final member = staff[idx];
                 final roleColor = member.role == StaffRole.owner
                     ? AppTheme.primary
                     : member.role == StaffRole.manager
-                        ? const Color(0xFF3B82F6)
-                        : AppTheme.secondary;
+                    ? const Color(0xFF3B82F6)
+                    : AppTheme.secondary;
 
                 final initials = member.name.length >= 2
                     ? member.name.substring(0, 2).toUpperCase()
                     : member.name.toUpperCase();
 
                 return Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
+                  ),
                   child: Row(
                     children: [
                       // Avatar block
@@ -565,7 +616,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF10B981),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2.w),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2.w,
+                                  ),
                                 ),
                               ),
                             ),
@@ -581,7 +635,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                           children: [
                             Text(
                               member.name,
-                              style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 13.sp),
+                              style: AppTheme.bodyMd.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13.sp,
+                              ),
                             ),
                             Text(
                               'ID: EMP-${member.id.hashCode.toString().padLeft(3, '0')}',
@@ -596,7 +653,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                         flex: 2,
                         child: Text(
                           member.role.displayLabel,
-                          style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w600, fontSize: 12.sp),
+                          style: AppTheme.bodyMd.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.sp,
+                          ),
                         ),
                       ),
 
@@ -606,7 +666,10 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
                             decoration: BoxDecoration(
                               color: member.isActive
                                   ? const Color(0xFFE6F4EA)
@@ -618,7 +681,9 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                               style: AppTheme.labelSm.copyWith(
                                 fontSize: 9.sp,
                                 fontWeight: FontWeight.w800,
-                                color: member.isActive ? const Color(0xFF0F9D58) : AppTheme.secondary,
+                                color: member.isActive
+                                    ? const Color(0xFF0F9D58)
+                                    : AppTheme.secondary,
                               ),
                             ),
                           ),
@@ -630,20 +695,31 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.edit_outlined, size: 18.r, color: AppTheme.secondary),
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              size: 18.r,
+                              color: AppTheme.secondary,
+                            ),
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
-                            onPressed: () => _showStaffSheet(context, ref, member),
+                            onPressed: () =>
+                                _showStaffSheet(context, ref, member),
                           ),
                           SizedBox(width: 8.w),
                           IconButton(
-                            icon: Icon(Icons.archive_outlined, size: 18.r, color: AppTheme.secondary),
+                            icon: Icon(
+                              Icons.archive_outlined,
+                              size: 18.r,
+                              color: AppTheme.secondary,
+                            ),
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Archived employee "${member.name}".'),
+                                  content: Text(
+                                    'Archived employee "${member.name}".',
+                                  ),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -656,12 +732,19 @@ class _StaffManagementScreenState extends ConsumerState<StaffManagementScreen> {
                 );
               },
             ),
-          Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+          Divider(
+            height: 1.h,
+            thickness: 1.h,
+            color: AppTheme.surfaceContainerHigh,
+          ),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 12.h),
             child: Text(
               'View All Staff  →',
-              style: AppTheme.labelSm.copyWith(color: AppTheme.primary, fontWeight: FontWeight.w800),
+              style: AppTheme.labelSm.copyWith(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -792,11 +875,17 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
                 children: [
                   Text(
                     widget.member == null ? 'Add Staff Member' : 'Edit Staff',
-                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                    style: AppTheme.titleLg.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   if (widget.member != null)
                     IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22.r),
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppTheme.error,
+                        size: 22.r,
+                      ),
                       onPressed: _remove,
                     ),
                 ],
@@ -839,7 +928,11 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
                         decoration: BoxDecoration(
                           color: active ? color : AppTheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(8.r),
-                          border: active ? null : Border.all(color: AppTheme.surfaceContainerHigh),
+                          border: active
+                              ? null
+                              : Border.all(
+                                  color: AppTheme.surfaceContainerHigh,
+                                ),
                         ),
                         child: Center(
                           child: Text(
@@ -860,10 +953,16 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
 
               // Active switch
               SwitchListTile(
-                title: Text('Currently Active', style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700)),
-                subtitle: Text('Toggles clocked in or off shift status', style: AppTheme.bodySm),
+                title: Text(
+                  'Currently Active',
+                  style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Toggles clocked in or off shift status',
+                  style: AppTheme.bodySm,
+                ),
                 value: _active,
-                activeColor: AppTheme.primary,
+                activeThumbColor: AppTheme.primary,
                 contentPadding: EdgeInsets.zero,
                 onChanged: (val) => setState(() => _active = val),
               ),
@@ -876,9 +975,16 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                        side: const BorderSide(
+                          color: AppTheme.surfaceContainerHigh,
+                        ),
                       ),
-                      child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.secondary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -892,9 +998,18 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
                           ? SizedBox(
                               width: 20.r,
                               height: 20.r,
-                              child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
-                          : Text('Save Staff', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700)),
+                          : Text(
+                              'Save Staff',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -929,11 +1044,30 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
           decoration: InputDecoration(
             hintText: hint,
             counterText: '',
-            hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 13.sp),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            hintStyle: GoogleFonts.plusJakartaSans(
+              color: AppTheme.secondary,
+              fontSize: 13.sp,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppTheme.primary),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 8.h,
+            ),
             isDense: true,
           ),
         ),

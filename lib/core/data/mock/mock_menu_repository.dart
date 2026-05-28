@@ -117,6 +117,14 @@ class MockMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<void> deleteAllMenuItems(String tenantId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    await _ensureLoaded();
+    _items!.removeWhere((i) => i.tenantId == tenantId);
+    _itemsController.add(List.from(_items!));
+  }
+
+  @override
   Future<void> toggleItemAvailability(String itemId, bool isAvailable) async {
     await Future.delayed(const Duration(milliseconds: 250));
     await _ensureLoaded();

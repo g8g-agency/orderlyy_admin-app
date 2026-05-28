@@ -62,6 +62,16 @@ final updateOrderProvider = Provider<Future<OrderDto> Function(OrderDto order)>(
   },
 );
 
+// ── Delete all orders ────────────────────────────────────────────────────────
+final deleteAllOrdersProvider = Provider<Future<void> Function(String tenantId)>(
+  (ref) {
+    final repo = ref.read(ordersRepositoryProvider);
+    return (tenantId) async {
+      return repo.deleteAllOrders(tenantId);
+    };
+  },
+);
+
 // ── Offline Connection State ──────────────────────────────────────────────────
 final isOnlineProvider = StateNotifierProvider<IsOnlineNotifier, bool>((ref) {
   final queue = ref.watch(offlineSyncQueueProvider);

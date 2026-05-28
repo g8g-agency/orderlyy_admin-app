@@ -13,11 +13,7 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
   final MenuItemDto? item;
   final String? defaultCategoryId;
 
-  const ItemDetailScreen({
-    super.key,
-    this.item,
-    this.defaultCategoryId,
-  });
+  const ItemDetailScreen({super.key, this.item, this.defaultCategoryId});
 
   @override
   ConsumerState<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -53,15 +49,23 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final item = widget.item;
 
     _nameCtrl = TextEditingController(text: item?.name ?? 'Wagyu Burger');
-    _skuCtrl = TextEditingController(text: item != null ? 'MNU-MB-${item.id.hashCode.toString().padLeft(3, '0')}' : 'MNU-MB-042');
+    _skuCtrl = TextEditingController(
+      text: item != null
+          ? 'MNU-MB-${item.id.hashCode.toString().padLeft(3, '0')}'
+          : 'MNU-MB-042',
+    );
     _descCtrl = TextEditingController(
-      text: item?.description ??
+      text:
+          item?.description ??
           'Premium 8oz Wagyu beef patty, aged cheddar, caramelized onions, house truffle aioli, on a toasted brioche bun. Served medium unless otherwise specified.',
     );
-    _priceCtrl = TextEditingController(text: item != null ? item.price.toStringAsFixed(2) : '24.00');
+    _priceCtrl = TextEditingController(
+      text: item != null ? item.price.toStringAsFixed(2) : '24.00',
+    );
     _categoryId = item?.categoryId ?? widget.defaultCategoryId ?? 'cat-002';
     _available = item?.isAvailable ?? true;
-    _currentImageUrl = item?.imageUrl ??
+    _currentImageUrl =
+        item?.imageUrl ??
         'https://lh3.googleusercontent.com/aida-public/AB6AXuAVdq5VDic-tPPqrG4IZ9NrYtibwKWsDJYr33ioz3VLtH2BH62EOB9Kx2hb8UUoaQAIz8qQJZvtkc5m_jvMgSSkHIJ96gkJCC6D6cBRRwSSPZdSdlDVVfYvrsiilFgtvlllbC8iHBGQyWXySdmNgDSFH_WN7GNZFe83y_J8eCGFG3UXQCj88E7yO4sCfv6plTD_J2dCYQZ9u9rDH-D18wrTWIyXkwUA8ngHIkst7exLCKxwo6fw2YvAl61P75EnskscupoGigXag0PV';
 
     // Mock initial tags
@@ -125,7 +129,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     style: GoogleFonts.plusJakartaSans(),
                     decoration: InputDecoration(
                       hintText: 'e.g. Nut Free',
-                      hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                      hintStyle: GoogleFonts.plusJakartaSans(
+                        color: AppTheme.secondary,
+                      ),
                     ),
                   ),
                   SizedBox(height: 12.h),
@@ -156,7 +162,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.secondary,
+                    ),
                   ),
                 ),
                 ElevatedButton(
@@ -259,7 +267,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an item name'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text('Please enter an item name'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -275,7 +286,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           name: name,
           description: _descCtrl.text.trim(),
           price: double.tryParse(_priceCtrl.text) ?? widget.item!.price,
-          imageUrl: _pickedImage != null ? _pickedImage!.path : _currentImageUrl,
+          imageUrl: _pickedImage != null
+              ? _pickedImage!.path
+              : _currentImageUrl,
           isAvailable: _available,
           isVegetarian: widget.item!.isVegetarian,
           prepTimeMinutes: widget.item!.prepTimeMinutes,
@@ -294,6 +307,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error saving: $e'),
@@ -324,7 +338,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, size: 22.r, color: AppTheme.secondary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            size: 22.r,
+            color: AppTheme.secondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -334,7 +352,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               side: const BorderSide(color: AppTheme.surfaceContainerHigh),
               padding: EdgeInsets.symmetric(horizontal: 14.w),
               minimumSize: Size(80.w, 36.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
             ),
             child: Text(
               'Discard',
@@ -353,14 +373,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               minimumSize: Size(90.w, 36.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
               elevation: 0,
             ),
             child: _isSaving
                 ? SizedBox(
                     width: 16.r,
                     height: 16.r,
-                    child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
                   )
                 : Text(
                     'Save Item',
@@ -441,7 +466,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         clipBehavior: Clip.antiAlias,
@@ -455,14 +480,18 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 child: _pickedImage != null
                     ? Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
                     : _currentImageUrl != null && _currentImageUrl!.isNotEmpty
-                        ? _currentImageUrl!.startsWith('/') || _currentImageUrl!.contains('cache')
-                            ? Image.file(File(_currentImageUrl!), fit: BoxFit.cover)
-                            : Image.network(_currentImageUrl!, fit: BoxFit.cover)
-                        : Icon(
-                            Icons.restaurant_rounded,
-                            size: 48.r,
-                            color: AppTheme.surfaceContainerHigh,
-                          ),
+                    ? _currentImageUrl!.startsWith('/') ||
+                              _currentImageUrl!.contains('cache')
+                          ? Image.file(
+                              File(_currentImageUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : Image.network(_currentImageUrl!, fit: BoxFit.cover)
+                    : Icon(
+                        Icons.restaurant_rounded,
+                        size: 48.r,
+                        color: AppTheme.surfaceContainerHigh,
+                      ),
               ),
             ),
 
@@ -475,16 +504,25 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     onTap: _pickImage,
                     borderRadius: BorderRadius.circular(8.r),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 8.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8.r),
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)],
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black26, blurRadius: 8),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.add_a_photo_outlined, size: 16.r, color: AppTheme.primary),
+                          Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 16.r,
+                            color: AppTheme.primary,
+                          ),
                           SizedBox(width: 6.w),
                           Text(
                             'Replace Image',
@@ -511,7 +549,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
+                  border: Border.all(
+                    color: AppTheme.surfaceContainerHigh,
+                    width: 1.w,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -520,7 +561,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       width: 7.r,
                       height: 7.r,
                       decoration: BoxDecoration(
-                        color: _available ? const Color(0xFF10B981) : AppTheme.error,
+                        color: _available
+                            ? const Color(0xFF10B981)
+                            : AppTheme.error,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -559,7 +602,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -573,7 +616,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   children: [
                     Text(
                       'Stock Count',
-                      style: AppTheme.titleMd.copyWith(fontWeight: FontWeight.w800),
+                      style: AppTheme.titleMd.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     Text(
                       'Real-time inventory tracking',
@@ -584,7 +629,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 Icon(
                   Icons.inventory_2_outlined,
                   size: 26.r,
-                  color: _stockCount <= 5 ? AppTheme.primary : AppTheme.secondary,
+                  color: _stockCount <= 5
+                      ? AppTheme.primary
+                      : AppTheme.secondary,
                 ),
               ],
             ),
@@ -629,7 +676,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       widthFactor: _stockProgress,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _stockCount <= 5 ? AppTheme.primary : const Color(0xFF10B981),
+                          color: _stockCount <= 5
+                              ? AppTheme.primary
+                              : const Color(0xFF10B981),
                           borderRadius: BorderRadius.circular(3.r),
                         ),
                       ),
@@ -639,7 +688,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 if (_stockCount <= 5) ...[
                   SizedBox(width: 10.w),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 5.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryContainer.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4.r),
@@ -665,9 +717,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   child: OutlinedButton(
                     onPressed: _adjustStock,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                      side: const BorderSide(
+                        color: AppTheme.surfaceContainerHigh,
+                      ),
                       minimumSize: Size(double.infinity, 36.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                     ),
                     child: Text(
                       'Adjust Stock',
@@ -689,9 +745,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       });
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                      side: const BorderSide(
+                        color: AppTheme.surfaceContainerHigh,
+                      ),
                       minimumSize: Size(double.infinity, 36.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                     ),
                     child: Text(
                       'Mark Sold Out',
@@ -721,7 +781,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -729,7 +789,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.label_outline_rounded, size: 18.r, color: AppTheme.secondary),
+                Icon(
+                  Icons.label_outline_rounded,
+                  size: 18.r,
+                  color: AppTheme.secondary,
+                ),
                 SizedBox(width: 6.w),
                 Text(
                   'Tags & Dietary',
@@ -750,12 +814,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   final isAllergen = tag['isAllergen'] as bool;
 
                   return Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 6.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: isAllergen ? const Color(0xFFFEF2F2) : AppTheme.surfaceContainerLow,
+                      color: isAllergen
+                          ? const Color(0xFFFEF2F2)
+                          : AppTheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(
-                        color: isAllergen ? const Color(0xFFFCA5A5) : AppTheme.surfaceContainerHigh,
+                        color: isAllergen
+                            ? const Color(0xFFFCA5A5)
+                            : AppTheme.surfaceContainerHigh,
                         width: 1.w,
                       ),
                     ),
@@ -767,7 +838,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           style: AppTheme.labelSm.copyWith(
                             fontSize: 10.sp,
                             fontWeight: FontWeight.w700,
-                            color: isAllergen ? const Color(0xFF991B1B) : AppTheme.onSurface,
+                            color: isAllergen
+                                ? const Color(0xFF991B1B)
+                                : AppTheme.onSurface,
                           ),
                         ),
                         SizedBox(width: 4.w),
@@ -780,7 +853,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           child: Icon(
                             Icons.close_rounded,
                             size: 12.r,
-                            color: isAllergen ? const Color(0xFF991B1B) : AppTheme.secondary,
+                            color: isAllergen
+                                ? const Color(0xFF991B1B)
+                                : AppTheme.secondary,
                           ),
                         ),
                       ],
@@ -795,10 +870,17 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     width: 26.r,
                     height: 26.r,
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppTheme.secondary, style: BorderStyle.solid),
+                      border: Border.all(
+                        color: AppTheme.secondary,
+                        style: BorderStyle.solid,
+                      ),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.add_rounded, size: 14.r, color: AppTheme.secondary),
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 14.r,
+                      color: AppTheme.secondary,
+                    ),
                   ),
                 ),
               ],
@@ -823,7 +905,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -838,7 +920,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             SizedBox(height: 16.h),
 
             // Name
-            _buildInputField('Item Name', _nameCtrl, 'e.g. Classic Cheeseburger'),
+            _buildInputField(
+              'Item Name',
+              _nameCtrl,
+              'e.g. Classic Cheeseburger',
+            ),
             SizedBox(height: 12.h),
 
             // Category + SKU
@@ -850,7 +936,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     children: [
                       Text(
                         'Category',
-                        style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
+                        style: AppTheme.labelSm.copyWith(
+                          color: AppTheme.secondary,
+                        ),
                       ),
                       SizedBox(height: 6.h),
                       Container(
@@ -864,11 +952,26 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           isExpanded: true,
                           underline: const SizedBox(),
                           items: const [
-                            DropdownMenuItem(value: 'cat-001', child: Text('Starters')),
-                            DropdownMenuItem(value: 'cat-002', child: Text('Mains')),
-                            DropdownMenuItem(value: 'cat-003', child: Text('Sides')),
-                            DropdownMenuItem(value: 'cat-004', child: Text('Drinks')),
-                            DropdownMenuItem(value: 'cat-005', child: Text('Desserts')),
+                            DropdownMenuItem(
+                              value: 'cat-001',
+                              child: Text('Starters'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'cat-002',
+                              child: Text('Mains'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'cat-003',
+                              child: Text('Sides'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'cat-004',
+                              child: Text('Drinks'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'cat-005',
+                              child: Text('Desserts'),
+                            ),
                           ],
                           onChanged: (val) {
                             if (val != null) {
@@ -884,14 +987,24 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: _buildInputField('SKU/ID', _skuCtrl, 'e.g. MNU-MB-042', editable: false),
+                  child: _buildInputField(
+                    'SKU/ID',
+                    _skuCtrl,
+                    'e.g. MNU-MB-042',
+                    editable: false,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 12.h),
 
             // Description
-            _buildInputField('Description', _descCtrl, 'Detailed food ingredients, serving specs...', maxLines: 3),
+            _buildInputField(
+              'Description',
+              _descCtrl,
+              'Detailed food ingredients, serving specs...',
+              maxLines: 3,
+            ),
             Align(
               alignment: Alignment.centerRight,
               child: Text(
@@ -915,7 +1028,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -932,7 +1045,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   onTap: _addAddon,
                   child: Row(
                     children: [
-                      Icon(Icons.add_rounded, size: 14.r, color: AppTheme.primary),
+                      Icon(
+                        Icons.add_rounded,
+                        size: 14.r,
+                        color: AppTheme.primary,
+                      ),
                       SizedBox(width: 2.w),
                       Text(
                         'Add Variant',
@@ -956,7 +1073,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               decoration: BoxDecoration(
                 color: AppTheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppTheme.surfaceContainerHigh, style: BorderStyle.solid),
+                border: Border.all(
+                  color: AppTheme.surfaceContainerHigh,
+                  style: BorderStyle.solid,
+                ),
               ),
               child: Row(
                 children: [
@@ -966,7 +1086,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       children: [
                         Text(
                           'Base Price',
-                          style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w800),
+                          style: AppTheme.bodyMd.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         Text(
                           'Default price without add-ons',
@@ -986,7 +1108,12 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     ),
                     child: Row(
                       children: [
-                        Text('₹', style: AppTheme.bodyMd.copyWith(color: AppTheme.secondary)),
+                        Text(
+                          '₹',
+                          style: AppTheme.bodyMd.copyWith(
+                            color: AppTheme.secondary,
+                          ),
+                        ),
                         SizedBox(width: 4.w),
                         Expanded(
                           child: TextField(
@@ -1017,23 +1144,34 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             // Variations List
             Text(
               'Add-ons & Upgrades',
-              style: AppTheme.labelSm.copyWith(color: AppTheme.secondary, letterSpacing: 0.8),
+              style: AppTheme.labelSm.copyWith(
+                color: AppTheme.secondary,
+                letterSpacing: 0.8,
+              ),
             ),
             SizedBox(height: 10.h),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _addons.length,
-              separatorBuilder: (_, __) => SizedBox(height: 8.h),
+              separatorBuilder: (_, _) => SizedBox(height: 8.h),
               itemBuilder: (context, i) {
                 final addon = _addons[i];
-                final addonNameCtrl = TextEditingController(text: addon['name'] as String);
-                final addonPriceCtrl = TextEditingController(text: (addon['price'] as double).toStringAsFixed(2));
+                final addonNameCtrl = TextEditingController(
+                  text: addon['name'] as String,
+                );
+                final addonPriceCtrl = TextEditingController(
+                  text: (addon['price'] as double).toStringAsFixed(2),
+                );
 
                 return Row(
                   children: [
                     // Drag indicator
-                    Icon(Icons.drag_indicator_rounded, color: AppTheme.surfaceContainerHighest, size: 18.r),
+                    Icon(
+                      Icons.drag_indicator_rounded,
+                      color: AppTheme.surfaceContainerHighest,
+                      size: 18.r,
+                    ),
                     SizedBox(width: 6.w),
 
                     // Editable addon name
@@ -1046,9 +1184,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         },
                         style: GoogleFonts.plusJakartaSans(fontSize: 12.sp),
                         decoration: InputDecoration(
-                          border: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.surfaceContainerHigh)),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.surfaceContainerHigh)),
-                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primary)),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: AppTheme.surfaceContainerHigh,
+                            ),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: AppTheme.surfaceContainerHigh,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppTheme.primary),
+                          ),
                           contentPadding: EdgeInsets.symmetric(vertical: 4.h),
                           isDense: true,
                         ),
@@ -1061,21 +1209,44 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       flex: 1,
                       child: Row(
                         children: [
-                          Text('+₹', style: AppTheme.bodySm.copyWith(fontSize: 10.sp, color: AppTheme.secondary)),
+                          Text(
+                            '+₹',
+                            style: AppTheme.bodySm.copyWith(
+                              fontSize: 10.sp,
+                              color: AppTheme.secondary,
+                            ),
+                          ),
                           SizedBox(width: 2.w),
                           Expanded(
                             child: TextField(
                               controller: addonPriceCtrl,
                               keyboardType: TextInputType.number,
                               onChanged: (val) {
-                                addon['price'] = double.tryParse(val) ?? addon['price'];
+                                addon['price'] =
+                                    double.tryParse(val) ?? addon['price'];
                               },
-                              style: GoogleFonts.plusJakartaSans(fontSize: 12.sp),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.sp,
+                              ),
                               decoration: InputDecoration(
-                                border: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.surfaceContainerHigh)),
-                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.surfaceContainerHigh)),
-                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primary)),
-                                contentPadding: EdgeInsets.symmetric(vertical: 4.h),
+                                border: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppTheme.surfaceContainerHigh,
+                                  ),
+                                ),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppTheme.surfaceContainerHigh,
+                                  ),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppTheme.primary,
+                                  ),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 4.h,
+                                ),
                                 isDense: true,
                               ),
                             ),
@@ -1087,7 +1258,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
                     // Remove button
                     IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, size: 16.r, color: AppTheme.secondary),
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 16.r,
+                        color: AppTheme.secondary,
+                      ),
                       constraints: const BoxConstraints(),
                       padding: EdgeInsets.zero,
                       onPressed: () {
@@ -1118,12 +1293,18 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           children: [
             Text(
               'Danger Zone',
-              style: AppTheme.titleMd.copyWith(color: const Color(0xFF991B1B), fontWeight: FontWeight.w800),
+              style: AppTheme.titleMd.copyWith(
+                color: const Color(0xFF991B1B),
+                fontWeight: FontWeight.w800,
+              ),
             ),
             SizedBox(height: 2.h),
             Text(
               'Actions here can affect live orders and menu visibility.',
-              style: AppTheme.bodySm.copyWith(color: const Color(0xFF7F1D1D), fontSize: 11.sp),
+              style: AppTheme.bodySm.copyWith(
+                color: const Color(0xFF7F1D1D),
+                fontSize: 11.sp,
+              ),
             ),
             SizedBox(height: 16.h),
 
@@ -1133,37 +1314,54 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 OutlinedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Item has been archived.'), behavior: SnackBarBehavior.floating),
+                      const SnackBar(
+                        content: Text('Item has been archived.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
                     );
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFFCA5A5)),
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFFDC2626),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
                   ),
                   child: Text(
                     'Archive Item',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11.sp),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11.sp,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12.w),
                 ElevatedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Item deleted permanently.'), behavior: SnackBarBehavior.floating, backgroundColor: AppTheme.error),
+                      const SnackBar(
+                        content: Text('Item deleted permanently.'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: AppTheme.error,
+                      ),
                     );
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFDC2626),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
                     elevation: 0,
                   ),
                   child: Text(
                     'Delete Permanently',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11.sp),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11.sp,
+                    ),
                   ),
                 ),
               ],
@@ -1201,12 +1399,34 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 13.sp),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
-            disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerLow)),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: maxLines > 1 ? 12.h : 8.h),
+            hintStyle: GoogleFonts.plusJakartaSans(
+              color: AppTheme.secondary,
+              fontSize: 13.sp,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppTheme.primary),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppTheme.surfaceContainerLow),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: maxLines > 1 ? 12.h : 8.h,
+            ),
             isDense: true,
           ),
         ),

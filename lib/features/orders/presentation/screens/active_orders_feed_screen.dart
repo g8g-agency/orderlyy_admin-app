@@ -1,7 +1,6 @@
 // lib/features/orders/presentation/screens/active_orders_feed_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -16,10 +15,12 @@ class ActiveOrdersFeedScreen extends ConsumerStatefulWidget {
   const ActiveOrdersFeedScreen({super.key});
 
   @override
-  ConsumerState<ActiveOrdersFeedScreen> createState() => _ActiveOrdersFeedScreenState();
+  ConsumerState<ActiveOrdersFeedScreen> createState() =>
+      _ActiveOrdersFeedScreenState();
 }
 
-class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen> with SingleTickerProviderStateMixin {
+class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
+    with SingleTickerProviderStateMixin {
   ActiveOrderSort _sortBy = ActiveOrderSort.elapsed;
   OrderStatus? _statusFilter;
   Timer? _slaTimer;
@@ -53,7 +54,8 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
     for (final item in order.items) {
       if (item.product.category == 'Mains') {
         return 15;
-      } else if (item.product.category == 'Sides' || item.product.category == 'Greens') {
+      } else if (item.product.category == 'Sides' ||
+          item.product.category == 'Greens') {
         slaLimit = 10;
       }
     }
@@ -122,7 +124,9 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
         stream: repository.watchActiveOrders(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -130,7 +134,13 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
 
           var orders = snapshot.data ?? [];
           // Filter out completed and cancelled orders
-          orders = orders.where((o) => o.status != OrderStatus.completed && o.status != OrderStatus.cancelled).toList();
+          orders = orders
+              .where(
+                (o) =>
+                    o.status != OrderStatus.completed &&
+                    o.status != OrderStatus.cancelled,
+              )
+              .toList();
 
           // Apply Category Filter Chips
           if (_statusFilter != null) {
@@ -141,7 +151,10 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
           if (_sortBy == ActiveOrderSort.elapsed) {
             orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           } else {
-            orders.sort((a, b) => _calculateSla(b).index.compareTo(_calculateSla(a).index));
+            orders.sort(
+              (a, b) =>
+                  _calculateSla(b).index.compareTo(_calculateSla(a).index),
+            );
           }
 
           return Column(
@@ -154,7 +167,11 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.assignment_turned_in_rounded, size: 64, color: Colors.grey[400]),
+                            Icon(
+                              Icons.assignment_turned_in_rounded,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
                             const SizedBox(height: 16),
                             const Text('No active orders found.'),
                           ],
@@ -165,13 +182,13 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                           SliverPadding(
                             padding: const EdgeInsets.all(16),
                             sliver: SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final order = orders[index];
-                                  return _buildOrderCard(order, theme, isDark);
-                                },
-                                childCount: orders.length,
-                              ),
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                final order = orders[index];
+                                return _buildOrderCard(order, theme, isDark);
+                              }, childCount: orders.length),
                             ),
                           ),
                         ],
@@ -200,8 +217,14 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
             },
           ),
           const SizedBox(width: 8),
-          ...[OrderStatus.draft, OrderStatus.sent, OrderStatus.preparing, OrderStatus.ready].map((status) {
-            final label = status.name[0].toUpperCase() + status.name.substring(1);
+          ...[
+            OrderStatus.draft,
+            OrderStatus.sent,
+            OrderStatus.preparing,
+            OrderStatus.ready,
+          ].map((status) {
+            final label =
+                status.name[0].toUpperCase() + status.name.substring(1);
             return Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: FilterChip(
@@ -229,7 +252,9 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
       color: isDark ? AppColors.darkSurface : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -247,31 +272,48 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                 children: [
                   Text(
                     'Table ${order.tableId}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
                   ),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           order.status.name.toUpperCase(),
-                          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: slaColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${elapsedMinutes}m elapsed',
-                          style: TextStyle(color: slaColor, fontWeight: FontWeight.bold, fontSize: 10),
+                          style: TextStyle(
+                            color: slaColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ],
@@ -291,7 +333,10 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                       children: [
                         Text(
                           '${item.quantity}x ',
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
                         Expanded(
                           child: Text(
@@ -301,7 +346,9 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                         ),
                         Text(
                           item.status.name.toUpperCase(),
-                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),
@@ -324,7 +371,9 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.error.withValues(alpha: 0.4 * _pulsingController.value),
+                  color: AppColors.error.withValues(
+                    alpha: 0.4 * _pulsingController.value,
+                  ),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),

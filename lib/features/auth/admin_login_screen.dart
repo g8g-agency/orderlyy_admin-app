@@ -99,17 +99,25 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final primaryRed = const Color(0xFFE31E24);
-    
+
     return Scaffold(
-      backgroundColor: _showLoginForm ? const Color(0xFFF8F9FA) : AppTheme.background,
+      backgroundColor: _showLoginForm
+          ? const Color(0xFFF8F9FA)
+          : AppTheme.background,
       appBar: AppBar(
-        backgroundColor: _showLoginForm ? const Color(0xFFF8F9FA) : AppTheme.surfaceContainerLowest,
+        backgroundColor: _showLoginForm
+            ? const Color(0xFFF8F9FA)
+            : AppTheme.surfaceContainerLowest,
         elevation: 0,
         toolbarHeight: 68.h,
         automaticallyImplyLeading: false,
         leading: _showLoginForm
             ? IconButton(
-                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 16.r, color: AppTheme.secondary),
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 16.r,
+                  color: AppTheme.secondary,
+                ),
                 onPressed: () => setState(() {
                   _showLoginForm = false;
                   _errorMessage = '';
@@ -123,7 +131,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
               width: 32.r,
               height: 32.r,
               decoration: BoxDecoration(
-                color: primaryRed.withOpacity(0.08),
+                color: primaryRed.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -152,20 +160,23 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.05),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  ),
-                ),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0.0, 0.05),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: child,
               ),
             );
           },
-          child: _showLoginForm ? _buildLoginScreen(primaryRed) : _buildLaptopScreen(primaryRed),
+          child: _showLoginForm
+              ? _buildLoginScreen(primaryRed)
+              : _buildLaptopScreen(primaryRed),
         ),
       ),
     );
@@ -196,7 +207,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                   ),
                 ),
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
-              
+
               SizedBox(height: 24.h),
 
               // Tablet Mockup and Floating Alert
@@ -213,7 +224,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  
+
                   // Floating notification mockup overlay
                   Positioned(
                     bottom: -10.h,
@@ -227,10 +238,10 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
-                          )
+                          ),
                         ],
                       ),
                       child: Column(
@@ -295,11 +306,11 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
-                  )
+                  ),
                 ],
               ).animate().fadeIn(duration: 500.ms),
 
@@ -383,7 +394,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.secondary.withOpacity(0.6),
+                    color: AppTheme.secondary.withValues(alpha: 0.6),
                   ),
                 ),
               ).animate().fadeIn(delay: 350.ms),
@@ -394,12 +405,9 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
     );
   }
 
-  Widget _buildHorizontalCard({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildHorizontalCard({required IconData icon, required String label}) {
     final primaryRed = const Color(0xFFE31E24);
-    
+
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 2.w),
@@ -410,21 +418,17 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
           border: Border.all(color: const Color(0xFFF1F5F9)), // slate 100
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: primaryRed,
-              size: 20.r,
-            ),
+            Icon(icon, color: primaryRed, size: 20.r),
             SizedBox(height: 8.h),
             Text(
               label,
@@ -461,7 +465,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -486,7 +490,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       ),
                     ),
                     SizedBox(height: 8.h),
-                    
+
                     // Welcome Back Heading
                     Center(
                       child: Text(
@@ -499,7 +503,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       ),
                     ),
                     SizedBox(height: 6.h),
-                    
+
                     // Sign-in Subheading
                     Center(
                       child: Text(
@@ -521,10 +525,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                         margin: EdgeInsets.only(bottom: 16.h),
                         padding: EdgeInsets.all(12.r),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withOpacity(0.1),
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
-                            color: const Color(0xFFEF4444).withOpacity(0.3),
+                            color: const Color(
+                              0xFFEF4444,
+                            ).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -559,7 +565,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       ),
                     ),
                     SizedBox(height: 6.h),
-                    
+
                     // Email Field
                     TextFormField(
                       controller: _emailController,
@@ -587,11 +593,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                         fillColor: const Color(0xFFF8F9FA),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
@@ -661,8 +671,9 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                         filled: true,
                         fillColor: const Color(0xFFF8F9FA),
                         suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_outlined
@@ -673,11 +684,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
@@ -685,7 +700,9 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Please enter your password';
+                        if (v == null || v.isEmpty) {
+                          return 'Please enter your password';
+                        }
                         return null;
                       },
                       onFieldSubmitted: (_) => _loginWithPassword(),
@@ -726,10 +743,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                     ),
                                   ),
                                   SizedBox(width: 8.w),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 18.r,
-                                  ),
+                                  Icon(Icons.arrow_forward_rounded, size: 18.r),
                                 ],
                               ),
                       ),
