@@ -15,6 +15,7 @@ import '../auth/mock_auth_provider.dart';
 
 // ── Menu items stream ─────────────────────────────────────────────────────────
 // Emits every time the underlying repository pushes an update.
+@Deprecated('Use menuItemsProvider and ApiMenuItemsRepository instead')
 final menuItemsStreamProvider = StreamProvider<List<MenuItemDto>>((ref) async* {
   final ctx = ref.watch(appContextProvider);
   if (ctx == null) {
@@ -28,6 +29,7 @@ final menuItemsStreamProvider = StreamProvider<List<MenuItemDto>>((ref) async* {
 });
 
 // ── Toggle availability ───────────────────────────────────────────────────────
+@Deprecated('Use updateMenuItem in menuItemsProvider instead')
 final toggleMenuItemAvailabilityProvider =
     Provider<Future<void> Function(String itemId, bool isAvailable)>((ref) {
       final repo = ref.read(menuRepositoryProvider);
@@ -36,6 +38,7 @@ final toggleMenuItemAvailabilityProvider =
     });
 
 // ── Create menu item ──────────────────────────────────────────────────────────
+@Deprecated('Use createMenuItem in menuItemsProvider instead')
 final createMenuItemProvider =
     Provider<Future<MenuItemDto> Function(MenuItemDto item)>((ref) {
       final repo = ref.read(menuRepositoryProvider);
@@ -43,6 +46,7 @@ final createMenuItemProvider =
     });
 
 // ── Update menu item ──────────────────────────────────────────────────────────
+@Deprecated('Use updateMenuItem in menuItemsProvider instead')
 final updateMenuItemProvider =
     Provider<Future<MenuItemDto> Function(MenuItemDto item)>((ref) {
       final repo = ref.read(menuRepositoryProvider);
@@ -50,6 +54,7 @@ final updateMenuItemProvider =
     });
 
 // ── Delete menu item ──────────────────────────────────────────────────────────
+@Deprecated('Use deleteMenuItem in menuItemsProvider instead')
 final deleteMenuItemProvider = Provider<Future<void> Function(String itemId)>((
   ref,
 ) {
@@ -58,6 +63,14 @@ final deleteMenuItemProvider = Provider<Future<void> Function(String itemId)>((
 });
 
 // ── Menu categories ───────────────────────────────────────────────────────────
+@Deprecated('Use createCategory in categoriesProvider instead')
+final createMenuCategoryProvider =
+    Provider<Future<MenuCategoryDto> Function(MenuCategoryDto category)>((ref) {
+      final repo = ref.read(menuRepositoryProvider);
+      return (category) async => repo.createCategory(category);
+    });
+
+@Deprecated('Use categoriesProvider and ApiCategoriesRepository instead')
 final menuCategoriesFutureProvider = FutureProvider<List<MenuCategoryDto>>((
   ref,
 ) async {

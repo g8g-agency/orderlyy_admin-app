@@ -7,12 +7,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/orders_repository_interface.dart';
 import '../../../../core/storage/state_persistence.dart';
-import '../../../../core/utils/uuid.dart';
 import '../../../../shared/models/result.dart';
 import '../../../../shared/models/failures.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_status.dart' as domain;
 import 'orders_state.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
+
 
 class OrdersNotifier extends StateNotifier<OrdersState> {
   final IOrdersRepository _repository;
@@ -132,7 +135,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
 
   Future<Result<Order, AppFailure>> createOrder(Order order) async {
     // Generate temporary ID for optimistic update
-    final tempId = UuidGenerator.generateRuntimeId(prefix: 'temp-order');
+    final tempId = 'temp-order-${uuid.v4()}';
     final optimisticOrder = order.copyWith(id: tempId);
 
     // Optimistic update

@@ -102,16 +102,16 @@ class ModifierOption extends Equatable {
 }
 
 class TaxConfig extends Equatable {
-  final double vatRate;
-  final double serviceChargeRate;
+  final int vatRateBps;
+  final int serviceChargeRateBps;
 
   const TaxConfig({
-    required this.vatRate,
-    required this.serviceChargeRate,
+    required this.vatRateBps,
+    required this.serviceChargeRateBps,
   });
 
   @override
-  List<Object?> get props => [vatRate, serviceChargeRate];
+  List<Object?> get props => [vatRateBps, serviceChargeRateBps];
 }
 
 class MenuSnapshot extends Equatable {

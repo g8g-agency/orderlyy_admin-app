@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../network/api_exception.dart';
 import '../repositories/auth_repository.dart';
 import '../dtos/auth_dto.dart';
 
 const _kSupabaseStaffUserIdKey = 'supabase_auth_user_id';
 const _kSupabaseStaffSessionKey = 'supabase_auth_staff_session';
 
+@Deprecated('Use ApiAuthRepository instead')
 class SupabaseAuthRepository implements AuthRepository {
   final SupabaseClient _client;
   String? _currentUserId;
@@ -89,7 +91,7 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<LoginResponseDto> signInWithPassword(LoginRequestDto request) async {
+  Future<Result<LoginResponseDto>> signInWithPassword(LoginRequestDto request) async {
     try {
       // Clear staff session first
       await _clearStaffSession();
@@ -101,28 +103,28 @@ class SupabaseAuthRepository implements AuthRepository {
 
       final user = response.user;
       if (user == null) {
-        return LoginResponseDto.failure('Authentication failed: user is null');
+        return Failure(ApiFailure('Authentication failed: user is null', ApiErrorCode.unauthorized));
       }
 
       _currentUserId = user.id;
       _currentStaff = null;
       _authStateController.add(_currentUserId);
 
-      return LoginResponseDto(
+      return Success(LoginResponseDto(
         userId: user.id,
         email: user.email ?? request.email,
         accessToken: response.session?.accessToken,
         isSuccess: true,
-      );
+      ));
     } on AuthException catch (e) {
-      return LoginResponseDto.failure(e.message);
+      return Failure(ApiFailure(e.message, ApiErrorCode.unauthorized));
     } catch (e) {
-      return LoginResponseDto.failure(e.toString());
+      return Failure(ApiFailure(e.toString()));
     }
   }
 
   @override
-  Future<StaffPinLoginResponseDto> staffPinLogin(
+  Future<Result<StaffPinLoginResponseDto>> staffPinLogin(
     StaffPinLoginRequestDto request,
   ) async {
     try {
@@ -142,7 +144,7 @@ class SupabaseAuthRepository implements AuthRepository {
           .maybeSingle();
 
       if (response == null) {
-        return StaffPinLoginResponseDto.failure('Invalid PIN or restaurant code.');
+        return Failure(ApiFailure('Invalid PIN or restaurant code.', ApiErrorCode.unauthorized));
       }
 
       final staff = StaffDto.fromJson(response);
@@ -157,22 +159,22 @@ class SupabaseAuthRepository implements AuthRepository {
 
       _authStateController.add(_currentUserId);
 
-      return StaffPinLoginResponseDto(
+      return Success(StaffPinLoginResponseDto(
         isSuccess: true,
         staff: staff,
-      );
+      ));
     } catch (e) {
-      return StaffPinLoginResponseDto.failure(e.toString());
+      return Failure(ApiFailure(e.toString()));
     }
   }
 
   @override
-  Future<AppContextDto?> resolveContext() async {
+  Future<Result<AppContextDto?>> resolveContext() async {
     // If logged in as staff, we don't have a GoTrue session to call the edge function with
     if (_currentUserId != null && _currentUserId!.startsWith('staff-')) {
       final staff = _currentStaff;
       if (staff != null) {
-        return AppContextDto(
+        return Success(AppContextDto(
           user: UserContextDto(
             id: staff.id,
             fullName: staff.name,
@@ -197,43 +199,43 @@ class SupabaseAuthRepository implements AuthRepository {
             accountSuspended: false,
             onboardingRequired: false,
           ),
-        );
+        ));
       }
-      return null;
+      return const Success(null);
     }
 
     final res = await _client.functions.invoke('resolve-context-v2');
 
     if (res.status == 401) {
       await signOut();
-      return null;
+      return const Success(null);
     }
 
     if (res.status >= 400) {
       final errorData = res.data;
       if (errorData is Map<String, dynamic>) {
         final message = (errorData['message'] ?? errorData['error'])?.toString();
-        throw Exception(message ?? 'Unable to resolve account context.');
+        return Failure(ApiFailure(message ?? 'Unable to resolve account context.'));
       }
-      throw Exception('Unable to resolve account context.');
+      return Failure(ApiFailure('Unable to resolve account context.'));
     }
 
     if (res.data == null || res.data is! Map<String, dynamic>) {
-      return null;
+      return const Success(null);
     }
 
-    return AppContextDto.fromJson(res.data as Map<String, dynamic>);
+    return Success(AppContextDto.fromJson(res.data as Map<String, dynamic>));
   }
 
   @override
-  Future<void> changePassword(String email, String newPassword) async {
+  Future<Result<void>> changePassword(String email, String newPassword) async {
     final res = await _client.functions.invoke(
       'change-password',
       body: {'new_password': newPassword},
     );
 
     if (res.data is Map && res.data['error'] != null) {
-      throw Exception(res.data['error']);
+      return Failure(ApiFailure(res.data['error'].toString()));
     }
 
     // Re-authenticate with new password
@@ -242,17 +244,19 @@ class SupabaseAuthRepository implements AuthRepository {
       password: newPassword,
     );
     if (loginRes.session == null) {
-      throw Exception('Re-login failed after password change');
+      return Failure(ApiFailure('Re-login failed after password change'));
     }
+    return const Success(null);
   }
 
   @override
-  Future<void> signOut() async {
+  Future<Result<void>> signOut() async {
     try {
       await _client.auth.signOut();
     } catch (_) {}
     await _clearStaffSession();
     _authStateController.add(null);
+    return const Success(null);
   }
 
   Future<void> _clearStaffSession() async {

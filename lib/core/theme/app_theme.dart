@@ -98,6 +98,13 @@ class AppTheme {
     height: 32 / 24,
   );
 
+  static TextStyle get headlineSm => GoogleFonts.plusJakartaSans(
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    color: onSurface,
+    height: 28 / 22,
+  );
+
   static TextStyle get titleLg => GoogleFonts.plusJakartaSans(
     fontSize: 20,
     fontWeight: FontWeight.w600,

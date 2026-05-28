@@ -2,6 +2,7 @@
 /// Never store these in SharedPreferences — hold in Riverpod state only.
 library;
 
+@Deprecated('Use RestaurantContextDto instead')
 class UserContext {
   final String id;
   final String fullName;
@@ -93,6 +94,7 @@ class ContextFlags {
 }
 
 /// Root context object. Populated after every successful `resolve-context-v2` call.
+@Deprecated('Use RestaurantContextDto instead')
 class AppContext {
   final UserContext user;
   final TenantContext tenant;

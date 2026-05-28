@@ -156,7 +156,7 @@ class MenuRepositoryImpl implements MenuRepository {
         name: g.name,
         options: g.options.map((o) => ModifierOptionDto(id: o.id, name: o.name, priceInCents: o.price.amountInCents)).toList(),
       )).toList(),
-      taxConfig: TaxConfigDto(vatRate: snapshot.taxConfig.vatRate, serviceChargeRate: snapshot.taxConfig.serviceChargeRate),
+      taxConfig: TaxConfigDto(vatRateBps: snapshot.taxConfig.vatRateBps, serviceChargeRateBps: snapshot.taxConfig.serviceChargeRateBps),
       metadata: snapshot.metadata,
       availabilityOverlay: snapshot.availabilityOverlay,
       etag: snapshot.etag,
@@ -333,7 +333,7 @@ class MenuRepositoryImpl implements MenuRepository {
           ],
         ),
       ],
-      taxConfig: TaxConfigDto(vatRate: 0.10, serviceChargeRate: 0.05),
+      taxConfig: TaxConfigDto(vatRateBps: 1000, serviceChargeRateBps: 500),
     ).toDomain();
   }
 }

@@ -1,0 +1,162 @@
+import '../dtos/order_dto.dart';
+import '../repositories/orders_repository.dart';
+import '../../network/dio_client.dart';
+import '../../network/api_exception.dart';
+import '../../constants/api_constants.dart';
+
+class ApiOrdersRepository implements OrdersRepository {
+  final DioClient _dioClient;
+
+  ApiOrdersRepository(this._dioClient);
+
+  @override
+  Future<Result<List<OrderDto>>> getOrdersPaginated({
+    OrderStatus? status,
+    String? tableId,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+        if (status != null) 'status': status.name,
+        if (tableId != null) 'table_id': tableId,
+      };
+
+      final response = await _dioClient.get(
+        ApiConstants.orders,
+        queryParameters: queryParams,
+      );
+
+      if (response.data['success'] == true) {
+        final data = response.data['data'] as List<dynamic>? ?? [];
+        final orders = data
+            .map((json) => OrderDto.fromJson(json as Map<String, dynamic>))
+            .toList();
+        return Success(orders);
+      } else {
+        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch orders';
+        return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
+      }
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
+    } catch (e) {
+      return Failure(ApiFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<OrderDto>> createOrderEntity(OrderDto order, {required String idempotencyKey}) async {
+    try {
+      final response = await _dioClient.post(
+        ApiConstants.orders,
+        data: order.toJson(),
+        options: _dioClient.buildOptions(
+          headers: {'Idempotency-Key': idempotencyKey},
+        ),
+      );
+
+      if (response.data['success'] == true) {
+        return Success(OrderDto.fromJson(response.data['data']));
+      } else {
+        final errorMessage = response.data['error']?['message'] ?? 'Failed to create order';
+        return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
+      }
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
+    } catch (e) {
+      return Failure(ApiFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<OrderDto>> transitionOrderStatus(
+    String orderId,
+    OrderStatus newStatus,
+    int currentVersion, {
+    required String idempotencyKey,
+  }) async {
+    try {
+      final response = await _dioClient.patch(
+        '${ApiConstants.orders}/$orderId/status',
+        data: {
+          'status': newStatus.name,
+          'version_num': currentVersion,
+        },
+        options: _dioClient.buildOptions(
+          headers: {'Idempotency-Key': idempotencyKey},
+        ),
+      );
+
+      if (response.data['success'] == true) {
+        return Success(OrderDto.fromJson(response.data['data']));
+      } else {
+        final errorMessage = response.data['error']?['message'] ?? 'Failed to transition order status';
+        return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
+      }
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
+    } catch (e) {
+      return Failure(ApiFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<OrderDto>> updateOrderLineItems(
+    String orderId,
+    List<OrderItemDto> items,
+    int currentVersion, {
+    required String idempotencyKey,
+  }) async {
+    try {
+      final response = await _dioClient.patch(
+        '${ApiConstants.orders}/$orderId/items',
+        data: {
+          'items': items.map((i) => i.toJson()).toList(),
+          'version_num': currentVersion,
+        },
+        options: _dioClient.buildOptions(
+          headers: {'Idempotency-Key': idempotencyKey},
+        ),
+      );
+
+      if (response.data['success'] == true) {
+        return Success(OrderDto.fromJson(response.data['data']));
+      } else {
+        final errorMessage = response.data['error']?['message'] ?? 'Failed to update order items';
+        return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
+      }
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
+    } catch (e) {
+      return Failure(ApiFailure(e.toString()));
+    }
+  }
+
+  // ── Deprecated Methods ──────────────────────────────────────────────────────
+
+  @override
+  Future<List<OrderDto>> getOrders(String tenantId, {OrderStatus? status, String? tableId, DateTime? from, DateTime? to}) => throw UnimplementedError();
+
+  @override
+  Future<OrderDto?> getOrderById(String orderId) => throw UnimplementedError();
+
+  @override
+  Future<OrderDto> createOrder(OrderDto order) => throw UnimplementedError();
+
+  @override
+  Future<OrderDto> updateOrderStatus(String orderId, OrderStatus newStatus) => throw UnimplementedError();
+
+  @override
+  Future<OrderDto> updateOrder(OrderDto order) => throw UnimplementedError();
+
+  @override
+  Future<void> cancelOrder(String orderId) => throw UnimplementedError();
+
+  @override
+  Stream<List<OrderDto>> watchOrders(String tenantId) => throw UnimplementedError();
+
+  @override
+  Future<Map<String, dynamic>> getDailySummary(String tenantId, DateTime date) => throw UnimplementedError();
+}

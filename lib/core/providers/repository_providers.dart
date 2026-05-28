@@ -36,8 +36,27 @@ import '../data/supabase/supabase_staff_repository.dart';
 import '../data/supabase/supabase_tables_repository.dart';
 import '../data/supabase/supabase_settings_repository.dart';
 
+import '../data/api/api_auth_repository.dart';
+import '../data/api/api_categories_repository.dart';
+import '../data/repositories/categories_repository.dart';
+import '../data/api/api_menu_items_repository.dart';
+import '../data/repositories/menu_items_repository.dart';
+import '../data/api/api_pricing_repository.dart';
+import '../data/repositories/pricing_repository.dart';
+import '../data/api/api_modifier_repository.dart';
+import '../data/repositories/modifier_repository.dart';
+import '../data/api/api_tables_repository.dart';
+import '../data/repositories/tables_repository.dart';
+import '../data/api/api_availability_repository.dart';
+import '../data/repositories/availability_repository.dart';
+import '../data/api/api_orders_repository.dart';
+import '../data/api/api_settings_repository.dart';
+import '../data/api/api_analytics_repository.dart';
+import '../data/repositories/analytics_repository.dart';
+
 import '../data/local/offline_sync_queue.dart';
 import '../data/repositories/offline_first_orders_repository.dart';
+import '../network/network_providers.dart';
 
 // ── Feature flag ──────────────────────────────────────────────────────────────
 // Toggle this to switch between mock and live repositories.
@@ -66,8 +85,9 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
 // MockAuthRepository instance (session already restored from SharedPreferences).
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   if (kUseMockRepositories) return MockAuthRepository();
-  final client = ref.watch(supabaseClientProvider);
-  return SupabaseAuthRepository(client);
+  final dioClient = ref.watch(dioClientProvider);
+  final supabaseClient = ref.watch(supabaseClientProvider);
+  return ApiAuthRepository(dioClient, supabaseClient);
 });
 
 // ── Menu Repository Provider ──────────────────────────────────────────────────
@@ -77,40 +97,64 @@ final menuRepositoryProvider = Provider<MenuRepository>((ref) {
   return SupabaseMenuRepository(client);
 });
 
-// ── Orders Repository Provider ────────────────────────────────────────────────
-final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
-  final delegate = ref.watch(_baseOrdersRepositoryProvider);
-  final queue = ref.watch(offlineSyncQueueProvider);
-  final repo = OfflineFirstOrdersRepository(delegate: delegate, queue: queue);
-  // Dispose the internal broadcast StreamController when this provider is torn down
-  // to prevent memory leaks after hot-reload or provider invalidation.
-  ref.onDispose(repo.dispose);
-  return repo;
+// ── Categories Repository Provider ────────────────────────────────────────────
+final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiCategoriesRepository(dioClient);
 });
 
-final _baseOrdersRepositoryProvider = Provider<OrdersRepository>((ref) {
-  if (kUseMockRepositories) return MockOrdersRepository();
-  final client = ref.watch(supabaseClientProvider);
-  return SupabaseOrdersRepository(client);
+// ── Menu Items Repository Provider ────────────────────────────────────────────
+final menuItemsRepositoryProvider = Provider<MenuItemsRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiMenuItemsRepository(dioClient);
 });
 
-// ── Tables Repository Provider ────────────────────────────────────────────────
+// ── Pricing Repository Provider ───────────────────────────────────────────────
+final pricingRepositoryProvider = Provider<PricingRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiPricingRepository(dioClient);
+});
+
+// ── Tax Repository Provider ───────────────────────────────────────────────────
+final taxRepositoryProvider = Provider<TaxRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiTaxRepository(dioClient);
+});
+
+// ── Modifier Repository Provider ──────────────────────────────────────────────
+final modifierRepositoryProvider = Provider<ModifierRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiModifierRepository(dioClient);
+});
+
+// ── Tables Repository Provider (Phase 9) ────────────────────────────────────
 final tablesRepositoryProvider = Provider<TablesRepository>((ref) {
-  if (kUseMockRepositories) return MockTablesRepository();
-  final client = ref.watch(supabaseClientProvider);
-  return SupabaseTablesRepository(client);
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiTablesRepository(dioClient);
+});
+
+// ── Availability Repository Provider (Phase 9) ──────────────────────────────
+final availabilityRepositoryProvider = Provider<AvailabilityRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiAvailabilityRepository(dioClient);
+});
+
+// ── Orders Repository Provider (Phase 10) ───────────────────────────────────
+final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiOrdersRepository(dioClient);
+});
+
+// ── Settings Repository Provider (Phase 11) ─────────────────────────────────
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiSettingsRepository(dioClient);
+});
+
+// ── Analytics Repository Provider (Phase 11) ────────────────────────────────
+final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return ApiAnalyticsRepository(dioClient);
 });
 
 // ── Staff Repository Provider ─────────────────────────────────────────────────
-final staffRepositoryProvider = Provider<StaffRepository>((ref) {
-  if (kUseMockRepositories) return MockStaffRepository();
-  final client = ref.watch(supabaseClientProvider);
-  return SupabaseStaffRepository(client);
-});
-
-// ── Settings Repository Provider ──────────────────────────────────────────────
-final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
-  if (kUseMockRepositories) return MockSettingsRepository();
-  final client = ref.watch(supabaseClientProvider);
-  return SupabaseSettingsRepository(client);
-});

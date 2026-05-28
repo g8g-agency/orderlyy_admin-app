@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'network_info.dart';
-import '../utils/uuid.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
 
 typedef OfflineWriteHandler = Future<void> Function(Map<String, dynamic> payload);
 
@@ -29,7 +31,7 @@ class OfflineQueueManager {
   }
 
   Future<void> queueWrite({required String action, required Map<String, dynamic> payload}) async {
-    final id = UuidGenerator.generateRuntimeId(prefix: 'offline-write');
+    final id = 'offline-write-${uuid.v4()}';
     final item = {
       'id': id,
       'action': action,

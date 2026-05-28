@@ -3,8 +3,11 @@ import 'package:flutter/foundation.dart';
 import '../../data/dtos/order_dto.dart';
 import '../../data/dtos/sync_action.dart';
 import '../../data/local/offline_sync_queue.dart';
-import '../../utils/uuid.dart';
 import 'orders_repository.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
+
 
 class OfflineFirstOrdersRepository implements OrdersRepository {
   final OrdersRepository _delegate;
@@ -175,11 +178,11 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
   @override
   Future<OrderDto> createOrder(OrderDto order) async {
     final action = SyncAction(
-      id: UuidGenerator.generateRuntimeId(prefix: 'act-create'),
+      id: 'act-create-${uuid.v4()}',
       type: 'createOrder',
       payload: order.toJson(),
       timestamp: DateTime.now(),
-      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-create'),
+      idempotencyKey: 'idem-create-${uuid.v4()}',
     );
 
     await _queue.enqueue(action);
@@ -197,11 +200,11 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
   @override
   Future<OrderDto> updateOrder(OrderDto order) async {
     final action = SyncAction(
-      id: UuidGenerator.generateRuntimeId(prefix: 'act-update'),
+      id: 'act-update-${uuid.v4()}',
       type: 'updateOrder',
       payload: order.toJson(),
       timestamp: DateTime.now(),
-      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-update'),
+      idempotencyKey: 'idem-update-${uuid.v4()}',
     );
 
     await _queue.enqueue(action);
@@ -230,11 +233,11 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
           ));
 
     final action = SyncAction(
-      id: UuidGenerator.generateRuntimeId(prefix: 'act-status'),
+      id: 'act-status-${uuid.v4()}',
       type: 'updateOrderStatus',
       payload: {'orderId': orderId, 'status': newStatus.name},
       timestamp: DateTime.now(),
-      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-status'),
+      idempotencyKey: 'idem-status-${uuid.v4()}',
     );
 
     await _queue.enqueue(action);
@@ -252,11 +255,11 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
   @override
   Future<void> cancelOrder(String orderId) async {
     final action = SyncAction(
-      id: UuidGenerator.generateRuntimeId(prefix: 'act-cancel'),
+      id: 'act-cancel-${uuid.v4()}',
       type: 'cancelOrder',
       payload: {'orderId': orderId},
       timestamp: DateTime.now(),
-      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-cancel'),
+      idempotencyKey: 'idem-cancel-${uuid.v4()}',
     );
 
     await _queue.enqueue(action);

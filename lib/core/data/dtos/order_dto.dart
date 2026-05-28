@@ -26,7 +26,13 @@ class OrderItemDto {
   final String menuItemId;
   final String menuItemName;
   final int quantity;
-  final double unitPrice;
+  
+  // MINOR UNITS ONLY. Frontend never multiplies this.
+  final int unitPriceAmount; 
+  
+  // Backend provides the resolved total. Frontend never computes it.
+  final int lineTotalAmount; 
+  
   final String? notes;
 
   const OrderItemDto({
@@ -34,18 +40,18 @@ class OrderItemDto {
     required this.menuItemId,
     required this.menuItemName,
     required this.quantity,
-    required this.unitPrice,
+    required this.unitPriceAmount,
+    required this.lineTotalAmount,
     this.notes,
   });
-
-  double get lineTotal => unitPrice * quantity;
 
   factory OrderItemDto.fromJson(Map<String, dynamic> json) => OrderItemDto(
     id: json['id'] as String,
     menuItemId: json['menu_item_id'] as String,
     menuItemName: json['menu_item_name'] as String,
     quantity: json['quantity'] as int,
-    unitPrice: (json['unit_price'] as num).toDouble(),
+    unitPriceAmount: (json['unit_price_amount'] as num?)?.toInt() ?? 0,
+    lineTotalAmount: (json['line_total_amount'] as num?)?.toInt() ?? 0,
     notes: json['notes'] as String?,
   );
 
@@ -54,7 +60,8 @@ class OrderItemDto {
     'menu_item_id': menuItemId,
     'menu_item_name': menuItemName,
     'quantity': quantity,
-    'unit_price': unitPrice,
+    'unit_price_amount': unitPriceAmount,
+    'line_total_amount': lineTotalAmount,
     'notes': notes,
   };
 }
@@ -68,12 +75,18 @@ class OrderDto {
   final String tableLabel;
   final OrderStatus status;
   final List<OrderItemDto> items;
-  final double totalAmount;
+  
+  // MINOR UNITS ONLY. Provided by backend engine.
+  final int totalAmount;
+  final int totalTaxAmount; 
+  final int totalDiscountAmount;
+  
   final String? staffId;
   final String? staffName;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int versionNum;
 
   const OrderDto({
     required this.id,
@@ -83,11 +96,14 @@ class OrderDto {
     required this.status,
     required this.items,
     required this.totalAmount,
+    this.totalTaxAmount = 0,
+    this.totalDiscountAmount = 0,
     this.staffId,
     this.staffName,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    required this.versionNum,
   });
 
   factory OrderDto.fromJson(Map<String, dynamic> json) => OrderDto(
@@ -99,12 +115,15 @@ class OrderDto {
     items: (json['items'] as List? ?? [])
         .map((e) => OrderItemDto.fromJson(e as Map<String, dynamic>))
         .toList(),
-    totalAmount: (json['total_amount'] as num).toDouble(),
+    totalAmount: (json['total_amount'] as num?)?.toInt() ?? 0,
+    totalTaxAmount: (json['total_tax_amount'] as num?)?.toInt() ?? 0,
+    totalDiscountAmount: (json['total_discount_amount'] as num?)?.toInt() ?? 0,
     staffId: json['staff_id'] as String?,
     staffName: json['staff_name'] as String?,
     notes: json['notes'] as String?,
     createdAt: DateTime.parse(json['created_at'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
+    versionNum: json['version_num'] as int? ?? 1,
   );
 
   Map<String, dynamic> toJson() => {
@@ -115,14 +134,17 @@ class OrderDto {
     'status': status.name,
     'items': items.map((i) => i.toJson()).toList(),
     'total_amount': totalAmount,
+    'total_tax_amount': totalTaxAmount,
+    'total_discount_amount': totalDiscountAmount,
     'staff_id': staffId,
     'staff_name': staffName,
     'notes': notes,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
+    'version_num': versionNum,
   };
 
-  OrderDto copyWith({OrderStatus? status, DateTime? updatedAt}) => OrderDto(
+  OrderDto copyWith({OrderStatus? status, DateTime? updatedAt, int? versionNum}) => OrderDto(
     id: id,
     tenantId: tenantId,
     tableId: tableId,
@@ -130,11 +152,14 @@ class OrderDto {
     status: status ?? this.status,
     items: items,
     totalAmount: totalAmount,
+    totalTaxAmount: totalTaxAmount,
+    totalDiscountAmount: totalDiscountAmount,
     staffId: staffId,
     staffName: staffName,
     notes: notes,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    versionNum: versionNum ?? this.versionNum,
   );
 
   String get displayStatus => status.name.toUpperCase();

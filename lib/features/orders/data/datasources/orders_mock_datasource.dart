@@ -6,7 +6,9 @@ import 'dart:async';
 import 'dart:math';
 import '../../../../core/data/datasources/base/base_datasource.dart';
 import '../../../../core/data/dtos/order_dto.dart';
-import '../../../../core/utils/uuid.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
 
 /// Mock data source for orders
 class OrdersMockDataSource extends MockDataSource<OrderDto> {
@@ -83,7 +85,7 @@ class OrdersMockDataSource extends MockDataSource<OrderDto> {
     await simulateLatency();
 
     final newOrder = OrderDto(
-      id: UuidGenerator.generateRuntimeId(prefix: 'order'),
+      id: 'order-${uuid.v4()}',
       tenantId: dto.tenantId,
       tableId: dto.tableId,
       tableLabel: dto.tableLabel,

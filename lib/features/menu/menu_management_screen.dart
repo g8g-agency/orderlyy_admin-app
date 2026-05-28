@@ -10,34 +10,20 @@ import '../../core/data/dtos/menu_dto.dart';
 import '../../core/providers/menu_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/uuid.dart';
+import '../../core/widgets/admin_shell.dart';
 import 'presentation/screens/item_detail_screen.dart';
 import 'presentation/screens/modifier_matrix_screen.dart';
+import '../onboarding/presentation/state/onboarding_notifier.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
 
 // ── Local Mock States for Interactive Operations ─────────────────────────────
-final expandedCategoriesProvider = StateProvider<Map<String, bool>>((ref) => {
-      'cat-001': false,
-      'cat-002': true, // Expanded by default to match HTML
-      'cat-003': false,
-      'cat-004': false,
-      'cat-005': false,
-    });
+final expandedCategoriesProvider = StateProvider<Map<String, bool>>((ref) => {});
 
-final categoryVisibilityProvider = StateProvider<Map<String, bool>>((ref) => {
-      'cat-001': true,
-      'cat-002': true,
-      'cat-003': true,
-      'cat-004': false, // Hidden by default to match HTML
-      'cat-005': true,
-    });
+final categoryVisibilityProvider = StateProvider<Map<String, bool>>((ref) => {});
 
-final categorySchedulesProvider = StateProvider<Map<String, String?>>((ref) => {
-      'cat-001': null, // All Day
-      'cat-002': '11:00 AM - 10:00 PM',
-      'cat-003': null,
-      'cat-004': null,
-      'cat-005': null,
-    });
+final categorySchedulesProvider = StateProvider<Map<String, String?>>((ref) => {});
 
 class MenuManagementScreen extends ConsumerStatefulWidget {
   const MenuManagementScreen({super.key});
@@ -48,22 +34,11 @@ class MenuManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
-  // Category Details Mapping
-  final Map<String, String> _categoryNames = {
-    'cat-001': 'Appetizers',
-    'cat-002': 'Mains',
-    'cat-003': 'Sides',
-    'cat-004': 'Drinks',
-    'cat-005': 'Desserts',
-  };
-
-  // Drag-and-drop simulated indices mapping
-  late List<String> _categoryOrder;
+  String? _selectedCategoryId;
 
   @override
   void initState() {
     super.initState();
-    _categoryOrder = ['cat-001', 'cat-002', 'cat-003', 'cat-004', 'cat-005'];
   }
 
   Future<void> _toggleItemAvailability(MenuItemDto item) async {
@@ -119,30 +94,46 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final name = controller.text.trim();
                 if (name.isNotEmpty) {
-                  final newId = 'cat-00${_categoryOrder.length + 1}';
-                  setState(() {
-                    _categoryNames[newId] = name;
-                    _categoryOrder.add(newId);
-                    ref.read(expandedCategoriesProvider.notifier).state = {
-                      ...ref.read(expandedCategoriesProvider),
-                      newId: false,
-                    };
-                    ref.read(categoryVisibilityProvider.notifier).state = {
-                      ...ref.read(categoryVisibilityProvider),
-                      newId: true,
-                    };
-                  });
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Category "$name" created successfully.'),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: AppColors.success,
-                    ),
+                  final tenantId = ref.read(appContextProvider)?.tenant.id ?? '';
+                  final newCategory = MenuCategoryDto(
+                    id: uuid.v4(),
+                    tenantId: tenantId,
+                    name: name,
+                    isActive: true,
+                    sortOrder: 0,
                   );
+                  
+                  try {
+                    await ref.read(createMenuCategoryProvider)(newCategory);
+                    
+                    // Invalidate caches to refresh UI instantly
+                    ref.invalidate(menuCategoriesFutureProvider);
+                    ref.invalidate(onboardingNotifierProvider);
+                    
+                    if (mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Category "$name" created successfully.'),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to create category: $e'),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: AppTheme.error,
+                        ),
+                      );
+                    }
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -248,157 +239,271 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(menuCategoriesFutureProvider);
     final menuItemsAsync = ref.watch(menuItemsStreamProvider);
-    final expandedCategories = ref.watch(expandedCategoriesProvider);
-    final categoryVisibility = ref.watch(categoryVisibilityProvider);
-    final categorySchedules = ref.watch(categorySchedulesProvider);
+    final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Column(
+    return AdminShell(
+      title: 'Menu Manager',
+      disablePadding: true,
+      actions: [
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ModifierMatrixScreen()),
+            );
+          },
+          icon: Icon(Icons.tune_rounded, size: 16.r, color: AppTheme.primary),
+          label: Text(
+            'Modifier Studio',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 11.sp,
+              color: AppTheme.primary,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
+            minimumSize: Size(125.w, 38.h),
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        ElevatedButton.icon(
+          onPressed: () => _showAddCategorySheet(context),
+          icon: Icon(Icons.create_new_folder_rounded, size: 16.r, color: Colors.white),
+          label: Text(
+            'Add Category',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11.sp),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primary,
+            foregroundColor: Colors.white,
+            minimumSize: Size(120.w, 38.h),
+            padding: EdgeInsets.symmetric(horizontal: 14.w),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+          ),
+        ),
+        if (isDesktop && _selectedCategoryId != null) ...[
+          SizedBox(width: 8.w),
+          ElevatedButton.icon(
+            onPressed: () => _showItemEditSheet(context, null, _selectedCategoryId!),
+            icon: Icon(Icons.add_rounded, size: 16.r, color: Colors.white),
+            label: Text(
+              'Add Item',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11.sp),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryContainer,
+              foregroundColor: Colors.white,
+              minimumSize: Size(100.w, 38.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+          ),
+        ],
+      ],
+      body: isDesktop
+          ? _buildTwoColumnLayout(categoriesAsync, menuItemsAsync)
+          : _buildStackedLayout(categoriesAsync, menuItemsAsync),
+    );
+  }
+
+  // ── 2-Column Desktop Layout ───────────────────────────────────────────────
+  Widget _buildTwoColumnLayout(
+      AsyncValue<List<MenuCategoryDto>> categoriesAsync, AsyncValue<List<MenuItemDto>> menuItemsAsync) {
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+      error: (err, stack) => Center(
+        child: Text('Failed to load categories: $err', style: GoogleFonts.plusJakartaSans(color: AppTheme.error)),
+      ),
+      data: (categories) {
+        if (categories.isEmpty) {
+          return Center(
+            child: Text('No categories found. Create one to get started!',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+          );
+        }
+
+        // Auto-select first category if none selected
+        if (_selectedCategoryId == null && categories.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _selectedCategoryId = categories.first.id;
+              });
+            }
+          });
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header block
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Menu Manager',
-                          style: AppTheme.headlineLg.copyWith(
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.w800,
+            // Left Panel - Categories List
+            Container(
+              width: 320.w,
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceContainerLowest,
+                border: Border(right: BorderSide(color: AppTheme.surfaceContainerHigh)),
+              ),
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  final isSelected = _selectedCategoryId == category.id;
+                  
+                  return Material(
+                    color: isSelected ? AppTheme.primaryContainer.withOpacity(0.1) : Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategoryId = category.id;
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: isSelected ? AppTheme.primary : Colors.transparent,
+                              width: 4.w,
+                            ),
+                            bottom: BorderSide(color: AppTheme.surfaceContainerHigh),
                           ),
                         ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Organize categories, items, and availability.',
-                          style: AppTheme.bodySm.copyWith(
-                            color: AppTheme.secondary,
-                            fontSize: 12.sp,
-                          ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.folder_open_rounded,
+                              color: isSelected ? AppTheme.primary : AppTheme.secondary,
+                              size: 20.r,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                category.name,
+                                style: AppTheme.titleMd.copyWith(
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: isSelected ? AppTheme.primary : AppTheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded, color: AppTheme.surfaceContainerHighest),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ModifierMatrixScreen(),
-                        ),
-                      );
-                    },
-                    icon: Icon(Icons.tune_rounded, size: 16.r, color: AppTheme.primary),
-                    label: Text(
-                      'Modifier Studio',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11.sp,
-                        color: AppTheme.primary,
                       ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
-                      minimumSize: Size(125.w, 38.h),
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10.w),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddCategorySheet(context),
-                    icon: Icon(Icons.add_rounded, size: 16.r, color: Colors.white),
-                    label: Text(
-                      'Add Category',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11.sp,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryContainer,
-                      foregroundColor: Colors.white,
-                      minimumSize: Size(120.w, 38.h),
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-
-            Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
-
-            // Categories tree area
+            
+            // Right Panel - Items List
             Expanded(
               child: menuItemsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
                 error: (err, stack) => Center(
-                  child: Text(
-                    'Failed to load menu: $err',
-                    style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
-                  ),
+                  child: Text('Failed to load menu: $err', style: GoogleFonts.plusJakartaSans(color: AppTheme.error)),
                 ),
                 data: (menuItems) {
-                  // Render drag-and-drop category editor list
-                  return ReorderableListView.builder(
-                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
-                    itemCount: _categoryOrder.length,
-                    onReorder: (oldIdx, newIdx) {
-                      setState(() {
-                        if (newIdx > oldIdx) newIdx -= 1;
-                        final item = _categoryOrder.removeAt(oldIdx);
-                        _categoryOrder.insert(newIdx, item);
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      final catId = _categoryOrder[index];
-                      final catName = _categoryNames[catId] ?? 'Category';
-                      final isExpanded = expandedCategories[catId] ?? false;
-                      final isVisible = categoryVisibility[catId] ?? true;
-                      final schedule = categorySchedules[catId];
+                  final catItems = menuItems.where((i) => i.categoryId == _selectedCategoryId).toList();
+                  final selectedCatName = categories.firstWhere((c) => c.id == _selectedCategoryId, orElse: () => categories.first).name;
 
-                      // Group items under this category
-                      final catItems = menuItems.where((i) {
-                        // Map standard DTO category IDs to our local categories
-                        final itemCat = i.categoryId.toLowerCase();
-                        if (catId == 'cat-001' && (itemCat.contains('start') || itemCat == 'cat-001')) return true;
-                        if (catId == 'cat-002' && (itemCat.contains('main') || itemCat == 'cat-002')) return true;
-                        if (catId == 'cat-003' && (itemCat.contains('side') || itemCat == 'cat-003')) return true;
-                        if (catId == 'cat-004' && (itemCat.contains('bev') || itemCat == 'cat-004')) return true;
-                        if (catId == 'cat-005' && (itemCat.contains('dessert') || itemCat == 'cat-005')) return true;
-                        return itemCat == catId;
-                      }).toList();
-
-                      return _buildCategoryAccordionCard(
-                        key: ValueKey(catId),
-                        catId: catId,
-                        catName: catName,
-                        items: catItems,
-                        isExpanded: isExpanded,
-                        isVisible: isVisible,
-                        schedule: schedule,
-                      );
-                    },
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: AppTheme.surfaceContainerHigh)),
+                        ),
+                        child: Text(
+                          selectedCatName,
+                          style: AppTheme.headlineSm.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      Expanded(
+                        child: catItems.isEmpty
+                            ? Center(
+                                child: Text('No items in this category. Click "Add Item" to start.',
+                                    style: AppTheme.bodySm.copyWith(fontStyle: FontStyle.italic)),
+                              )
+                            : ListView.separated(
+                                padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+                                itemCount: catItems.length,
+                                separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                                itemBuilder: (context, i) {
+                                  return _buildNestedItemRow(catItems[i], _selectedCategoryId!);
+                                },
+                              ),
+                      ),
+                    ],
                   );
                 },
               ),
             ),
           ],
-        ),
+        );
+      },
+    );
+  }
+
+  // ── Stacked Mobile Layout (Fallback) ──────────────────────────────────────
+  Widget _buildStackedLayout(
+      AsyncValue<List<MenuCategoryDto>> categoriesAsync, AsyncValue<List<MenuItemDto>> menuItemsAsync) {
+    final expandedCategories = ref.watch(expandedCategoriesProvider);
+    final categoryVisibility = ref.watch(categoryVisibilityProvider);
+    final categorySchedules = ref.watch(categorySchedulesProvider);
+
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+      error: (err, stack) => Center(
+        child: Text('Failed to load categories: $err', style: GoogleFonts.plusJakartaSans(color: AppTheme.error)),
       ),
+      data: (categories) {
+        return menuItemsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+          error: (err, stack) => Center(
+            child: Text('Failed to load menu: $err', style: GoogleFonts.plusJakartaSans(color: AppTheme.error)),
+          ),
+          data: (menuItems) {
+            if (categories.isEmpty) {
+              return Center(
+                child: Text('No categories found. Create one to get started!',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+              );
+            }
+
+            return ReorderableListView.builder(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
+              itemCount: categories.length,
+              onReorderItem: (oldIdx, newIdx) {},
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final catId = category.id;
+                final catName = category.name;
+                final isExpanded = expandedCategories[catId] ?? true;
+                final isVisible = categoryVisibility[catId] ?? true;
+                final schedule = categorySchedules[catId];
+                final catItems = menuItems.where((i) => i.categoryId == catId).toList();
+
+                return _buildCategoryAccordionCard(
+                  key: ValueKey(catId),
+                  catId: catId,
+                  catName: catName,
+                  items: catItems,
+                  isExpanded: isExpanded,
+                  isVisible: isVisible,
+                  schedule: schedule,
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -822,7 +927,7 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
       if (widget.item == null) {
         // Create
         final newItem = MenuItemDto(
-          id: UuidGenerator.generateRuntimeId(prefix: 'menu-item'),
+          id: 'menu-item-${uuid.v4()}',
           tenantId: tenantId,
           categoryId: _categoryId,
           name: name,

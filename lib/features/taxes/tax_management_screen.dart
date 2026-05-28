@@ -1,377 +1,349 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import 'data/dtos/tax_dto.dart';
+import 'data/repositories/tax_provider.dart';
+import 'data/repositories/tax_repository.dart';
 
-class TaxManagementScreen extends StatefulWidget {
+class TaxManagementScreen extends ConsumerStatefulWidget {
   const TaxManagementScreen({super.key});
 
   @override
-  State<TaxManagementScreen> createState() => _TaxManagementScreenState();
+  ConsumerState<TaxManagementScreen> createState() => _TaxManagementScreenState();
 }
 
-class _TaxManagementScreenState extends State<TaxManagementScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  final List<Map<String, dynamic>> _taxRules = [
-    {
-      'id': 'rule_std',
-      'category': 'Burgers & Mains',
-      'vatRate': 20.0,
-      'serviceChargeRate': 5.0,
-      'isExempt': false,
-    },
-    {
-      'id': 'rule_bev',
-      'category': 'Beverages',
-      'vatRate': 12.5,
-      'serviceChargeRate': 5.0,
-      'isExempt': false,
-    },
-    {
-      'id': 'rule_exempt',
-      'category': 'Water & Basic Bread',
-      'vatRate': 0.0,
-      'serviceChargeRate': 0.0,
-      'isExempt': true,
-    },
-  ];
-
-  String _selectedCategory = 'Burgers & Mains';
-  double _inputAmount = 10.0;
-  final _inputCtrl = TextEditingController(text: '10.00');
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _inputCtrl.dispose();
-    super.dispose();
-  }
-
-  double get _currentVatRate {
-    final rule = _taxRules.firstWhere((r) => r['category'] == _selectedCategory);
-    return rule['vatRate'] as double;
-  }
-
-  double get _currentServiceChargeRate {
-    final rule = _taxRules.firstWhere((r) => r['category'] == _selectedCategory);
-    return rule['serviceChargeRate'] as double;
-  }
-
-  double get _calculatedVat => _inputAmount * (_currentVatRate / 100);
-  double get _calculatedServiceCharge => _inputAmount * (_currentServiceChargeRate / 100);
-  double get _calculatedGross => _inputAmount + _calculatedVat + _calculatedServiceCharge;
-
-  void _editTaxRule(int index) {
-    final rule = _taxRules[index];
-    final vatCtrl = TextEditingController(text: rule['vatRate'].toString());
-    final scCtrl = TextEditingController(text: rule['serviceChargeRate'].toString());
-
-    showDialog(
+class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
+  void _showTaxForm({TaxProfileDto? existingProfile}) {
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceContainerLowest,
-        title: Text('Edit Tax Rule', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(rule['category'] as String,
-                style: GoogleFonts.inter(fontSize: 14.sp, color: AppTheme.secondary)),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: vatCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.jetBrainsMono(),
-              decoration: InputDecoration(
-                suffixText: '%',
-                labelText: 'VAT / Sales Tax',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: scCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.jetBrainsMono(),
-              decoration: InputDecoration(
-                suffixText: '%',
-                labelText: 'Service Charge',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
-          TextButton(
-            onPressed: () {
-              final newVat = double.tryParse(vatCtrl.text);
-              final newSc = double.tryParse(scCtrl.text);
-              if (newVat != null && newSc != null) {
-                setState(() {
-                  _taxRules[index]['vatRate'] = newVat;
-                  _taxRules[index]['serviceChargeRate'] = newSc;
-                  _taxRules[index]['isExempt'] = (newVat == 0 && newSc == 0);
-                });
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _TaxFormSheet(existingProfile: existingProfile),
+    ).then((_) {
+      // Refresh the list when sheet is closed
+      ref.invalidate(taxProfilesProvider);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final asyncProfiles = ref.watch(taxProfilesProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceContainerLowest,
-        title: Text('Tax Configuration',
-            style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+        title: Text('Taxes',
+            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
         elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppTheme.primaryContainer,
-          labelColor: AppTheme.primaryContainer,
-          unselectedLabelColor: AppTheme.secondary,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12.sp),
-          tabs: const [
-            Tab(text: 'Tax Rules'),
-            Tab(text: 'Simulator'),
-          ],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: asyncProfiles.when(
+        data: (profiles) {
+          if (profiles.isEmpty) {
+            return _buildEmptyState();
+          }
+          return _buildList(profiles);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, st) => Center(
+          child: Text('Error loading taxes: $err',
+              style: GoogleFonts.inter(color: Colors.red)),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showTaxForm(),
+        backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text('New Tax',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildRulesTab(),
-          _buildSimulatorTab(),
+          Icon(Icons.receipt_long_outlined, size: 64, color: AppTheme.secondary.withOpacity(0.5)),
+          const SizedBox(height: 16),
+          Text('No Tax Profiles',
+              style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('Create a tax profile to apply taxes to your menu items.',
+              style: GoogleFonts.inter(color: AppTheme.secondary)),
         ],
       ),
     );
   }
 
-  Widget _buildRulesTab() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Jurisdiction-Specific Tax Matrix',
-            style: GoogleFonts.inter(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.onSurface,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            'Define tax categories and service charges applied branch-wide.',
-            style: GoogleFonts.inter(fontSize: 12.sp, color: AppTheme.secondary),
-          ),
-          SizedBox(height: 20.h),
-          ...List.generate(_taxRules.length, (i) {
-            final rule = _taxRules[i];
-            final bool exempt = rule['isExempt'] as bool;
-            return Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.all(16.r),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppTheme.surfaceContainerHigh),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          rule['category'] as String,
-                          style: GoogleFonts.inter(fontSize: 15.sp, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8.h),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: [
-                            _taxBadge('VAT: ${rule['vatRate']}%',
-                                exempt ? const Color(0xFF64748B) : const Color(0xFFC0272D),
-                                exempt ? const Color(0xFFF1F5F9) : const Color(0xFFFEF2F2)),
-                            _taxBadge('SC: ${rule['serviceChargeRate']}%',
-                                const Color(0xFF16A34A), const Color(0xFFF0FDF4)),
-                            if (exempt)
-                              _taxBadge('EXEMPT', const Color(0xFF64748B), const Color(0xFFF1F5F9)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit_rounded, color: Color(0xFFC0272D)),
-                    onPressed: () => _editTaxRule(i),
-                  ),
-                ],
-              ),
-            ).animate(delay: Duration(milliseconds: 60 * i)).fadeIn(duration: 300.ms).slideY(begin: 0.05);
-          }),
-        ],
-      ),
-    );
-  }
+  Widget _buildList(List<TaxProfileDto> profiles) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: profiles.length,
+      separatorBuilder: (ctx, i) => const SizedBox(height: 12),
+      itemBuilder: (ctx, index) {
+        final profile = profiles[index];
+        final ratePercent = profile.effectiveBasisPoints / 100.0;
 
-  Widget _buildSimulatorTab() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Tax Preview Simulator',
-            style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            'Test calculations based on tax regulations.',
-            style: GoogleFonts.inter(fontSize: 12.sp, color: AppTheme.secondary),
-          ),
-          SizedBox(height: 24.h),
-
-          // Form
-          Container(
-            padding: EdgeInsets.all(16.r),
+        return InkWell(
+          onTap: () => _showTaxForm(existingProfile: profile),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(12.r),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppTheme.surfaceContainerHigh),
             ),
-            child: Column(
+            child: Row(
               children: [
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: 'Simulation Category',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                  isExpanded: true,
-                  items: _taxRules
-                      .map((r) => DropdownMenuItem(
-                            value: r['category'] as String,
-                            child: Text(r['category'] as String, overflow: TextOverflow.ellipsis),
-                          ))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedCategory = val);
-                  },
-                ),
-                SizedBox(height: 16.h),
-                TextField(
-                  controller: _inputCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600),
-                  onChanged: (v) {
-                    setState(() => _inputAmount = double.tryParse(v) ?? 0.0);
-                  },
-                  decoration: InputDecoration(
-                    prefixText: '₹ ',
-                    labelText: 'Simulated net price',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 20.h),
-
-          // Results Card
-          Container(
-            padding: EdgeInsets.all(20.r),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: AppTheme.surfaceContainerHigh),
-            ),
-            child: Column(
-              children: [
-                _simRow('Net price', _inputAmount),
-                _simRow('VAT (${_currentVatRate.toStringAsFixed(1)}%)', _calculatedVat),
-                _simRow('Service Charge (${_currentServiceChargeRate.toStringAsFixed(1)}%)', _calculatedServiceCharge),
-                SizedBox(height: 12.h),
-                Divider(height: 1, color: AppTheme.surfaceContainerHigh),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Gross Price',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                    Text(
-                      '₹${_calculatedGross.toStringAsFixed(2)}',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20.sp,
-                        color: const Color(0xFFC0272D),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(profile.name,
+                              style: GoogleFonts.inter(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                          if (!profile.isActive)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text('Inactive',
+                                    style: GoogleFonts.inter(
+                                        fontSize: 10, color: Colors.grey.shade700)),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                      if (profile.description != null && profile.description!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(profile.description!,
+                              style: GoogleFonts.inter(
+                                  fontSize: 13, color: AppTheme.secondary)),
+                        ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('${ratePercent.toStringAsFixed(2)}%',
+                        style: GoogleFonts.jetBrainsMono(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryContainer)),
+                    const SizedBox(height: 4),
+                    Text(profile.calculationMode.toUpperCase(),
+                        style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.secondary)),
                   ],
                 ),
+                const SizedBox(width: 8),
+                Switch(
+                  value: profile.isActive,
+                  onChanged: (val) async {
+                    await ref.read(taxRepositoryProvider).toggleTaxProfile(profile.id, val);
+                    ref.invalidate(taxProfilesProvider);
+                  },
+                ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+}
 
-  Widget _taxBadge(String text, Color textColor, Color bgColor) {
+class _TaxFormSheet extends ConsumerStatefulWidget {
+  final TaxProfileDto? existingProfile;
+
+  const _TaxFormSheet({this.existingProfile});
+
+  @override
+  ConsumerState<_TaxFormSheet> createState() => _TaxFormSheetState();
+}
+
+class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameCtrl;
+  late TextEditingController _descCtrl;
+  late TextEditingController _rateCtrl;
+  String _calcMode = 'exclusive';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.existingProfile?.name ?? '');
+    _descCtrl = TextEditingController(text: widget.existingProfile?.description ?? '');
+    
+    final currentBp = widget.existingProfile?.effectiveBasisPoints ?? 0;
+    _rateCtrl = TextEditingController(text: currentBp > 0 ? (currentBp / 100.0).toStringAsFixed(2) : '');
+    
+    if (widget.existingProfile != null) {
+      _calcMode = widget.existingProfile!.calculationMode;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    _rateCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final repo = ref.read(taxRepositoryProvider);
+      
+      final rateDouble = double.tryParse(_rateCtrl.text) ?? 0.0;
+      final rateBasisPoints = (rateDouble * 100).round();
+
+      if (widget.existingProfile == null) {
+        await repo.createTaxProfile(
+          name: _nameCtrl.text,
+          description: _descCtrl.text,
+          calculationMode: _calcMode,
+          rateBasisPoints: rateBasisPoints,
+        );
+      } else {
+        await repo.updateTaxProfile(
+          id: widget.existingProfile!.id,
+          name: _nameCtrl.text,
+          description: _descCtrl.text,
+          calculationMode: _calcMode,
+          newRateBasisPoints: rateBasisPoints,
+          currentRateBasisPoints: widget.existingProfile!.effectiveBasisPoints,
+        );
+      }
+      
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving tax: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(4.r),
+      padding: EdgeInsets.only(
+        left: 20, right: 20, top: 24, bottom: bottomInset > 0 ? bottomInset + 20 : 32
       ),
-      child: Text(
-        text,
-        style: GoogleFonts.jetBrainsMono(
-          fontSize: 10.sp,
-          fontWeight: FontWeight.bold,
-          color: textColor,
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.existingProfile == null ? 'Create Tax Profile' : 'Edit Tax Profile',
+                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            
+            TextFormField(
+              controller: _nameCtrl,
+              decoration: InputDecoration(
+                labelText: 'Tax Name',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                isDense: true,
+              ),
+              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+            
+            TextFormField(
+              controller: _rateCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'Rate Percentage',
+                suffixText: '%',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                isDense: true,
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Required';
+                if (double.tryParse(v) == null) return 'Invalid number';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            DropdownButtonFormField<String>(
+              value: _calcMode,
+              decoration: InputDecoration(
+                labelText: 'Calculation Mode',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                isDense: true,
+              ),
+              items: const [
+                DropdownMenuItem(value: 'exclusive', child: Text('Exclusive (Added to price)')),
+                DropdownMenuItem(value: 'inclusive', child: Text('Inclusive (Included in price)')),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => _calcMode = val);
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            TextFormField(
+              controller: _descCtrl,
+              decoration: InputDecoration(
+                labelText: 'Description (Optional)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                isDense: true,
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 24),
+            
+            FilledButton(
+              onPressed: _isLoading ? null : _submit,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: _isLoading 
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text('Save Tax', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _simRow(String label, double amount) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(label,
-                style: GoogleFonts.inter(color: AppTheme.secondary),
-                overflow: TextOverflow.ellipsis),
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            '₹${amount.toStringAsFixed(2)}',
-            style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600, color: AppTheme.onSurface),
-          ),
-        ],
       ),
     );
   }

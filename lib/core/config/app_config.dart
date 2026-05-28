@@ -36,11 +36,11 @@ class AppConfig {
       environment: resolvedEnv,
       apiBaseUrl: apiBaseUrl ?? const String.fromEnvironment(
         'API_BASE_URL',
-        defaultValue: 'https://api.staging.orderlli.com/v1',
+        defaultValue: 'http://localhost:3001',
       ),
       websocketUrl: websocketUrl ?? const String.fromEnvironment(
         'WEBSOCKET_URL',
-        defaultValue: 'wss://api.staging.orderlli.com/v1/ws',
+        defaultValue: 'ws://localhost:3001/ws',
       ),
       enableLogging: enableLogging ?? const bool.fromEnvironment(
         'ENABLE_LOGGING',

@@ -44,7 +44,7 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
         ),
       ],
       modifierGroups: [],
-      taxConfig: TaxConfig(vatRate: 0.10, serviceChargeRate: 0.05),
+      taxConfig: TaxConfig(vatRateBps: 1000, serviceChargeRateBps: 500),
       snapshotVersion: 'v2',
     );
 

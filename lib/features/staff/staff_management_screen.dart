@@ -7,8 +7,11 @@ import '../../core/auth/mock_auth_provider.dart';
 import '../../core/data/dtos/staff_dto.dart';
 import '../../core/providers/staff_providers.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/uuid.dart';
 import 'presentation/screens/rbac_matrix_screen.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
+
 
 class StaffManagementScreen extends ConsumerStatefulWidget {
   const StaffManagementScreen({super.key});
@@ -724,7 +727,7 @@ class _StaffSheetState extends ConsumerState<_StaffSheet> {
       if (widget.member == null) {
         // Create
         final newStaff = StaffDto(
-          id: UuidGenerator.generateRuntimeId(prefix: 'staff'),
+          id: 'staff-${uuid.v4()}',
           tenantId: tenantId,
           name: name,
           role: _role,

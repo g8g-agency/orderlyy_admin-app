@@ -153,29 +153,29 @@ class ModifierGroupDto {
 }
 
 class TaxConfigDto {
-  final double vatRate;
-  final double serviceChargeRate;
+  final int vatRateBps;
+  final int serviceChargeRateBps;
 
   const TaxConfigDto({
-    required this.vatRate,
-    required this.serviceChargeRate,
+    required this.vatRateBps,
+    required this.serviceChargeRateBps,
   });
 
   factory TaxConfigDto.fromJson(Map<String, dynamic> json) {
     return TaxConfigDto(
-      vatRate: (json['vat_rate'] as num? ?? 0.0).toDouble(),
-      serviceChargeRate: (json['service_charge_rate'] as num? ?? 0.0).toDouble(),
+      vatRateBps: (json['vat_rate_bps'] as num?)?.toInt() ?? 0,
+      serviceChargeRateBps: (json['service_charge_rate_bps'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'vat_rate': vatRate,
-        'service_charge_rate': serviceChargeRate,
+        'vat_rate_bps': vatRateBps,
+        'service_charge_rate_bps': serviceChargeRateBps,
       };
 
   TaxConfig toDomain() => TaxConfig(
-        vatRate: vatRate,
-        serviceChargeRate: serviceChargeRate,
+        vatRateBps: vatRateBps,
+        serviceChargeRateBps: serviceChargeRateBps,
       );
 }
 

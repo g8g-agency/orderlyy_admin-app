@@ -13,7 +13,7 @@ class SetupDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingState = ref.watch(onboardingNotifierProvider);
-    final authState = ref.watch(authNotifierProvider);
+    final appContext = ref.watch(appContextProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -69,7 +69,7 @@ class SetupDashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome to Orderlli, ${authState.userId != null ? authState.userId : 'Owner'}',
+                      'Welcome to Orderlli, ${appContext?.tenant.name ?? 'Owner'}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -144,15 +144,7 @@ class SetupDashboardScreen extends ConsumerWidget {
                         context.push('/admin/menu');
                       },
                     ),
-                    _ChecklistCard(
-                      title: 'Add Menu Items',
-                      description: 'Add your dishes with prices and details',
-                      isCompleted: status.hasMenuItems,
-                      icon: Icons.restaurant_menu_rounded,
-                      onTap: () {
-                        context.push('/admin/menu');
-                      },
-                    ),
+
                     _ChecklistCard(
                       title: 'Configure Taxes',
                       description: 'Set up GST, VAT or other local tax profiles',
@@ -186,7 +178,7 @@ class SetupDashboardScreen extends ConsumerWidget {
                       isCompleted: status.hasKdsStations,
                       icon: Icons.kitchen_rounded,
                       onTap: () {
-                        context.push('/admin/inventory');
+                        context.push('/admin/kds');
                       },
                     ),
 

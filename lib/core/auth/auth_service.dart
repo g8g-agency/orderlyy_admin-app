@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+@Deprecated('Use ApiAuthRepository instead')
 class AuthService {
   final _client = Supabase.instance.client;
 

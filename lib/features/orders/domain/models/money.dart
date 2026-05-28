@@ -12,32 +12,32 @@ abstract class Money with _$Money implements Comparable<Money> {
   const Money._();
 
   const factory Money({
-    required double amount,
+    required int amountInCents, // STRICTLY integer minor units
     @Default('INR') String currency,
   }) = _Money;
 
   factory Money.fromJson(Map<String, dynamic> json) => _$MoneyFromJson(json);
 
-  factory Money.zero() => const Money(amount: 0.0);
+  factory Money.zero() => const Money(amountInCents: 0);
 
   Money operator +(Money other) {
     _assertSameCurrency(other);
-    return Money(amount: amount + other.amount, currency: currency);
+    return Money(amountInCents: amountInCents + other.amountInCents, currency: currency);
   }
 
   Money operator -(Money other) {
     _assertSameCurrency(other);
-    return Money(amount: amount - other.amount, currency: currency);
+    return Money(amountInCents: amountInCents - other.amountInCents, currency: currency);
   }
 
-  Money operator *(double multiplier) {
-    return Money(amount: amount * multiplier, currency: currency);
+  Money operator *(int multiplier) {
+    return Money(amountInCents: amountInCents * multiplier, currency: currency);
   }
 
   @override
   int compareTo(Money other) {
     _assertSameCurrency(other);
-    return amount.compareTo(other.amount);
+    return amountInCents.compareTo(other.amountInCents);
   }
 
   void _assertSameCurrency(Money other) {
@@ -47,10 +47,10 @@ abstract class Money with _$Money implements Comparable<Money> {
   }
 
   String format() {
-    return '₹${amount.toStringAsFixed(2)}';
+    return '₹${(amountInCents / 100).toStringAsFixed(2)}';
   }
 
-  bool get isZero => amount == 0.0;
-  bool get isPositive => amount > 0.0;
-  bool get isNegative => amount < 0.0;
+  bool get isZero => amountInCents == 0;
+  bool get isPositive => amountInCents > 0;
+  bool get isNegative => amountInCents < 0;
 }

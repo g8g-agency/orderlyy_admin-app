@@ -42,8 +42,10 @@ class RestaurantTableDto {
   final int capacity;
   final TableStatus status;
   final String? activeOrderId;
-  final String? section; // e.g. "Indoor", "Patio"
+  final String? sectionId; // Normalized reference to a section/floor, NOT tightly coupled to layout logic
   final DateTime updatedAt;
+  final int versionNum;
+  final DateTime? deletedAt;
 
   const RestaurantTableDto({
     required this.id,
@@ -52,8 +54,10 @@ class RestaurantTableDto {
     required this.capacity,
     required this.status,
     this.activeOrderId,
-    this.section,
+    this.sectionId,
     required this.updatedAt,
+    required this.versionNum,
+    this.deletedAt,
   });
 
   factory RestaurantTableDto.fromJson(Map<String, dynamic> json) =>
@@ -64,26 +68,28 @@ class RestaurantTableDto {
         capacity: json['capacity'] as int? ?? 4,
         status: TableStatus.fromString((json['status'] ?? 'available') as String),
         activeOrderId: json['active_order_id'] as String?,
-        section: (json['section'] ?? json['floor']?.toString()) as String?,
+        sectionId: (json['section_id'] ?? json['floor']?.toString()) as String?,
         updatedAt: DateTime.parse(json['updated_at'] ?? json['created_at'] ?? DateTime.now().toUtc().toIso8601String()),
+        versionNum: json['version_num'] as int? ?? 1,
+        deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
       );
 
   Map<String, dynamic> toJson() => {
-    'id': id,
+    // id, updated_at, deleted_at handled by backend
     'tenant_id': tenantId,
-    'table_num': label,
+    'label': label,
     'capacity': capacity,
     'status': status.name,
     'active_order_id': activeOrderId,
-    'floor': int.tryParse(section ?? '1') ?? 1,
-    'created_at': updatedAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
+    'section_id': sectionId,
+    'version_num': versionNum, // sent for OCC
   };
 
   RestaurantTableDto copyWith({
     TableStatus? status,
     String? activeOrderId,
     DateTime? updatedAt,
+    int? versionNum,
   }) => RestaurantTableDto(
     id: id,
     tenantId: tenantId,
@@ -91,7 +97,9 @@ class RestaurantTableDto {
     capacity: capacity,
     status: status ?? this.status,
     activeOrderId: activeOrderId ?? this.activeOrderId,
-    section: section,
+    sectionId: sectionId,
     updatedAt: updatedAt ?? this.updatedAt,
+    versionNum: versionNum ?? this.versionNum,
+    deletedAt: deletedAt,
   );
 }

@@ -28,7 +28,10 @@ class MockDioClient implements DioClient {
   Object? mockError;
 
   @override
-  void Function()? get onUnauthorized => null;
+  void Function(String)? get onUnauthorized => null;
+
+  @override
+  String get deviceFingerprint => 'mock_device_fingerprint';
 
   @override
   Dio get dio => throw UnimplementedError();

@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/providers/menu_providers.dart';
+import '../../../../core/data/dtos/menu_dto.dart';
 
 class ModifierMatrixScreen extends ConsumerStatefulWidget {
   const ModifierMatrixScreen({super.key});
@@ -31,30 +33,8 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
   // Mapper search state
   String _mapperSearchQuery = '';
 
-  // Multi-Item checkboxes states (mapped by item name)
-  final Map<String, bool> _mappedItems = {
-    'New York Strip': true,
-    'Ribeye 16oz': true,
-    'Filet Mignon': true,
-    'House Burger': false,
-    'Wagyu Smashburger': false,
-  };
-
-  final Map<String, String> _itemCategories = {
-    'New York Strip': 'Steaks',
-    'Ribeye 16oz': 'Steaks',
-    'Filet Mignon': 'Steaks',
-    'House Burger': 'Burgers',
-    'Wagyu Smashburger': 'Burgers',
-  };
-
-  final Map<String, String> _itemMenus = {
-    'New York Strip': 'Dinner Menu',
-    'Ribeye 16oz': 'Dinner Menu',
-    'Filet Mignon': 'Dinner Menu',
-    'House Burger': 'Lunch Menu',
-    'Wagyu Smashburger': 'Lunch Menu',
-  };
+  // Multi-Item checkboxes states (mapped by item UUID)
+  final Map<String, bool> _mappedItemIds = {};
 
   @override
   void initState() {
@@ -102,7 +82,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
       return;
     }
 
-    final selectedItemsCount = _mappedItems.values.where((v) => v).length;
+    final selectedItemsCount = _mappedItemIds.values.where((v) => v).length;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -128,7 +108,17 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
   @override
   Widget build(BuildContext context) {
     final desktop = MediaQuery.of(context).size.width >= 960;
-    final selectedCount = _mappedItems.values.where((v) => v).length;
+    final selectedCount = _mappedItemIds.values.where((v) => v).length;
+
+    final itemsAsync = ref.watch(menuItemsStreamProvider);
+    final categoriesAsync = ref.watch(menuCategoriesFutureProvider);
+
+    final items = itemsAsync.value ?? [];
+    final categories = categoriesAsync.value ?? [];
+
+    final Map<String, String> categoryNames = {
+      for (var cat in categories) cat.id: cat.name,
+    };
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -223,7 +213,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           flex: 4,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [_buildItemMapperCard(context, selectedCount)],
+                            children: [_buildItemMapperCard(context, selectedCount, items, categoryNames)],
                           ),
                         ),
                       ],
@@ -234,7 +224,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                       children: [
                         ..._buildLeftStudioColumn(context),
                         SizedBox(height: 16.h),
-                        _buildItemMapperCard(context, selectedCount),
+                        _buildItemMapperCard(context, selectedCount, items, categoryNames),
                       ],
                     ),
             ),
@@ -668,11 +658,12 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
   }
 
   // ── Multi Item Mapper Card Widget ──────────────────────────────────────────
-  Widget _buildItemMapperCard(BuildContext context, int selectedCount) {
+  Widget _buildItemMapperCard(
+      BuildContext context, int selectedCount, List<MenuItemDto> items, Map<String, String> categoryNames) {
     // Filter checklist elements by mapper search query
-    final filteredItems = _mappedItems.keys.where((itemName) {
+    final filteredItems = items.where((item) {
       if (_mapperSearchQuery.isEmpty) return true;
-      return itemName.toLowerCase().contains(_mapperSearchQuery.toLowerCase());
+      return item.name.toLowerCase().contains(_mapperSearchQuery.toLowerCase());
     }).toList();
 
     return Container(
@@ -755,8 +746,10 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
               GestureDetector(
                 onTap: () {
                   setState(() {
-                    final allSelected = !_mappedItems.values.contains(false);
-                    _mappedItems.updateAll((key, val) => !allSelected);
+                    final allSelected = filteredItems.every((item) => _mappedItemIds[item.id] == true);
+                    for (var item in filteredItems) {
+                      _mappedItemIds[item.id] = !allSelected;
+                    }
                   });
                 },
                 child: Text(
@@ -785,14 +778,14 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                 : ListView.builder(
                     itemCount: filteredItems.length,
                     itemBuilder: (context, idx) {
-                      final itemName = filteredItems[idx];
-                      final isChecked = _mappedItems[itemName] ?? false;
-                      final category = _itemCategories[itemName] ?? 'Other';
-                      final menu = _itemMenus[itemName] ?? 'Standard Menu';
+                      final item = filteredItems[idx];
+                      final isChecked = _mappedItemIds[item.id] ?? false;
+                      final category = categoryNames[item.categoryId] ?? 'Other';
+                      final menu = 'Standard Menu'; // Placeholder for menu categorization if needed
 
                       // Render category headers when category transitions
                       bool showHeader = idx == 0 ||
-                          _itemCategories[filteredItems[idx - 1]] != category;
+                          filteredItems[idx - 1].categoryId != item.categoryId;
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -820,7 +813,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                           ],
                           CheckboxListTile(
                             title: Text(
-                              itemName,
+                              item.name,
                               style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 12.sp),
                             ),
                             subtitle: Text(
@@ -835,7 +828,7 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                             onChanged: (val) {
                               if (val != null) {
                                 setState(() {
-                                  _mappedItems[itemName] = val;
+                                  _mappedItemIds[item.id] = val;
                                 });
                               }
                             },

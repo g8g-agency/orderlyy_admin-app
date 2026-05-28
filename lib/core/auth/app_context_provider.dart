@@ -6,6 +6,7 @@ import 'app_context_model.dart';
 // Holds resolved context in memory ONLY — never persisted to disk.
 // Always call resolveContext() immediately after signInWithPassword succeeds.
 
+@Deprecated('Use RestaurantContextProvider instead')
 class AppContextNotifier extends StateNotifier<AppContext?> {
   // Public getter for current user email
   String? get currentUserEmail => _client.auth.currentUser?.email;

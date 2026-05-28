@@ -14,13 +14,8 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   }
 
   Future<OnboardingStatusModel?> _fetchStatus() async {
-    try {
-      final repo = ref.read(onboardingRepositoryProvider);
-      return await repo.getOnboardingStatus();
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-      return null;
-    }
+    final repo = ref.read(onboardingRepositoryProvider);
+    return await repo.getOnboardingStatus();
   }
 
   Future<void> hydrate() async {

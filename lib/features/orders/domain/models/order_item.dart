@@ -23,8 +23,6 @@ abstract class OrderItem with _$OrderItem {
   factory OrderItem.fromJson(Map<String, dynamic> json) =>
       _$OrderItemFromJson(json);
 
-  Money get subtotal => Money(amount: unitPrice.amount * quantity);
-
   OrderItem updateQuantity(int newQuantity) {
     if (newQuantity < 1) {
       throw ArgumentError('Quantity must be at least 1');

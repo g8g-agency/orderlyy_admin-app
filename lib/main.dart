@@ -13,6 +13,7 @@ import 'core/data/mock/mock_auth_repository.dart';
 import 'core/providers/repository_providers.dart';
 import 'core/storage/local_storage.dart';
 import 'core/storage/hive_storage.dart';
+import 'core/device/device_fingerprint_provider.dart';
 
 import 'core/constants/supabase_constants.dart';
 
@@ -34,6 +35,7 @@ Future<void> main() async {
   AppConfig.initialize();
 
   final prefs = await SharedPreferences.getInstance();
+  final fingerprint = await DeviceFingerprintService.initFingerprint(prefs);
 
   // Initialize local storage
   final localStorage = SharedPreferencesStorage(prefs);
@@ -55,6 +57,7 @@ Future<void> main() async {
           authRepositoryProvider.overrideWithValue(mockRepo),
           apiCacheBoxProvider.overrideWithValue(apiCacheBox),
           offlineQueueBoxProvider.overrideWithValue(offlineQueueBox),
+          deviceFingerprintProvider.overrideWithValue(fingerprint),
         ],
         child: const OrderlliApp(),
       ),
@@ -81,6 +84,7 @@ Future<void> main() async {
         localStorageProvider.overrideWithValue(localStorage),
         apiCacheBoxProvider.overrideWithValue(apiCacheBox),
         offlineQueueBoxProvider.overrideWithValue(offlineQueueBox),
+        deviceFingerprintProvider.overrideWithValue(fingerprint),
       ],
       child: const OrderlliApp(),
     ),

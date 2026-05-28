@@ -535,7 +535,7 @@ class _OrderDetailsSheet extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    item.subtotal.format(),
+                    (item.unitPrice * item.quantity).format(),
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 14.sp,
                       color: AppTheme.secondary,

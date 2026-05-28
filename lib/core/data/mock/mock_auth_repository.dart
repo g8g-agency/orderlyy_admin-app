@@ -15,6 +15,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/auth_repository.dart';
 import '../dtos/auth_dto.dart';
+import '../../network/api_exception.dart';
 
 // ── Persistence key ───────────────────────────────────────────────────────────
 const _kMockUserIdKey = 'mock_auth_user_id';
@@ -141,7 +142,7 @@ class MockAuthRepository implements AuthRepository {
 
   // ── Email + password sign-in ──────────────────────────────────────────────
   @override
-  Future<LoginResponseDto> signInWithPassword(LoginRequestDto request) async {
+  Future<Result<LoginResponseDto>> signInWithPassword(LoginRequestDto request) async {
     debugPrint(
       '[MockAuth] 🔐 Login attempt: ${request.email} hashCode=$hashCode',
     );
@@ -152,13 +153,14 @@ class MockAuthRepository implements AuthRepository {
 
     if (request.email.isEmpty || !request.email.contains('@')) {
       debugPrint('[MockAuth] ❌ Invalid email');
-      return LoginResponseDto.failure('Invalid email address.');
+      return Failure(ApiFailure('Invalid email address.', ApiErrorCode.validationError));
     }
     if (request.password.length < 6) {
       debugPrint('[MockAuth] ❌ Password too short');
-      return LoginResponseDto.failure(
+      return Failure(ApiFailure(
         'Password must be at least 6 characters.',
-      );
+        ApiErrorCode.validationError,
+      ));
     }
 
     // Accept any valid-format credentials in mock mode
@@ -171,17 +173,17 @@ class MockAuthRepository implements AuthRepository {
       '[MockAuth] ✅ Login success → userId: $_currentUserId (hashCode=$hashCode)',
     );
 
-    return LoginResponseDto(
+    return Success(LoginResponseDto(
       userId: _currentUserId!,
       email: request.email,
       accessToken: 'mock-access-token-dev',
       isSuccess: true,
-    );
+    ));
   }
 
   // ── Staff PIN sign-in ─────────────────────────────────────────────────────
   @override
-  Future<StaffPinLoginResponseDto> staffPinLogin(
+  Future<Result<StaffPinLoginResponseDto>> staffPinLogin(
     StaffPinLoginRequestDto request,
   ) async {
     debugPrint(
@@ -208,9 +210,10 @@ class MockAuthRepository implements AuthRepository {
 
     if (match == null) {
       debugPrint('[MockAuth] ❌ Invalid PIN');
-      return StaffPinLoginResponseDto.failure(
+      return Failure(ApiFailure(
         'Invalid PIN or restaurant code.',
-      );
+        ApiErrorCode.unauthorized,
+      ));
     }
 
     final staffDto = StaffDto(
@@ -232,12 +235,12 @@ class MockAuthRepository implements AuthRepository {
     debugPrint(
       '[MockAuth] ✅ Staff login success → ${staffDto.name} (${staffDto.role}) (hashCode=$hashCode)',
     );
-    return StaffPinLoginResponseDto(isSuccess: true, staff: staffDto);
+    return Success(StaffPinLoginResponseDto(isSuccess: true, staff: staffDto));
   }
 
   // ── Resolve app context ───────────────────────────────────────────────────
   @override
-  Future<AppContextDto?> resolveContext() async {
+  Future<Result<AppContextDto?>> resolveContext() async {
     debugPrint('[MockAuth] 🔍 Resolving context... hashCode=$hashCode');
     await Future.delayed(const Duration(milliseconds: 200));
 
@@ -249,21 +252,22 @@ class MockAuthRepository implements AuthRepository {
     debugPrint(
       '[MockAuth] ✅ Context resolved: tenant=${ctx.tenant.name} hashCode=$hashCode',
     );
-    return ctx;
+    return Success(ctx);
   }
 
   // ── Change password ───────────────────────────────────────────────────────
   @override
-  Future<void> changePassword(String email, String newPassword) async {
+  Future<Result<void>> changePassword(String email, String newPassword) async {
     await Future.delayed(const Duration(milliseconds: 500));
     debugPrint(
       '[MockAuth] 🔑 Password changed (mock no-op) hashCode=$hashCode',
     );
+    return const Success(null);
   }
 
   // ── Sign out ──────────────────────────────────────────────────────────────
   @override
-  Future<void> signOut() async {
+  Future<Result<void>> signOut() async {
     debugPrint('[MockAuth] 🚪 Signing out... hashCode=$hashCode');
     debugPrint('[TRACE] [signOut Start]');
     await Future.delayed(const Duration(milliseconds: 200));
@@ -272,5 +276,6 @@ class MockAuthRepository implements AuthRepository {
     _authStateController.add(null);
     await _persistSession(null);
     debugPrint('[MockAuth] ✅ Signed out hashCode=$hashCode');
+    return const Success(null);
   }
 }

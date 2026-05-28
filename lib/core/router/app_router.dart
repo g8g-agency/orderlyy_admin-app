@@ -26,6 +26,8 @@ import '../../features/runtime_monitoring/presentation/screens/guest_sessions_sc
 import '../../features/runtime_monitoring/presentation/screens/device_management_screen.dart';
 import '../../features/taxes/tax_management_screen.dart';
 import '../../features/branch_overrides/branch_override_screen.dart';
+import '../../features/tables_infrastructure/presentation/screens/table_management_screen.dart';
+import '../../features/kds/presentation/screens/kds_management_screen.dart';
 import '../../features/audit/audit_logs_screen.dart';
 import '../../features/menu/presentation/screens/occ_conflict_screen.dart';
 import '../runtime/runtime_ready_gate.dart';
@@ -125,46 +127,68 @@ final routerProvider = Provider<GoRouter>((ref) {
             );
             return '/account-suspended';
           }
-          if ((!resolvedCtx.onboarding.isComplete ||
-                  flags.onboardingRequired) &&
-              loc != '/onboarding') {
-            debugPrint(
-              '[ROUTER] 📋 Admin onboarding required → redirectResult=/onboarding',
-            );
-            return '/onboarding';
+          final isOnboardingIncomplete = !resolvedCtx.onboarding.isComplete || flags.onboardingRequired;
+
+          const onboardingAllowedRoutes = {
+            '/onboarding',
+            '/admin/menu',
+            '/admin/categories',
+            '/admin/tables',
+            '/admin/taxes',
+            '/admin/staff',
+            '/admin/kds',
+          };
+
+          const operationalRoutes = {
+            '/admin/dashboard',
+            '/admin/orders',
+            '/admin/live-floorplan',
+            '/admin/analytics',
+            '/admin/inventory',
+            '/admin/profile',
+            '/admin/settings',
+            '/admin/pricing',
+            '/admin/overrides',
+            '/admin/audit',
+            '/admin/occ-conflict',
+            '/admin/organization',
+            '/admin/guest-sessions',
+            '/admin/devices',
+          };
+
+          if (isOnboardingIncomplete) {
+            // Block access to operational routes during setup
+            if (operationalRoutes.contains(loc) || (!onboardingAllowedRoutes.contains(loc) && loc.startsWith('/admin'))) {
+              debugPrint(
+                '[ROUTER] 📋 Onboarding incomplete, blocking operational route "$loc" → redirectResult=/onboarding',
+              );
+              return '/onboarding';
+            }
+          } else {
+            // Onboarding is complete, lock out the setup screen
+            if (loc == '/onboarding') {
+              debugPrint(
+                '[ROUTER] ✅ Onboarding complete, redirecting away from setup → redirectResult=/admin/dashboard',
+              );
+              return '/admin/dashboard';
+            }
           }
         }
 
-        // B. If on splash or other public routes, route to dashboard
+        // B. If on splash or other public routes, route to dashboard (or onboarding)
         if (isPublicRoute) {
           if (isAdminLoggedIn) {
+            final isOnboardingIncomplete = resolvedCtx != null && (!resolvedCtx.onboarding.isComplete || resolvedCtx.flags.onboardingRequired);
+            final target = isOnboardingIncomplete ? '/onboarding' : '/admin/dashboard';
             debugPrint(
-              '[ROUTER] ✅ Admin logged in on public route → redirectResult=/admin/dashboard',
+              '[ROUTER] ✅ Admin logged in on public route → redirectResult=$target',
             );
-            return '/admin/dashboard';
+            return target;
           }
         }
 
         // C. Protect admin / staff routes
-        const protectedAdminRoutes = {
-          '/admin/dashboard',
-          '/admin/orders',
-          '/admin/tables',
-          '/admin/live-floorplan',
-          '/admin/menu',
-          '/admin/analytics',
-          '/admin/inventory',
-          '/admin/staff',
-          '/admin/profile',
-          '/admin/settings',
-          '/admin/pricing',
-          '/admin/taxes',
-          '/admin/overrides',
-          '/admin/audit',
-          '/admin/occ-conflict',
-        };
-
-        final isProtectedAdmin = protectedAdminRoutes.contains(loc);
+        final isProtectedAdmin = loc.startsWith('/admin') && loc != '/admin/login';
 
         if (isProtectedAdmin && !isAdminLoggedIn) {
           debugPrint(
@@ -316,6 +340,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/taxes',
             name: 'admin-taxes',
             builder: (context, state) => const TaxManagementScreen(),
+          ),
+          GoRoute(
+            path: '/admin/tables',
+            name: 'admin-tabls',
+            builder: (context, state) => const TableManagementScreen(),
+          ),
+          GoRoute(
+            path: '/admin/kds',
+            name: 'admin-kds',
+            builder: (context, state) => const KdsManagementScreen(),
           ),
           GoRoute(
             path: '/admin/overrides',

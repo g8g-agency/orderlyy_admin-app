@@ -3,7 +3,9 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../config/app_config.dart';
-import '../utils/uuid.dart';
+import 'package:uuid/uuid.dart';
+
+final uuid = Uuid();
 
 class LocalSyncClient {
   static bool enabled = _isEnabled();
@@ -105,7 +107,7 @@ class LocalSyncClient {
 
     _sequenceNumber += 1;
     final event = {
-      'idempotencyKey': UuidGenerator.generateRuntimeId(prefix: 'sync'),
+      'idempotencyKey': 'sync-${uuid.v4()}',
       'sequenceNumber': _sequenceNumber,
       'type': type,
       'payload': payload,

@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/auth/mock_auth_provider.dart';
 import '../../core/data/dtos/auth_dto.dart';
 import '../../core/providers/repository_providers.dart';
+import '../../core/providers/restaurant_context_provider.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 
 class AdminLoginScreen extends ConsumerStatefulWidget {
@@ -48,26 +50,31 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
           password: _passwordController.text,
         ),
       );
-      if (response.isSuccess) {
-        final ctx = await ref
-            .read(appContextProvider.notifier)
-            .resolveContext();
-        if (ctx == null) {
-          if (mounted) context.go('/admin/login');
-          return;
-        }
-        if (mounted) {
-          _routeFromFlags(
-            ctx.flags.mustChangePassword,
-            ctx.flags.subscriptionExpired,
-            ctx.flags.accountSuspended,
-            ctx.flags.onboardingRequired,
+      if (response is Success<LoginResponseDto>) {
+        final loginData = response.data;
+        if (loginData.isSuccess) {
+          // Bootstrap Restaurant Context after login
+          await ref.read(restaurantContextProvider.notifier).bootstrapContext();
+          final ctxState = ref.read(restaurantContextProvider);
+          
+          if (ctxState.context == null) {
+            setState(() => _errorMessage = ctxState.error ?? 'Failed to load restaurant context');
+            if (mounted) context.go('/admin/login');
+            return;
+          }
+          
+          if (mounted) {
+            _routeFromContext(ctxState);
+          }
+        } else {
+          setState(
+            () => _errorMessage =
+                loginData.errorMessage ?? 'Login failed. Please try again.',
           );
         }
-      } else {
+      } else if (response is Failure<LoginResponseDto>) {
         setState(
-          () => _errorMessage =
-              response.errorMessage ?? 'Login failed. Please try again.',
+          () => _errorMessage = response.failure.message,
         );
       }
     } catch (e) {
@@ -77,20 +84,13 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
     }
   }
 
-  void _routeFromFlags(
-    bool mustChangePw,
-    bool subExpired,
-    bool suspended,
-    bool onboardRequired,
-  ) {
-    if (mustChangePw) {
-      context.go('/change-password');
-    } else if (subExpired) {
-      context.go('/subscription-expired');
-    } else if (suspended) {
+  void _routeFromContext(RestaurantContextState ctxState) {
+    // Basic routing using the context
+    // Ideally map flags to features or status logic from activeTenant
+    final tenant = ctxState.context?.activeTenant;
+    
+    if (tenant?.status == 'suspended') {
       context.go('/account-suspended');
-    } else if (onboardRequired) {
-      context.go('/onboarding');
     } else {
       context.go('/admin/dashboard');
     }
