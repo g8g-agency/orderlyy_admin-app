@@ -28,8 +28,10 @@ class TableManagementScreen extends ConsumerWidget {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceContainerLowest,
-        title: Text('Tables',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Tables',
+          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -45,16 +47,23 @@ class TableManagementScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(
-          child: Text('Error loading tables: $err',
-              style: GoogleFonts.inter(color: Colors.red)),
+          child: Text(
+            'Error loading tables: $err',
+            style: GoogleFonts.inter(color: Colors.red),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTableForm(context, ref),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('New Table',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+        label: Text(
+          'New Table',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
@@ -64,13 +73,21 @@ class TableManagementScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.table_restaurant_outlined, size: 64, color: AppTheme.secondary.withOpacity(0.5)),
+          Icon(
+            Icons.table_restaurant_outlined,
+            size: 64,
+            color: AppTheme.secondary.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          Text('No Tables Configured',
-              style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(
+            'No Tables Configured',
+            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          Text('Add tables to manage your floor plan.',
-              style: GoogleFonts.inter(color: AppTheme.secondary)),
+          Text(
+            'Add tables to manage your floor plan.',
+            style: GoogleFonts.inter(color: AppTheme.secondary),
+          ),
         ],
       ),
     );
@@ -103,24 +120,37 @@ class TableManagementScreen extends ConsumerWidget {
                 children: [
                   Text(
                     table.tableNumber,
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryContainer.withOpacity(0.1),
+                      color: AppTheme.surfaceContainerHighest.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.people, size: 14, color: AppTheme.primaryContainer),
+                        Icon(
+                          Icons.people,
+                          size: 14,
+                          color: AppTheme.primaryContainer,
+                        ),
                         const SizedBox(width: 4),
-                        Text('${table.capacity}',
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryContainer)),
+                        Text(
+                          '${table.capacity}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryContainer,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -139,8 +169,14 @@ class TableManagementScreen extends ConsumerWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                    onPressed: () => ref.read(tablesFutureProvider.notifier).deleteTable(table.id),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: Colors.red,
+                    ),
+                    onPressed: () => ref
+                        .read(tablesFutureProvider.notifier)
+                        .deleteTable(table.id),
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
                   ),
@@ -176,19 +212,21 @@ class _TableFormSheetState extends ConsumerState<_TableFormSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final capacity = int.tryParse(_capCtrl.text) ?? 4;
-      await ref.read(tablesFutureProvider.notifier).addTable(_nameCtrl.text, capacity);
-      
+      await ref
+          .read(tablesFutureProvider.notifier)
+          .addTable(_nameCtrl.text, capacity);
+
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding table: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding table: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -198,10 +236,13 @@ class _TableFormSheetState extends ConsumerState<_TableFormSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    
+
     return Container(
       padding: EdgeInsets.only(
-        left: 20, right: 20, top: 24, bottom: bottomInset > 0 ? bottomInset + 20 : 32
+        left: 20,
+        right: 20,
+        top: 24,
+        bottom: bottomInset > 0 ? bottomInset + 20 : 32,
       ),
       decoration: const BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
@@ -213,27 +254,36 @@ class _TableFormSheetState extends ConsumerState<_TableFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Create Table',
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              'Create Table',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 24),
-            
+
             TextFormField(
               controller: _nameCtrl,
               decoration: InputDecoration(
                 labelText: 'Table Number / Name',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _capCtrl,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Capacity (Seats)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               validator: (v) {
@@ -243,17 +293,32 @@ class _TableFormSheetState extends ConsumerState<_TableFormSheet> {
               },
             ),
             const SizedBox(height: 24),
-            
+
             FilledButton(
               onPressed: _isLoading ? null : _submit,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: _isLoading 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text('Save Table', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Save Table',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ],
         ),

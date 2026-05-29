@@ -22,12 +22,18 @@ abstract class Money with _$Money implements Comparable<Money> {
 
   Money operator +(Money other) {
     _assertSameCurrency(other);
-    return Money(amountInCents: amountInCents + other.amountInCents, currency: currency);
+    return Money(
+      amountInCents: amountInCents + other.amountInCents,
+      currency: currency,
+    );
   }
 
   Money operator -(Money other) {
     _assertSameCurrency(other);
-    return Money(amountInCents: amountInCents - other.amountInCents, currency: currency);
+    return Money(
+      amountInCents: amountInCents - other.amountInCents,
+      currency: currency,
+    );
   }
 
   Money operator *(int multiplier) {

@@ -95,6 +95,7 @@ dev_dependencies:
   riverpod_lint: ^2.6.5
   freezed: ^3.1.0
   json_serializable: ^6.8.0
+  crypto: ^3.0.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

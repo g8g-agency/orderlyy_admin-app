@@ -24,15 +24,37 @@ class ItemLevelKitchenStatusScreen extends ConsumerStatefulWidget {
   const ItemLevelKitchenStatusScreen({super.key});
 
   @override
-  ConsumerState<ItemLevelKitchenStatusScreen> createState() => _ItemLevelKitchenStatusScreenState();
+  ConsumerState<ItemLevelKitchenStatusScreen> createState() =>
+      _ItemLevelKitchenStatusScreenState();
 }
 
-class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenStatusScreen> {
+class _ItemLevelKitchenStatusScreenState
+    extends ConsumerState<ItemLevelKitchenStatusScreen> {
   final List<KitchenStationInfo> _stations = const [
-    KitchenStationInfo(name: 'Grill', icon: Icons.local_fire_department_rounded, themeColor: Colors.orange, currentDelay: '8m delay'),
-    KitchenStationInfo(name: 'Fryer', icon: Icons.cookie_rounded, themeColor: Colors.amber, currentDelay: '3m delay'),
-    KitchenStationInfo(name: 'Salad', icon: Icons.spa_rounded, themeColor: Colors.green, currentDelay: 'No delay'),
-    KitchenStationInfo(name: 'Bar', icon: Icons.local_bar_rounded, themeColor: Colors.blue, currentDelay: 'No delay'),
+    KitchenStationInfo(
+      name: 'Grill',
+      icon: Icons.local_fire_department_rounded,
+      themeColor: Colors.orange,
+      currentDelay: '8m delay',
+    ),
+    KitchenStationInfo(
+      name: 'Fryer',
+      icon: Icons.cookie_rounded,
+      themeColor: Colors.amber,
+      currentDelay: '3m delay',
+    ),
+    KitchenStationInfo(
+      name: 'Salad',
+      icon: Icons.spa_rounded,
+      themeColor: Colors.green,
+      currentDelay: 'No delay',
+    ),
+    KitchenStationInfo(
+      name: 'Bar',
+      icon: Icons.local_bar_rounded,
+      themeColor: Colors.blue,
+      currentDelay: 'No delay',
+    ),
   ];
 
   String _getStationForCategory(String category) {
@@ -50,26 +72,27 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Item-Level Kitchen Stations'),
-      ),
+      appBar: AppBar(title: const Text('Item-Level Kitchen Stations')),
       body: StreamBuilder<List<Order>>(
         stream: repository.watchActiveOrders(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
           final orders = snapshot.data ?? [];
-          
+
           // Flatten items and attach their order contexts
           final List<Map<String, dynamic>> allItems = [];
           for (final order in orders) {
             for (final item in order.items) {
-              if (item.status != OrderItemStatus.cancelled && item.status != OrderItemStatus.served) {
+              if (item.status != OrderItemStatus.cancelled &&
+                  item.status != OrderItemStatus.served) {
                 allItems.add({
                   'order': order,
                   'item': item,
@@ -83,27 +106,42 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
             padding: const EdgeInsets.all(16),
             child: Column(
               children: _stations.map((station) {
-                final stationItems = allItems.where((i) => i['station'] == station.name).toList();
+                final stationItems = allItems
+                    .where((i) => i['station'] == station.name)
+                    .toList();
 
                 return Card(
                   color: isDark ? AppColors.darkSurface : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    side: BorderSide(
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                    ),
                   ),
                   margin: const EdgeInsets.only(bottom: 20),
                   child: ExpansionTile(
                     initiallyExpanded: true,
-                    leading: Icon(station.icon, color: station.themeColor, size: 28),
+                    leading: Icon(
+                      station.icon,
+                      color: station.themeColor,
+                      size: 28,
+                    ),
                     title: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           '${station.name} Station',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: station.currentDelay.contains('delay')
                                 ? AppColors.error.withValues(alpha: 0.15)
@@ -113,7 +151,9 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                           child: Text(
                             station.currentDelay,
                             style: TextStyle(
-                              color: station.currentDelay.contains('delay') ? AppColors.error : AppColors.success,
+                              color: station.currentDelay.contains('delay')
+                                  ? AppColors.error
+                                  : AppColors.success,
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
                             ),
@@ -131,7 +171,9 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24.0),
                           child: Center(
-                            child: Text('No active prep items in this station.'),
+                            child: Text(
+                              'No active prep items in this station.',
+                            ),
                           ),
                         )
                       else
@@ -139,7 +181,8 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: stationItems.length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final task = stationItems[index];
                             final Order order = task['order'];
@@ -149,9 +192,17 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                             // For Mains, if they have sides in the same order, list them as dependencies
                             final List<String> dependencies = [];
                             if (station.name == 'Grill') {
-                              final sideItems = order.items.where((o) => _getStationForCategory(o.product.category) == 'Fryer');
+                              final sideItems = order.items.where(
+                                (o) =>
+                                    _getStationForCategory(
+                                      o.product.category,
+                                    ) ==
+                                    'Fryer',
+                              );
                               for (final side in sideItems) {
-                                dependencies.add('Fryer Station (${side.product.name})');
+                                dependencies.add(
+                                  'Fryer Station (${side.product.name})',
+                                );
                               }
                             }
 
@@ -161,14 +212,19 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             '${item.quantity}x ${item.product.name}',
-                                            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                            style: theme.textTheme.bodyLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
@@ -184,22 +240,28 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                                     const SizedBox(height: 6),
                                     Text(
                                       'Modifiers: ${item.selectedModifiers.map((m) => m.name).join(", ")}',
-                                      style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: AppColors.primary),
                                     ),
                                   ],
                                   if (dependencies.isNotEmpty) ...[
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
-                                        const Icon(Icons.link_rounded, size: 14, color: AppColors.info),
+                                        const Icon(
+                                          Icons.link_rounded,
+                                          size: 14,
+                                          color: AppColors.info,
+                                        ),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
                                             'Dependencies: ${dependencies.join(", ")}',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: AppColors.info,
-                                              fontStyle: FontStyle.italic,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: AppColors.info,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
                                           ),
                                         ),
                                       ],
@@ -214,19 +276,34 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.orange,
                                             foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
-                                          onPressed: () => _updateItemStatus(order, item.id, OrderItemStatus.preparing),
+                                          onPressed: () => _updateItemStatus(
+                                            order,
+                                            item.id,
+                                            OrderItemStatus.preparing,
+                                          ),
                                           child: const Text('Start Preparing'),
                                         ),
-                                      if (item.status == OrderItemStatus.preparing)
+                                      if (item.status ==
+                                          OrderItemStatus.preparing)
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.green,
                                             foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
-                                          onPressed: () => _updateItemStatus(order, item.id, OrderItemStatus.ready),
+                                          onPressed: () => _updateItemStatus(
+                                            order,
+                                            item.id,
+                                            OrderItemStatus.ready,
+                                          ),
                                           child: const Text('Mark Ready'),
                                         ),
                                       if (item.status == OrderItemStatus.ready)
@@ -234,9 +311,16 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.primary,
                                             foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
-                                          onPressed: () => _updateItemStatus(order, item.id, OrderItemStatus.served),
+                                          onPressed: () => _updateItemStatus(
+                                            order,
+                                            item.id,
+                                            OrderItemStatus.served,
+                                          ),
                                           child: const Text('Mark Served'),
                                         ),
                                     ],
@@ -271,12 +355,20 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
       ),
       child: Text(
         status.name.toUpperCase(),
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 9),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 9,
+        ),
       ),
     );
   }
 
-  Future<void> _updateItemStatus(Order order, String itemId, OrderItemStatus status) async {
+  Future<void> _updateItemStatus(
+    Order order,
+    String itemId,
+    OrderItemStatus status,
+  ) async {
     final repository = ref.read(ordersRepositoryProvider);
     final items = List<OrderItem>.from(order.items);
     final idx = items.indexWhere((i) => i.id == itemId);
@@ -285,7 +377,11 @@ class _ItemLevelKitchenStatusScreenState extends ConsumerState<ItemLevelKitchenS
 
       // Check if all items in order are served, update overall status
       var orderStatus = order.status;
-      if (items.every((i) => i.status == OrderItemStatus.served || i.status == OrderItemStatus.cancelled)) {
+      if (items.every(
+        (i) =>
+            i.status == OrderItemStatus.served ||
+            i.status == OrderItemStatus.cancelled,
+      )) {
         orderStatus = OrderStatus.completed;
       } else if (items.any((i) => i.status == OrderItemStatus.preparing)) {
         orderStatus = OrderStatus.preparing;

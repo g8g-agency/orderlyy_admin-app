@@ -23,20 +23,20 @@ class CacheEntry {
       DateTime.now().difference(cachedAt).inMinutes >= ttlInMinutes;
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'responseData': responseData,
-        'eTag': eTag,
-        'cachedAt': cachedAt.toIso8601String(),
-        'ttlInMinutes': ttlInMinutes,
-      };
+    'path': path,
+    'responseData': responseData,
+    'eTag': eTag,
+    'cachedAt': cachedAt.toIso8601String(),
+    'ttlInMinutes': ttlInMinutes,
+  };
 
   factory CacheEntry.fromJson(Map<String, dynamic> json) => CacheEntry(
-        path: json['path'] as String,
-        responseData: json['responseData'],
-        eTag: json['eTag'] as String?,
-        cachedAt: DateTime.parse(json['cachedAt'] as String),
-        ttlInMinutes: json['ttlInMinutes'] as int,
-      );
+    path: json['path'] as String,
+    responseData: json['responseData'],
+    eTag: json['eTag'] as String?,
+    cachedAt: DateTime.parse(json['cachedAt'] as String),
+    ttlInMinutes: json['ttlInMinutes'] as int,
+  );
 }
 
 class DioCacheInterceptor extends Interceptor {
@@ -46,7 +46,10 @@ class DioCacheInterceptor extends Interceptor {
   DioCacheInterceptor(this._cacheBox, this._talker);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     // Only cache GET requests
     if (options.method != 'GET') {
       return handler.next(options);
@@ -64,7 +67,8 @@ class DioCacheInterceptor extends Interceptor {
     if (cachedData != null) {
       try {
         final entry = CacheEntry.fromJson(
-            Map<String, dynamic>.from(jsonDecode(cachedData)));
+          Map<String, dynamic>.from(jsonDecode(cachedData)),
+        );
 
         // If ETag exists, append it to headers for conditional validation
         if (entry.eTag != null) {
@@ -95,9 +99,11 @@ class DioCacheInterceptor extends Interceptor {
     // Only cache successful GET requests
     if (response.requestOptions.method == 'GET' && response.statusCode == 200) {
       final cacheKey = response.requestOptions.uri.toString();
-      final eTag = response.headers.value('ETag') ?? response.headers.value('etag');
-      
-      final customTtl = response.requestOptions.extra['cache_ttl_minutes'] as int? ?? 60;
+      final eTag =
+          response.headers.value('ETag') ?? response.headers.value('etag');
+
+      final customTtl =
+          response.requestOptions.extra['cache_ttl_minutes'] as int? ?? 60;
 
       final entry = CacheEntry(
         path: response.requestOptions.path,
@@ -108,7 +114,9 @@ class DioCacheInterceptor extends Interceptor {
       );
 
       await _cacheBox.put(cacheKey, jsonEncode(entry.toJson()));
-      _talker.info('Cached response for GET: ${response.requestOptions.path} with ETag: $eTag, TTL: ${customTtl}m');
+      _talker.info(
+        'Cached response for GET: ${response.requestOptions.path} with ETag: $eTag, TTL: ${customTtl}m',
+      );
     }
 
     handler.next(response);
@@ -123,8 +131,9 @@ class DioCacheInterceptor extends Interceptor {
       if (cachedData != null) {
         try {
           final entry = CacheEntry.fromJson(
-              Map<String, dynamic>.from(jsonDecode(cachedData)));
-          
+            Map<String, dynamic>.from(jsonDecode(cachedData)),
+          );
+
           // Refresh TTL by rewriting with updated timestamp
           final updatedEntry = CacheEntry(
             path: entry.path,
@@ -135,8 +144,10 @@ class DioCacheInterceptor extends Interceptor {
           );
           await _cacheBox.put(cacheKey, jsonEncode(updatedEntry.toJson()));
 
-          _talker.info('Server returned 304. Refreshed ETag cache TTL for: ${err.requestOptions.path}');
-          
+          _talker.info(
+            'Server returned 304. Refreshed ETag cache TTL for: ${err.requestOptions.path}',
+          );
+
           final response = Response(
             requestOptions: err.requestOptions,
             data: entry.responseData,
@@ -159,9 +170,12 @@ class DioCacheInterceptor extends Interceptor {
       if (cachedData != null) {
         try {
           final entry = CacheEntry.fromJson(
-              Map<String, dynamic>.from(jsonDecode(cachedData)));
-          _talker.warning('Network unreachable. Serving expired/offline cache fallback for GET: ${err.requestOptions.path}');
-          
+            Map<String, dynamic>.from(jsonDecode(cachedData)),
+          );
+          _talker.warning(
+            'Network unreachable. Serving expired/offline cache fallback for GET: ${err.requestOptions.path}',
+          );
+
           final response = Response(
             requestOptions: err.requestOptions,
             data: entry.responseData,

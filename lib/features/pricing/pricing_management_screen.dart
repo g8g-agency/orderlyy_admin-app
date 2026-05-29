@@ -8,7 +8,8 @@ class PricingManagementScreen extends StatefulWidget {
   const PricingManagementScreen({super.key});
 
   @override
-  State<PricingManagementScreen> createState() => _PricingManagementScreenState();
+  State<PricingManagementScreen> createState() =>
+      _PricingManagementScreenState();
 }
 
 class _PricingManagementScreenState extends State<PricingManagementScreen> {
@@ -123,7 +124,9 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                 decoration: InputDecoration(
                   labelText: 'Promo Code (UPPERCASE)',
                   hintText: 'e.g. FREECOFFEE',
-                  hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    color: AppTheme.secondary,
+                  ),
                 ),
               ),
               SizedBox(height: 12.h),
@@ -133,7 +136,9 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                 decoration: InputDecoration(
                   labelText: 'Discount Description',
                   hintText: 'e.g. 15% off espresso drinks',
-                  hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    color: AppTheme.secondary,
+                  ),
                 ),
               ),
             ],
@@ -184,7 +189,10 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
     final name = _ruleNameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a rule name.'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text('Please enter a rule name.'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -228,7 +236,9 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppTheme.surfaceContainerHigh),
               padding: EdgeInsets.symmetric(horizontal: 14.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
             ),
             child: Text(
               'Export Rules',
@@ -255,7 +265,9 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
               backgroundColor: AppTheme.primaryContainer,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 14.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
               elevation: 0,
             ),
           ),
@@ -327,7 +339,7 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -339,11 +351,17 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.calendar_month_rounded, size: 20.r, color: AppTheme.primary),
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    size: 20.r,
+                    color: AppTheme.primary,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     'Active Rule Schedule',
-                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                    style: AppTheme.titleLg.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -358,19 +376,31 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                     GestureDetector(
                       onTap: () => setState(() => _isWeekView = true),
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 5.h,
+                        ),
                         decoration: BoxDecoration(
-                          color: _isWeekView ? AppTheme.surfaceContainerLowest : Colors.transparent,
+                          color: _isWeekView
+                              ? AppTheme.surfaceContainerLowest
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(6.r),
                           boxShadow: _isWeekView
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                  ),
+                                ]
                               : null,
                         ),
                         child: Text(
                           'Week',
                           style: AppTheme.labelSm.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: _isWeekView ? AppTheme.onSurface : AppTheme.secondary,
+                            color: _isWeekView
+                                ? AppTheme.onSurface
+                                : AppTheme.secondary,
                           ),
                         ),
                       ),
@@ -378,19 +408,31 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                     GestureDetector(
                       onTap: () => setState(() => _isWeekView = false),
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 5.h,
+                        ),
                         decoration: BoxDecoration(
-                          color: !_isWeekView ? AppTheme.surfaceContainerLowest : Colors.transparent,
+                          color: !_isWeekView
+                              ? AppTheme.surfaceContainerLowest
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(6.r),
                           boxShadow: !_isWeekView
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                  ),
+                                ]
                               : null,
                         ),
                         child: Text(
                           'Day',
                           style: AppTheme.labelSm.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: !_isWeekView ? AppTheme.onSurface : AppTheme.secondary,
+                            color: !_isWeekView
+                                ? AppTheme.onSurface
+                                : AppTheme.secondary,
                           ),
                         ),
                       ),
@@ -419,10 +461,21 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                         child: Text(
                           'Time',
                           textAlign: TextAlign.right,
-                          style: AppTheme.labelSm.copyWith(fontSize: 9.sp, color: AppTheme.secondary),
+                          style: AppTheme.labelSm.copyWith(
+                            fontSize: 9.sp,
+                            color: AppTheme.secondary,
+                          ),
                         ),
                       ),
-                      ...['Mon', 'Tue', 'Wed', 'Thu (Today)', 'Fri', 'Sat', 'Sun'].map((day) {
+                      ...[
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu (Today)',
+                        'Fri',
+                        'Sat',
+                        'Sun',
+                      ].map((day) {
                         final isToday = day.contains('Thu');
                         return Expanded(
                           child: Container(
@@ -431,17 +484,30 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                             margin: EdgeInsets.symmetric(horizontal: 2.w),
                             decoration: BoxDecoration(
                               color: isToday
-                                  ? AppTheme.primaryContainer.withValues(alpha: 0.06)
+                                  ? AppTheme.primaryContainer.withValues(
+                                      alpha: 0.06,
+                                    )
                                   : AppTheme.surfaceContainerLow,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
-                              border: isToday ? Border.all(color: AppTheme.primaryContainer.withValues(alpha: 0.15)) : null,
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(8.r),
+                              ),
+                              border: isToday
+                                  ? Border.all(
+                                      color: AppTheme.primaryContainer
+                                          .withValues(alpha: 0.15),
+                                    )
+                                  : null,
                             ),
                             child: Text(
                               day,
                               style: AppTheme.labelSm.copyWith(
                                 fontSize: 10.sp,
-                                fontWeight: isToday ? FontWeight.w800 : FontWeight.w700,
-                                color: isToday ? AppTheme.primary : AppTheme.onSurface,
+                                fontWeight: isToday
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                color: isToday
+                                    ? AppTheme.primary
+                                    : AppTheme.onSurface,
                               ),
                             ),
                           ),
@@ -456,7 +522,9 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.surfaceContainerLowest,
                       border: Border.all(color: AppTheme.surfaceContainerHigh),
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(8.r)),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(8.r),
+                      ),
                     ),
                     child: Stack(
                       children: [
@@ -481,13 +549,19 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                               width: 60.w,
                               padding: EdgeInsets.only(right: 8.w),
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: ['12 PM', '3 PM', '6 PM', '9 PM']
-                                    .map((t) => Text(
-                                          t,
-                                          style: AppTheme.bodySm.copyWith(fontSize: 9.sp, fontWeight: FontWeight.w600),
-                                        ))
+                                    .map(
+                                      (t) => Text(
+                                        t,
+                                        style: AppTheme.bodySm.copyWith(
+                                          fontSize: 9.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    )
                                     .toList(),
                               ),
                             ),
@@ -502,10 +576,15 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                                   height: double.infinity,
                                   decoration: BoxDecoration(
                                     color: isTodayColumn
-                                        ? AppTheme.primaryContainer.withValues(alpha: 0.02)
+                                        ? AppTheme.primaryContainer.withValues(
+                                            alpha: 0.02,
+                                          )
                                         : Colors.transparent,
                                     border: Border(
-                                      right: BorderSide(color: AppTheme.surfaceContainerLow, width: 1.w),
+                                      right: BorderSide(
+                                        color: AppTheme.surfaceContainerLow,
+                                        width: 1.w,
+                                      ),
                                     ),
                                   ),
                                   child: isTodayColumn
@@ -552,9 +631,16 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                           child: Container(
                             padding: EdgeInsets.all(6.r),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryFixed.withValues(alpha: 0.7),
+                              color: AppTheme.primaryFixed.withValues(
+                                alpha: 0.7,
+                              ),
                               borderRadius: BorderRadius.circular(6.r),
-                              border: Border(left: BorderSide(color: AppTheme.primary, width: 4.w)),
+                              border: Border(
+                                left: BorderSide(
+                                  color: AppTheme.primary,
+                                  width: 4.w,
+                                ),
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +659,8 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                                 Text(
                                   '4:00 PM - 6:00 PM',
                                   style: AppTheme.bodySm.copyWith(
-                                    color: AppTheme.onPrimaryFixedVariant.withValues(alpha: 0.8),
+                                    color: AppTheme.onPrimaryFixedVariant
+                                        .withValues(alpha: 0.8),
                                     fontSize: 8.sp,
                                   ),
                                   maxLines: 1,
@@ -593,9 +680,16 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                           child: Container(
                             padding: EdgeInsets.all(6.r),
                             decoration: BoxDecoration(
-                              color: AppTheme.errorContainer.withValues(alpha: 0.7),
+                              color: AppTheme.errorContainer.withValues(
+                                alpha: 0.7,
+                              ),
                               borderRadius: BorderRadius.circular(6.r),
-                              border: Border(left: BorderSide(color: AppTheme.error, width: 4.w)),
+                              border: Border(
+                                left: BorderSide(
+                                  color: AppTheme.error,
+                                  width: 4.w,
+                                ),
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,7 +708,9 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                                 Text(
                                   '8:00 PM - Close',
                                   style: AppTheme.bodySm.copyWith(
-                                    color: const Color(0xFF991B1B).withValues(alpha: 0.8),
+                                    color: const Color(
+                                      0xFF991B1B,
+                                    ).withValues(alpha: 0.8),
                                     fontSize: 8.sp,
                                   ),
                                   maxLines: 1,
@@ -649,13 +745,15 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border(top: BorderSide(color: AppTheme.primary, width: 4.w)),
+        border: Border(
+          top: BorderSide(color: AppTheme.primary, width: 4.w),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -689,16 +787,27 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                       decoration: BoxDecoration(
                         color: AppTheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppTheme.surfaceContainerHigh),
+                        border: Border.all(
+                          color: AppTheme.surfaceContainerHigh,
+                        ),
                       ),
                       child: DropdownButton<String>(
                         value: _ruleType,
                         isExpanded: true,
                         underline: const SizedBox(),
                         items: const [
-                          DropdownMenuItem(value: 'Discount (%)', child: Text('Discount (%)')),
-                          DropdownMenuItem(value: 'Surcharge (%)', child: Text('Surcharge (%)')),
-                          DropdownMenuItem(value: 'Fixed Price', child: Text('Fixed Price')),
+                          DropdownMenuItem(
+                            value: 'Discount (%)',
+                            child: Text('Discount (%)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Surcharge (%)',
+                            child: Text('Surcharge (%)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Fixed Price',
+                            child: Text('Fixed Price'),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) {
@@ -721,14 +830,35 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                     TextField(
                       controller: _ruleValueCtrl,
                       keyboardType: TextInputType.number,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 13.sp, fontWeight: FontWeight.w800),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w800,
+                      ),
                       decoration: InputDecoration(
                         prefixText: _ruleType.contains('%') ? '% ' : '₹ ',
-                        prefixStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                        prefixStyle: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.secondary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(
+                            color: AppTheme.surfaceContainerHigh,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(
+                            color: AppTheme.surfaceContainerHigh,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(color: AppTheme.primary),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 8.h,
+                        ),
                         isDense: true,
                       ),
                     ),
@@ -745,47 +875,74 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             spacing: 6.w,
             runSpacing: 6.h,
             children: [
-              ..._targetCategories.map((cat) => Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(6.r),
-                      border: Border.all(color: AppTheme.surfaceContainerHighest),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          cat,
-                          style: AppTheme.labelSm.copyWith(fontSize: 10.sp, color: AppTheme.onSurface, fontWeight: FontWeight.w700),
+              ..._targetCategories.map(
+                (cat) => Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(6.r),
+                    border: Border.all(color: AppTheme.surfaceContainerHighest),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        cat,
+                        style: AppTheme.labelSm.copyWith(
+                          fontSize: 10.sp,
+                          color: AppTheme.onSurface,
+                          fontWeight: FontWeight.w700,
                         ),
-                        SizedBox(width: 4.w),
-                        GestureDetector(
-                          onTap: () => setState(() => _targetCategories.remove(cat)),
-                          child: Icon(Icons.close_rounded, size: 12.r, color: AppTheme.secondary),
+                      ),
+                      SizedBox(width: 4.w),
+                      GestureDetector(
+                        onTap: () =>
+                            setState(() => _targetCategories.remove(cat)),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 12.r,
+                          color: AppTheme.secondary,
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               // Add Target button
               GestureDetector(
                 onTap: _addTargetCategory,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(6.r),
-                    border: Border.all(color: AppTheme.secondary, style: BorderStyle.solid),
+                    border: Border.all(
+                      color: AppTheme.secondary,
+                      style: BorderStyle.solid,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_rounded, size: 12.r, color: AppTheme.secondary),
+                      Icon(
+                        Icons.add_rounded,
+                        size: 12.r,
+                        color: AppTheme.secondary,
+                      ),
                       SizedBox(width: 2.w),
                       Text(
                         'Add Category',
-                        style: AppTheme.labelSm.copyWith(fontSize: 10.sp, color: AppTheme.secondary),
+                        style: AppTheme.labelSm.copyWith(
+                          fontSize: 10.sp,
+                          color: AppTheme.secondary,
+                        ),
                       ),
                     ],
                   ),
@@ -801,7 +958,10 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             children: [
               TextButton(
                 onPressed: () {},
-                child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                ),
               ),
               SizedBox(width: 10.w),
               ElevatedButton(
@@ -810,11 +970,16 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                   backgroundColor: AppTheme.primaryContainer,
                   minimumSize: Size(100.w, 36.h),
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
                 ),
                 child: Text(
                   'Save Rule',
-                  style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -837,7 +1002,7 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -848,11 +1013,17 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.local_offer_outlined, size: 18.r, color: AppTheme.secondary),
+                  Icon(
+                    Icons.local_offer_outlined,
+                    size: 18.r,
+                    color: AppTheme.secondary,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     'Promo Codes',
-                    style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                    style: AppTheme.titleLg.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -880,7 +1051,7 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _promoCodes.length,
-            separatorBuilder: (_, __) => SizedBox(height: 8.h),
+            separatorBuilder: (_, _) => SizedBox(height: 8.h),
             itemBuilder: (context, idx) {
               final promo = _promoCodes[idx];
               final code = promo['code'] as String;
@@ -920,14 +1091,20 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
                             usage,
-                            style: AppTheme.labelSm.copyWith(fontSize: 8.sp, color: AppTheme.onSurface),
+                            style: AppTheme.labelSm.copyWith(
+                              fontSize: 8.sp,
+                              color: AppTheme.onSurface,
+                            ),
                           ),
                         ),
                         SizedBox(height: 2.h),
@@ -935,8 +1112,12 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
                           expiry,
                           style: AppTheme.bodySm.copyWith(
                             fontSize: 9.sp,
-                            fontWeight: isExpiringSoon ? FontWeight.w700 : FontWeight.normal,
-                            color: isExpiringSoon ? AppTheme.primary : AppTheme.secondary,
+                            fontWeight: isExpiringSoon
+                                ? FontWeight.w700
+                                : FontWeight.normal,
+                            color: isExpiringSoon
+                                ? AppTheme.primary
+                                : AppTheme.secondary,
                           ),
                         ),
                       ],
@@ -963,7 +1144,11 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_circle_outline_rounded, size: 16.r, color: AppTheme.secondary),
+                  Icon(
+                    Icons.add_circle_outline_rounded,
+                    size: 16.r,
+                    color: AppTheme.secondary,
+                  ),
                   SizedBox(width: 4.w),
                   Text(
                     'Generate Codes',
@@ -994,10 +1179,22 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
   InputDecoration _buildInputDecor(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 13.sp),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
+      hintStyle: GoogleFonts.plusJakartaSans(
+        color: AppTheme.secondary,
+        fontSize: 13.sp,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.r),
+        borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.r),
+        borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.r),
+        borderSide: const BorderSide(color: AppTheme.primary),
+      ),
       contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       isDense: true,
     );

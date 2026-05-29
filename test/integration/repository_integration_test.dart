@@ -60,14 +60,16 @@ void main() {
             menuItemId: 'item-001',
             menuItemName: 'Paneer Butter Masala',
             quantity: 3,
-            unitPrice: 250.0,
+            unitPriceAmount: 25000,
+            lineTotalAmount: 75000,
           )
         ],
-        totalAmount: 750.0,
+        totalAmount: 75000,
         staffId: firstOrder.staffId,
         staffName: firstOrder.staffName,
         createdAt: firstOrder.createdAt,
         updatedAt: DateTime.now(),
+        versionNum: 1,
       );
       
       await repository.updateOrder(updatedOrder);
@@ -75,7 +77,7 @@ void main() {
       final updatedOrders = await repository.watchOrders('mock-tenant-001').first;
       final savedOrder = updatedOrders.firstWhere((o) => o.id == firstOrder.id);
       
-      expect(savedOrder.totalAmount, 750.0);
+      expect(savedOrder.totalAmount, 75000);
       expect(savedOrder.items.length, 1);
       expect(savedOrder.items.first.quantity, 3);
       print('✅ Order items and totalAmount updated successfully');
@@ -176,6 +178,7 @@ void main() {
         capacity: 4,
         status: TableStatus.available,
         updatedAt: DateTime.now(),
+        versionNum: 1,
       );
       
       await repository.createTable(newTable);
@@ -253,11 +256,12 @@ void main() {
         tenantId: 'mock-tenant-001',
         categoryId: 'cat-002',
         name: 'Test Dish',
-        price: 299.0,
+        basePriceAmount: 29900,
         isAvailable: true,
         isVegetarian: true,
         prepTimeMinutes: 15,
         tags: ['test'],
+        versionNum: 1,
       );
       
       await repository.createMenuItem(newItem);
@@ -277,12 +281,13 @@ void main() {
         categoryId: firstItem.categoryId,
         name: 'Updated Name',
         description: firstItem.description,
-        price: 999.0,
+        basePriceAmount: 99900,
         imageUrl: firstItem.imageUrl,
         isAvailable: firstItem.isAvailable,
         isVegetarian: firstItem.isVegetarian,
         prepTimeMinutes: firstItem.prepTimeMinutes,
         tags: firstItem.tags,
+        versionNum: 1,
       );
       
       await repository.updateMenuItem(updated);
@@ -291,7 +296,7 @@ void main() {
       final updatedItem = updatedItems.firstWhere((i) => i.id == firstItem.id);
       
       expect(updatedItem.name, 'Updated Name');
-      expect(updatedItem.price, 999.0);
+      expect(updatedItem.basePriceAmount, 99900);
       print('✅ Menu item updated: ${firstItem.id}');
     });
 

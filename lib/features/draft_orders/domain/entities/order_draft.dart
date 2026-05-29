@@ -54,7 +54,10 @@ class DraftItem extends Equatable {
   });
 
   Money get lineTotal {
-    final modSum = modifiers.fold<int>(0, (sum, mod) => sum + mod.price.amountInCents);
+    final modSum = modifiers.fold<int>(
+      0,
+      (sum, mod) => sum + mod.price.amountInCents,
+    );
     return Money(
       amountInCents: (unitPrice.amountInCents + modSum) * quantity,
       currency: unitPrice.currency,
@@ -63,13 +66,13 @@ class DraftItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        menuItemId,
-        name,
-        quantity,
-        unitPrice,
-        modifiers,
-        specialInstructions,
-      ];
+    menuItemId,
+    name,
+    quantity,
+    unitPrice,
+    modifiers,
+    specialInstructions,
+  ];
 
   Map<String, dynamic> toJson() {
     return {
@@ -127,17 +130,17 @@ class OrderDraft extends Equatable {
 
   @override
   List<Object?> get props => [
-        draftId,
-        tenantId,
-        branchId,
-        tableId,
-        tableLabel,
-        items,
-        calculatedSubtotal,
-        menuSnapshotVersion,
-        deviceSessionId,
-        createdAt,
-      ];
+    draftId,
+    tenantId,
+    branchId,
+    tableId,
+    tableLabel,
+    items,
+    calculatedSubtotal,
+    menuSnapshotVersion,
+    deviceSessionId,
+    createdAt,
+  ];
 
   Map<String, dynamic> toJson() {
     return {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class DeviceManagementScreen extends ConsumerWidget {
@@ -12,10 +11,10 @@ class DeviceManagementScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(
-        title: const Text('Device Management'),
-      ),
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
+      appBar: AppBar(title: const Text('Device Management')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -65,7 +64,7 @@ class _DeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     final isOnline = status == 'Online';
     final statusColor = isOnline ? AppColors.success : Colors.grey;
 
@@ -80,14 +79,19 @@ class _DeviceCard extends StatelessWidget {
           size: 40,
           color: isOnline ? AppColors.primary : Colors.grey,
         ),
-        title: Text(deviceName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          deviceName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
             Text('App Version: $appVersion'),
             const SizedBox(height: 2),
-            Text('Last sync: ${DateTime.now().difference(lastSync).inMinutes}m ago'),
+            Text(
+              'Last sync: ${DateTime.now().difference(lastSync).inMinutes}m ago',
+            ),
           ],
         ),
         trailing: Column(
@@ -102,7 +106,14 @@ class _DeviceCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(
+              status,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),

@@ -3,16 +3,17 @@ import 'package:orderlli_admin/core/auth/app_context_provider.dart';
 import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/table_dto.dart';
 import 'package:orderlli_admin/features/tables_infrastructure/data/repositories/table_infrastructure_repository.dart';
 
-final tablesFutureProvider = AsyncNotifierProvider<TablesNotifier, List<TableDto>>(() {
-  return TablesNotifier();
-});
+final tablesFutureProvider =
+    AsyncNotifierProvider<TablesNotifier, List<TableDto>>(() {
+      return TablesNotifier();
+    });
 
 class TablesNotifier extends AsyncNotifier<List<TableDto>> {
   @override
   Future<List<TableDto>> build() async {
     final ctx = ref.watch(appContextProvider);
     if (ctx == null) return [];
-    
+
     // For now we assume a default branch from the first branch linked, but let's hardcode 'branch_1' fallback if context doesn't have it.
     // Assuming context has a branch or we just fetch from API.
     // The backend uses JWT to scope tenant.

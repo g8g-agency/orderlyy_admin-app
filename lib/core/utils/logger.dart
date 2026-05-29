@@ -3,16 +3,13 @@ import 'package:talker_flutter/talker_flutter.dart';
 
 final talkerProvider = Provider<Talker>((ref) {
   return TalkerFlutter.init(
-    settings: TalkerSettings(
-      maxHistoryItems: 100,
-      useConsoleLogs: true,
-    ),
+    settings: TalkerSettings(maxHistoryItems: 100, useConsoleLogs: true),
   );
 });
 
 // Global logging helper functions
 void logInfo(String message) {
-  // Talker can also be used as a static singleton if initialized, 
+  // Talker can also be used as a static singleton if initialized,
   // but for convenience within the app we can log via Talker or print in release.
   TalkerFlutter.init().info(message);
 }

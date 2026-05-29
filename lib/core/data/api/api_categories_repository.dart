@@ -32,11 +32,14 @@ class ApiCategoriesRepository implements CategoriesRepository {
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final categories = data
-            .map((json) => MenuCategoryDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => MenuCategoryDto.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
         return Success(categories);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch categories';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to fetch categories';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -47,7 +50,9 @@ class ApiCategoriesRepository implements CategoriesRepository {
   }
 
   @override
-  Future<Result<MenuCategoryDto>> createCategory(MenuCategoryDto category) async {
+  Future<Result<MenuCategoryDto>> createCategory(
+    MenuCategoryDto category,
+  ) async {
     try {
       final response = await _dioClient.post(
         ApiConstants.categories,
@@ -57,7 +62,8 @@ class ApiCategoriesRepository implements CategoriesRepository {
       if (response.data['success'] == true) {
         return Success(MenuCategoryDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to create category';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to create category';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -68,17 +74,21 @@ class ApiCategoriesRepository implements CategoriesRepository {
   }
 
   @override
-  Future<Result<MenuCategoryDto>> updateCategory(MenuCategoryDto category) async {
+  Future<Result<MenuCategoryDto>> updateCategory(
+    MenuCategoryDto category,
+  ) async {
     try {
       final response = await _dioClient.patch(
         '${ApiConstants.categories}/${category.id}',
-        data: category.toJson(), // version_num is sent to backend for OCC validation
+        data: category
+            .toJson(), // version_num is sent to backend for OCC validation
       );
 
       if (response.data['success'] == true) {
         return Success(MenuCategoryDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update category';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to update category';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -89,19 +99,24 @@ class ApiCategoriesRepository implements CategoriesRepository {
   }
 
   @override
-  Future<Result<void>> deleteCategory(String categoryId, int currentVersion) async {
+  Future<Result<void>> deleteCategory(
+    String categoryId,
+    int currentVersion,
+  ) async {
     try {
       final response = await _dioClient.delete(
         '${ApiConstants.categories}/$categoryId',
         data: {
-          'version_num': currentVersion, // Backend expects version_num for safe deletion
+          'version_num':
+              currentVersion, // Backend expects version_num for safe deletion
         },
       );
 
       if (response.data['success'] == true) {
         return const Success(null);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to delete category';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to delete category';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

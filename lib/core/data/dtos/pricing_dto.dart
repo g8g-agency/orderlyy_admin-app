@@ -11,12 +11,12 @@ class PricingRecordDto {
   final String entityType; // 'menu_item', 'modifier'
   final int priceAmount; // MINOR UNITS ONLY. Never double/float.
   final String currencyCode;
-  
+
   // Time windows are purely informational for the frontend.
   // Backend dictates overlap and activation logic.
   final DateTime? effectiveFrom;
   final DateTime? effectiveTo;
-  
+
   final bool isActive;
   final int versionNum;
   final DateTime createdAt;
@@ -37,9 +37,11 @@ class PricingRecordDto {
 
   factory PricingRecordDto.fromJson(Map<String, dynamic> json) {
     if (json['price_amount'] is double) {
-      debugPrint('WARNING: Received float/double for price_amount. Backend should send minor unit INTs.');
+      debugPrint(
+        'WARNING: Received float/double for price_amount. Backend should send minor unit INTs.',
+      );
     }
-    
+
     return PricingRecordDto(
       id: json['id'] as String,
       tenantId: json['tenant_id'] as String,
@@ -47,8 +49,12 @@ class PricingRecordDto {
       entityType: json['entity_type'] as String,
       priceAmount: (json['price_amount'] as num).toInt(),
       currencyCode: json['currency_code'] as String? ?? 'INR',
-      effectiveFrom: json['effective_from'] != null ? DateTime.parse(json['effective_from'] as String) : null,
-      effectiveTo: json['effective_to'] != null ? DateTime.parse(json['effective_to'] as String) : null,
+      effectiveFrom: json['effective_from'] != null
+          ? DateTime.parse(json['effective_from'] as String)
+          : null,
+      effectiveTo: json['effective_to'] != null
+          ? DateTime.parse(json['effective_to'] as String)
+          : null,
       isActive: json['is_active'] as bool? ?? false,
       versionNum: json['version_num'] as int? ?? 1,
       createdAt: DateTime.parse(json['created_at'] as String),

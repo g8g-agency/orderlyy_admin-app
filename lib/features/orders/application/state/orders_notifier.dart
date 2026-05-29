@@ -16,7 +16,6 @@ import 'package:uuid/uuid.dart';
 
 final uuid = Uuid();
 
-
 class OrdersNotifier extends StateNotifier<OrdersState> {
   final IOrdersRepository _repository;
   final StatePersistence _persistence;
@@ -183,7 +182,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     );
 
     // Optimistic update
-    final updatedOrder = currentOrder.updateStatus(newStatus);
+    final updatedOrder = currentOrder.copyWith(status: newStatus);
     state = state.copyWith(
       orders: state.orders
           .map((o) => o.id == orderId ? updatedOrder : o)

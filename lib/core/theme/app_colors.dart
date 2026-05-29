@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Brand Colors
   static const Color primary = Color(0xFFBA0013); // Primary red
-  static const Color primaryContainer = Color(0xFFE31E24); // Primary container red
+  static const Color primaryContainer = Color(
+    0xFFE31E24,
+  ); // Primary container red
   static const Color secondary = Color(0xFF5D5E61); // Cool gray
   static const Color secondaryContainer = Color(0xFFE2E2E5);
 
@@ -18,7 +20,9 @@ class AppColors {
   // Light Mode Palette (KitchenSync core)
   static const Color lightBackground = Color(0xFFF8F9FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceCard = Color(0xFFFFFFFF); // Pure white as per specification Level 1
+  static const Color lightSurfaceCard = Color(
+    0xFFFFFFFF,
+  ); // Pure white as per specification Level 1
   static const Color lightTextPrimary = Color(0xFF191C1D);
   static const Color lightTextSecondary = Color(0xFF5D5E61);
 
@@ -30,6 +34,7 @@ class AppColors {
 
   // Neutral borders
   static const Color darkBorder = Color(0xFF2C2C35);
-  static const Color lightBorder = Color(0xFFE1E3E4); // surface-container-highest
+  static const Color lightBorder = Color(
+    0xFFE1E3E4,
+  ); // surface-container-highest
 }
-

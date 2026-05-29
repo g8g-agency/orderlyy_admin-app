@@ -3,14 +3,11 @@ class ApiException implements Exception {
   final String message;
   final Map<String, dynamic>? details;
 
-  ApiException({
-    required this.code,
-    required this.message,
-    this.details,
-  });
+  ApiException({required this.code, required this.message, this.details});
 
   @override
-  String toString() => 'ApiException(code: $code, message: $message, details: $details)';
+  String toString() =>
+      'ApiException(code: $code, message: $message, details: $details)';
 }
 
 enum ApiErrorCode {

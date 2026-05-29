@@ -20,7 +20,7 @@ class ApiAuthRepository implements AuthRepository {
     _authSubscription = _supabaseClient.auth.onAuthStateChange.listen((data) {
       final event = data.event;
       final session = data.session;
-      
+
       // If we are logged in as staff (custom token/session logic), ignore GoTrue auth events for now
       if (_currentUserId != null && _currentUserId!.startsWith('staff-')) {
         return;
@@ -49,7 +49,8 @@ class ApiAuthRepository implements AuthRepository {
   Stream<String?> get authStateStream => _authStateController.stream;
 
   @override
-  String? get currentUserId => _currentUserId ?? _supabaseClient.auth.currentUser?.id;
+  String? get currentUserId =>
+      _currentUserId ?? _supabaseClient.auth.currentUser?.id;
 
   @override
   StaffDto? get currentStaff => _currentStaff;
@@ -73,7 +74,9 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Result<LoginResponseDto>> signInWithPassword(LoginRequestDto request) async {
+  Future<Result<LoginResponseDto>> signInWithPassword(
+    LoginRequestDto request,
+  ) async {
     try {
       // 1. Sign in using Supabase Auth SDK
       // Note: We are keeping Supabase SDK for Auth as requested by the user.
@@ -84,7 +87,12 @@ class ApiAuthRepository implements AuthRepository {
 
       final user = response.user;
       if (user == null) {
-        return Failure(ApiFailure('Authentication failed: user is null', ApiErrorCode.unauthorized));
+        return Failure(
+          ApiFailure(
+            'Authentication failed: user is null',
+            ApiErrorCode.unauthorized,
+          ),
+        );
       }
 
       _currentUserId = user.id;
@@ -93,13 +101,15 @@ class ApiAuthRepository implements AuthRepository {
 
       // We can also call the backend login endpoint here if it does additional setup
       // but for now Supabase GoTrue acts as our JWT provider.
-      
-      return Success(LoginResponseDto(
-        userId: user.id,
-        email: user.email ?? request.email,
-        accessToken: response.session?.accessToken,
-        isSuccess: true,
-      ));
+
+      return Success(
+        LoginResponseDto(
+          userId: user.id,
+          email: user.email ?? request.email,
+          accessToken: response.session?.accessToken,
+          isSuccess: true,
+        ),
+      );
     } on AuthException catch (e) {
       return Failure(ApiFailure(e.message, ApiErrorCode.unauthorized));
     } catch (e) {
@@ -118,7 +128,7 @@ class ApiAuthRepository implements AuthRepository {
         data: {
           'tenantSlug': request.tenantSlug,
           'pin': request.pin,
-          'type': 'staff_pin'
+          'type': 'staff_pin',
         },
       );
 
@@ -138,12 +148,14 @@ class ApiAuthRepository implements AuthRepository {
           await _supabaseClient.auth.setSession(token);
         }
 
-        return Success(StaffPinLoginResponseDto(
-          isSuccess: true,
-          staff: staff,
-        ));
+        return Success(StaffPinLoginResponseDto(isSuccess: true, staff: staff));
       } else {
-        return Failure(ApiFailure('Invalid PIN or restaurant code.', ApiErrorCode.unauthorized));
+        return Failure(
+          ApiFailure(
+            'Invalid PIN or restaurant code.',
+            ApiErrorCode.unauthorized,
+          ),
+        );
       }
     } on ApiException catch (e) {
       return Failure(ApiFailure(e.message, e.code));
@@ -156,7 +168,7 @@ class ApiAuthRepository implements AuthRepository {
   Future<Result<AppContextDto?>> resolveContext() async {
     try {
       final res = await _dioClient.get(ApiConstants.currentTenant);
-      
+
       if (res.data['success'] == true) {
         return Success(AppContextDto.fromJson(res.data['data']));
       }

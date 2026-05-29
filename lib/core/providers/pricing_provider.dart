@@ -8,7 +8,7 @@ import 'repository_providers.dart';
 class PricingState {
   final bool isLoading;
   final String? error;
-  
+
   // Normalized store for RESOLVED projections ONLY.
   // entityId -> ResolvedPriceProjectionDto
   final Map<String, ResolvedPriceProjectionDto> resolvedPrices;
@@ -48,26 +48,30 @@ class PricingNotifier extends StateNotifier<PricingState> {
     final result = await _repository.getResolvedPrices(entityIds);
 
     if (result is Success<List<ResolvedPriceProjectionDto>>) {
-      final newResolved = Map<String, ResolvedPriceProjectionDto>.from(state.resolvedPrices);
-      for (final projection in result.data) {
+      final newResolved = Map<String, ResolvedPriceProjectionDto>.from(
+        state.resolvedPrices,
+      );
+      for (final projection in result.value) {
         newResolved[projection.entityId] = projection;
       }
       state = state.copyWith(isLoading: false, resolvedPrices: newResolved);
     } else if (result is Failure<List<ResolvedPriceProjectionDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
   /// Appends a new pricing record (immutable history).
   /// If it succeeds, it triggers a reload of the resolved price projection.
-  Future<Result<PricingRecordDto>> addPricingRecord(PricingRecordDto record) async {
+  Future<Result<PricingRecordDto>> addPricingRecord(
+    PricingRecordDto record,
+  ) async {
     final result = await _repository.addPricingRecord(record);
 
     if (result is Success<PricingRecordDto>) {
       // Deterministic reload of the projection for this entity
       await fetchResolvedPrices([record.entityId]);
     } else if (result is Failure<PricingRecordDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         // Deterministic reload on OCC Conflict
         await fetchResolvedPrices([record.entityId]);
       }
@@ -85,25 +89,32 @@ class PricingNotifier extends StateNotifier<PricingState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final pricingProvider = StateNotifierProvider<PricingNotifier, PricingState>((ref) {
+final pricingProvider = StateNotifierProvider<PricingNotifier, PricingState>((
+  ref,
+) {
   final repo = ref.watch(pricingRepositoryProvider);
   return PricingNotifier(repo);
 });
 
 // Selector for a specific entity's resolved price
-final resolvedPriceProvider = Provider.family<ResolvedPriceProjectionDto?, String>((ref, entityId) {
-  final state = ref.watch(pricingProvider);
-  return state.resolvedPrices[entityId];
-});
+final resolvedPriceProvider =
+    Provider.family<ResolvedPriceProjectionDto?, String>((ref, entityId) {
+      final state = ref.watch(pricingProvider);
+      return state.resolvedPrices[entityId];
+    });
 
 // Provider for fetching immutable history (not cached in notifier to avoid stale memory leaks)
-final pricingHistoryFutureProvider = FutureProvider.family<List<PricingRecordDto>, String>((ref, entityId) async {
-  final repo = ref.watch(pricingRepositoryProvider);
-  final result = await repo.getPricingHistory(entityId);
-  
-  if (result is Success<List<PricingRecordDto>>) {
-    return result.data;
-  } else {
-    throw Exception((result as Failure).failure.message);
-  }
-});
+final pricingHistoryFutureProvider =
+    FutureProvider.family<List<PricingRecordDto>, String>((
+      ref,
+      entityId,
+    ) async {
+      final repo = ref.watch(pricingRepositoryProvider);
+      final result = await repo.getPricingHistory(entityId);
+
+      if (result is Success<List<PricingRecordDto>>) {
+        return result.value;
+      } else {
+        throw Exception((result as Failure).error.message);
+      }
+    });

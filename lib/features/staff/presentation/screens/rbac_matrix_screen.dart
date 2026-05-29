@@ -30,47 +30,110 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
     _rolePermissions = {
       'Manager': {
         'Point of Sale Operations': {
-          'Process Payments': {'desc': 'Settle checks, split bills, process credit cards', 'val': true},
-          'Void Orders / Items': {'desc': 'Remove items after they have been sent to kitchen', 'val': true},
-          'Apply Comps & Discounts': {'desc': 'Authorize percentage or dollar amount discounts', 'val': true},
+          'Process Payments': {
+            'desc': 'Settle checks, split bills, process credit cards',
+            'val': true,
+          },
+          'Void Orders / Items': {
+            'desc': 'Remove items after they have been sent to kitchen',
+            'val': true,
+          },
+          'Apply Comps & Discounts': {
+            'desc': 'Authorize percentage or dollar amount discounts',
+            'val': true,
+          },
         },
         'Menu & Pricing': {
-          'Edit Pricing': {'desc': 'Change base prices of menu items', 'val': true},
-          '86 Items (Mark Unavailable)': {'desc': 'Temporarily remove items from active menu', 'val': true},
+          'Edit Pricing': {
+            'desc': 'Change base prices of menu items',
+            'val': true,
+          },
+          '86 Items (Mark Unavailable)': {
+            'desc': 'Temporarily remove items from active menu',
+            'val': true,
+          },
         },
         'Administration': {
-          'Manage Staff': {'desc': 'Add/remove employees, edit timesheets', 'val': true},
-          'View Financial Reports': {'desc': 'Access end-of-day sales, labor costs, and tax reports', 'val': true},
+          'Manage Staff': {
+            'desc': 'Add/remove employees, edit timesheets',
+            'val': true,
+          },
+          'View Financial Reports': {
+            'desc': 'Access end-of-day sales, labor costs, and tax reports',
+            'val': true,
+          },
         },
       },
       'Chef': {
         'Point of Sale Operations': {
-          'Process Payments': {'desc': 'Settle checks, split bills, process credit cards', 'val': false},
-          'Void Orders / Items': {'desc': 'Remove items after they have been sent to kitchen', 'val': false},
-          'Apply Comps & Discounts': {'desc': 'Authorize percentage or dollar amount discounts', 'val': false},
+          'Process Payments': {
+            'desc': 'Settle checks, split bills, process credit cards',
+            'val': false,
+          },
+          'Void Orders / Items': {
+            'desc': 'Remove items after they have been sent to kitchen',
+            'val': false,
+          },
+          'Apply Comps & Discounts': {
+            'desc': 'Authorize percentage or dollar amount discounts',
+            'val': false,
+          },
         },
         'Menu & Pricing': {
-          'Edit Pricing': {'desc': 'Change base prices of menu items', 'val': false},
-          '86 Items (Mark Unavailable)': {'desc': 'Temporarily remove items from active menu', 'val': true},
+          'Edit Pricing': {
+            'desc': 'Change base prices of menu items',
+            'val': false,
+          },
+          '86 Items (Mark Unavailable)': {
+            'desc': 'Temporarily remove items from active menu',
+            'val': true,
+          },
         },
         'Administration': {
-          'Manage Staff': {'desc': 'Add/remove employees, edit timesheets', 'val': false},
-          'View Financial Reports': {'desc': 'Access end-of-day sales, labor costs, and tax reports', 'val': false},
+          'Manage Staff': {
+            'desc': 'Add/remove employees, edit timesheets',
+            'val': false,
+          },
+          'View Financial Reports': {
+            'desc': 'Access end-of-day sales, labor costs, and tax reports',
+            'val': false,
+          },
         },
       },
       'Server': {
         'Point of Sale Operations': {
-          'Process Payments': {'desc': 'Settle checks, split bills, process credit cards', 'val': true},
-          'Void Orders / Items': {'desc': 'Remove items after they have been sent to kitchen', 'val': false},
-          'Apply Comps & Discounts': {'desc': 'Authorize percentage or dollar amount discounts', 'val': true},
+          'Process Payments': {
+            'desc': 'Settle checks, split bills, process credit cards',
+            'val': true,
+          },
+          'Void Orders / Items': {
+            'desc': 'Remove items after they have been sent to kitchen',
+            'val': false,
+          },
+          'Apply Comps & Discounts': {
+            'desc': 'Authorize percentage or dollar amount discounts',
+            'val': true,
+          },
         },
         'Menu & Pricing': {
-          'Edit Pricing': {'desc': 'Change base prices of menu items', 'val': false},
-          '86 Items (Mark Unavailable)': {'desc': 'Temporarily remove items from active menu', 'val': false},
+          'Edit Pricing': {
+            'desc': 'Change base prices of menu items',
+            'val': false,
+          },
+          '86 Items (Mark Unavailable)': {
+            'desc': 'Temporarily remove items from active menu',
+            'val': false,
+          },
         },
         'Administration': {
-          'Manage Staff': {'desc': 'Add/remove employees, edit timesheets', 'val': false},
-          'View Financial Reports': {'desc': 'Access end-of-day sales, labor costs, and tax reports', 'val': false},
+          'Manage Staff': {
+            'desc': 'Add/remove employees, edit timesheets',
+            'val': false,
+          },
+          'View Financial Reports': {
+            'desc': 'Access end-of-day sales, labor costs, and tax reports',
+            'val': false,
+          },
         },
       },
     };
@@ -128,17 +191,42 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                   setState(() {
                     _rolePermissions[roleName] = {
                       'Point of Sale Operations': {
-                        'Process Payments': {'desc': 'Settle checks, split bills, process credit cards', 'val': false},
-                        'Void Orders / Items': {'desc': 'Remove items after they have been sent to kitchen', 'val': false},
-                        'Apply Comps & Discounts': {'desc': 'Authorize percentage or dollar amount discounts', 'val': false},
+                        'Process Payments': {
+                          'desc':
+                              'Settle checks, split bills, process credit cards',
+                          'val': false,
+                        },
+                        'Void Orders / Items': {
+                          'desc':
+                              'Remove items after they have been sent to kitchen',
+                          'val': false,
+                        },
+                        'Apply Comps & Discounts': {
+                          'desc':
+                              'Authorize percentage or dollar amount discounts',
+                          'val': false,
+                        },
                       },
                       'Menu & Pricing': {
-                        'Edit Pricing': {'desc': 'Change base prices of menu items', 'val': false},
-                        '86 Items (Mark Unavailable)': {'desc': 'Temporarily remove items from active menu', 'val': false},
+                        'Edit Pricing': {
+                          'desc': 'Change base prices of menu items',
+                          'val': false,
+                        },
+                        '86 Items (Mark Unavailable)': {
+                          'desc': 'Temporarily remove items from active menu',
+                          'val': false,
+                        },
                       },
                       'Administration': {
-                        'Manage Staff': {'desc': 'Add/remove employees, edit timesheets', 'val': false},
-                        'View Financial Reports': {'desc': 'Access end-of-day sales, labor costs, and tax reports', 'val': false},
+                        'Manage Staff': {
+                          'desc': 'Add/remove employees, edit timesheets',
+                          'val': false,
+                        },
+                        'View Financial Reports': {
+                          'desc':
+                              'Access end-of-day sales, labor costs, and tax reports',
+                          'val': false,
+                        },
                       },
                     };
                     _selectedRole = roleName;
@@ -146,7 +234,9 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Custom role "$roleName" added to directory.'),
+                      content: Text(
+                        'Custom role "$roleName" added to directory.',
+                      ),
                       behavior: SnackBarBehavior.floating,
                       backgroundColor: AppColors.success,
                     ),
@@ -201,13 +291,21 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, size: 22.r, color: AppTheme.secondary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            size: 22.r,
+            color: AppTheme.secondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           OutlinedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.history_rounded, size: 16.r, color: AppTheme.secondary),
+            icon: Icon(
+              Icons.history_rounded,
+              size: 16.r,
+              color: AppTheme.secondary,
+            ),
             label: Text(
               'Audit Log',
               style: GoogleFonts.plusJakartaSans(
@@ -219,7 +317,9 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppTheme.surfaceContainerHigh),
               padding: EdgeInsets.symmetric(horizontal: 14.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
             ),
           ),
           SizedBox(width: 10.w),
@@ -238,7 +338,9 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
               backgroundColor: AppTheme.primaryContainer,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 14.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
               elevation: 0,
             ),
           ),
@@ -314,7 +416,7 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
               color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -359,10 +461,14 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                     margin: EdgeInsets.only(bottom: 10.h),
                     padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppTheme.primary.withValues(alpha: 0.04) : AppTheme.surfaceContainerLowest,
+                      color: isSelected
+                          ? AppTheme.primary.withValues(alpha: 0.04)
+                          : AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
-                        color: isSelected ? AppTheme.primary : AppTheme.surfaceContainerHigh,
+                        color: isSelected
+                            ? AppTheme.primary
+                            : AppTheme.surfaceContainerHigh,
                         width: isSelected ? 1.5.w : 1.w,
                       ),
                     ),
@@ -372,13 +478,17 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                           width: 32.r,
                           height: 32.r,
                           decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.primaryContainer : AppTheme.surfaceContainerLow,
+                            color: isSelected
+                                ? AppTheme.primaryContainer
+                                : AppTheme.surfaceContainerLow,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             roleIcon,
                             size: 16.r,
-                            color: isSelected ? Colors.white : AppTheme.secondary,
+                            color: isSelected
+                                ? Colors.white
+                                : AppTheme.secondary,
                           ),
                         ),
                         SizedBox(width: 10.w),
@@ -390,19 +500,25 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                                 role,
                                 style: AppTheme.bodyMd.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  color: isSelected ? AppTheme.primary : AppTheme.onSurface,
+                                  color: isSelected
+                                      ? AppTheme.primary
+                                      : AppTheme.onSurface,
                                 ),
                               ),
                               Text(
                                 desc,
-                                style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
+                                style: AppTheme.bodySm.copyWith(
+                                  fontSize: 10.sp,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         Icon(
                           Icons.chevron_right_rounded,
-                          color: isSelected ? AppTheme.primary : AppTheme.surfaceContainerHighest,
+                          color: isSelected
+                              ? AppTheme.primary
+                              : AppTheme.surfaceContainerHighest,
                         ),
                       ],
                     ),
@@ -427,7 +543,11 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_rounded, size: 16.r, color: AppTheme.primary),
+                    Icon(
+                      Icons.add_rounded,
+                      size: 16.r,
+                      color: AppTheme.primary,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       'Create New Role',
@@ -457,7 +577,7 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
               color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -499,9 +619,18 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                 isExpanded: true,
                 underline: const SizedBox(),
                 items: const [
-                  DropdownMenuItem(value: '4-Digit Numerical', child: Text('4-Digit Numerical')),
-                  DropdownMenuItem(value: '6-Digit Numerical', child: Text('6-Digit Numerical')),
-                  DropdownMenuItem(value: 'Alphanumeric Password', child: Text('Alphanumeric Password')),
+                  DropdownMenuItem(
+                    value: '4-Digit Numerical',
+                    child: Text('4-Digit Numerical'),
+                  ),
+                  DropdownMenuItem(
+                    value: '6-Digit Numerical',
+                    child: Text('6-Digit Numerical'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Alphanumeric Password',
+                    child: Text('Alphanumeric Password'),
+                  ),
                 ],
                 onChanged: (val) {
                   if (val != null) {
@@ -516,10 +645,13 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
 
             // Toggle Require swipe card
             SwitchListTile(
-              title: Text('Require Access Card', style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700)),
+              title: Text(
+                'Require Access Card',
+                style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700),
+              ),
               subtitle: Text('NFC/RFID authentication', style: AppTheme.bodySm),
               value: _requireAccessCard,
-              activeColor: AppTheme.primary,
+              activeThumbColor: AppTheme.primary,
               contentPadding: EdgeInsets.zero,
               onChanged: (val) => setState(() => _requireAccessCard = val),
             ),
@@ -551,7 +683,7 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -567,11 +699,17 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.checklist_rounded, size: 20.r, color: AppTheme.primary),
+                        Icon(
+                          Icons.checklist_rounded,
+                          size: 20.r,
+                          color: AppTheme.primary,
+                        ),
                         SizedBox(width: 8.w),
                         Text(
                           '$_selectedRole Permissions',
-                          style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
+                          style: AppTheme.titleLg.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ],
                     ),
@@ -585,12 +723,15 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                   children: [
                     Text(
                       'Select All',
-                      style: AppTheme.labelSm.copyWith(fontSize: 10.sp, color: AppTheme.secondary),
+                      style: AppTheme.labelSm.copyWith(
+                        fontSize: 10.sp,
+                        color: AppTheme.secondary,
+                      ),
                     ),
                     SizedBox(width: 8.w),
                     Switch(
                       value: allChecked,
-                      activeColor: AppTheme.primary,
+                      activeThumbColor: AppTheme.primary,
                       onChanged: _toggleAllSelected,
                     ),
                   ],
@@ -598,7 +739,11 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
               ],
             ),
           ),
-          Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+          Divider(
+            height: 1.h,
+            thickness: 1.h,
+            color: AppTheme.surfaceContainerHigh,
+          ),
 
           // Scrollable categorized checkbox lists
           roleMap.isEmpty
@@ -606,7 +751,9 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                   padding: EdgeInsets.all(32.r),
                   child: Text(
                     'No permissions defined for this role.',
-                    style: AppTheme.bodySm.copyWith(fontStyle: FontStyle.italic),
+                    style: AppTheme.bodySm.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 )
               : ListView.builder(
@@ -618,8 +765,12 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                     final categoryItems = roleMap[category] ?? {};
 
                     IconData catIcon = Icons.point_of_sale_rounded;
-                    if (category.contains('Menu')) catIcon = Icons.restaurant_menu_rounded;
-                    if (category.contains('Admin')) catIcon = Icons.manage_accounts_rounded;
+                    if (category.contains('Menu')) {
+                      catIcon = Icons.restaurant_menu_rounded;
+                    }
+                    if (category.contains('Admin')) {
+                      catIcon = Icons.manage_accounts_rounded;
+                    }
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,11 +778,18 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                         // Category Header Line
                         Container(
                           width: double.infinity,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
+                          ),
                           color: AppTheme.surfaceContainerLow,
                           child: Row(
                             children: [
-                              Icon(catIcon, size: 16.r, color: AppTheme.secondary),
+                              Icon(
+                                catIcon,
+                                size: 16.r,
+                                color: AppTheme.secondary,
+                              ),
                               SizedBox(width: 8.w),
                               Text(
                                 category.toUpperCase(),
@@ -657,16 +815,25 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                               CheckboxListTile(
                                 title: Text(
                                   permName,
-                                  style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700, fontSize: 13.sp),
+                                  style: AppTheme.bodyMd.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13.sp,
+                                  ),
                                 ),
                                 subtitle: Text(
                                   subtitle,
-                                  style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
+                                  style: AppTheme.bodySm.copyWith(
+                                    fontSize: 10.sp,
+                                  ),
                                 ),
                                 value: isChecked,
                                 activeColor: AppTheme.primary,
-                                controlAffinity: ListTileControlAffinity.trailing,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                                controlAffinity:
+                                    ListTileControlAffinity.trailing,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 4.h,
+                                ),
                                 onChanged: (val) {
                                   if (val != null) {
                                     setState(() {
@@ -675,10 +842,13 @@ class _RbacMatrixScreenState extends ConsumerState<RbacMatrixScreen> {
                                   }
                                 },
                               ),
-                              Divider(height: 1.h, color: AppTheme.surfaceContainerLow),
+                              Divider(
+                                height: 1.h,
+                                color: AppTheme.surfaceContainerLow,
+                              ),
                             ],
                           );
-                        }).toList(),
+                        }),
                       ],
                     );
                   },

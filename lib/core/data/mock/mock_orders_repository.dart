@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import '../repositories/orders_repository.dart';
 import '../dtos/order_dto.dart';
+import '../../network/api_exception.dart';
 import '../../network/local_sync_client.dart';
 
 class MockOrdersRepository implements OrdersRepository {
@@ -31,6 +32,88 @@ class MockOrdersRepository implements OrdersRepository {
   }
 
   void _broadcast() => _ordersController.add(List.from(_orders!));
+
+  // ── Phase 10 implementations ────────────────────────────────────────────────
+  @override
+  Future<Result<List<OrderDto>>> getOrdersPaginated({
+    OrderStatus? status,
+    String? tableId,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    await _ensureLoaded();
+    final res = _orders!.where((o) {
+      if (status != null && o.status != status) return false;
+      if (tableId != null && o.tableId != tableId) return false;
+      return true;
+    }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return Success(res);
+  }
+
+  @override
+  Future<Result<OrderDto>> createOrderEntity(
+    OrderDto order, {
+    required String idempotencyKey,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    await _ensureLoaded();
+    final newOrder = order.copyWith(versionNum: 1);
+    _orders!.add(newOrder);
+    _broadcast();
+    LocalSyncClient().broadcastEvent('order_update', newOrder.toJson());
+    return Success(newOrder);
+  }
+
+  @override
+  Future<Result<OrderDto>> transitionOrderStatus(
+    String orderId,
+    OrderStatus newStatus,
+    int currentVersion, {
+    required String idempotencyKey,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    await _ensureLoaded();
+    final idx = _orders!.indexWhere((o) => o.id == orderId);
+    if (idx == -1) return Failure(ApiFailure('Order not found', ApiErrorCode.notFound));
+    if (_orders![idx].versionNum != currentVersion) {
+      return Failure(ApiFailure('Conflict', ApiErrorCode.conflict));
+    }
+    final updated = _orders![idx].copyWith(
+      status: newStatus,
+      updatedAt: DateTime.now(),
+      versionNum: currentVersion + 1,
+    );
+    _orders![idx] = updated;
+    _broadcast();
+    LocalSyncClient().broadcastEvent('order_update', updated.toJson());
+    return Success(updated);
+  }
+
+  @override
+  Future<Result<OrderDto>> updateOrderLineItems(
+    String orderId,
+    List<OrderItemDto> items,
+    int currentVersion, {
+    required String idempotencyKey,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    await _ensureLoaded();
+    final idx = _orders!.indexWhere((o) => o.id == orderId);
+    if (idx == -1) return Failure(ApiFailure('Order not found', ApiErrorCode.notFound));
+    if (_orders![idx].versionNum != currentVersion) {
+      return Failure(ApiFailure('Conflict', ApiErrorCode.conflict));
+    }
+    final updated = _orders![idx].copyWith(
+      items: items,
+      updatedAt: DateTime.now(),
+      versionNum: currentVersion + 1,
+    );
+    _orders![idx] = updated;
+    _broadcast();
+    LocalSyncClient().broadcastEvent('order_update', updated.toJson());
+    return Success(updated);
+  }
 
   // ── Fetch orders ──────────────────────────────────────────────────────────
   @override

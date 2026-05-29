@@ -34,7 +34,9 @@ class ModifierGroupDto {
       isRequired: json['is_required'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
       versionNum: json['version_num'] as int? ?? 1,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String)
+          : null,
     );
   }
 
@@ -84,7 +86,9 @@ class ModifierItemDto {
       description: json['description'] as String?,
       isAvailable: json['is_available'] as bool? ?? true,
       versionNum: json['version_num'] as int? ?? 1,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String)
+          : null,
     );
   }
 

@@ -17,7 +17,7 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
     try {
       final queryParams = <String, dynamic>{
         'date': date.toIso8601String().split('T').first,
-        if (branchId != null) 'branch_id': branchId,
+        'branch_id': ?branchId,
       };
 
       final response = await _dioClient.get(
@@ -26,9 +26,13 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
       );
 
       if (response.data['success'] == true) {
-        return Success(DailySummaryProjectionDto.fromJson(response.data['data']));
+        return Success(
+          DailySummaryProjectionDto.fromJson(response.data['data']),
+        );
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch daily summary';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch daily summary';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -48,7 +52,7 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
       final queryParams = <String, dynamic>{
         'start_date': startDate.toIso8601String().split('T').first,
         'end_date': endDate.toIso8601String().split('T').first,
-        if (branchId != null) 'branch_id': branchId,
+        'branch_id': ?branchId,
       };
 
       final response = await _dioClient.get(
@@ -59,11 +63,17 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final projections = data
-            .map((json) => DailySummaryProjectionDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => DailySummaryProjectionDto.fromJson(
+                json as Map<String, dynamic>,
+              ),
+            )
             .toList();
         return Success(projections);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch analytics range';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch analytics range';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

@@ -8,7 +8,9 @@ abstract class PricingRepository {
 
   /// Fetches the resolved active price projection for a list of entities.
   /// Backend strictly computes time windows, precedence, and fallback.
-  Future<Result<List<ResolvedPriceProjectionDto>>> getResolvedPrices(List<String> entityIds);
+  Future<Result<List<ResolvedPriceProjectionDto>>> getResolvedPrices(
+    List<String> entityIds,
+  );
 
   /// Adds a new pricing record. The backend enforces append-only logic.
   /// Replaces the active window or queues future windows depending on dates.

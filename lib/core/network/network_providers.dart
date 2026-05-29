@@ -22,23 +22,25 @@ final offlineQueueManagerProvider = Provider<OfflineQueueManager>((ref) {
   return OfflineQueueManager(queueBox, networkInfo, talker);
 });
 
-final dioClientProvider = Provider<DioClient>((ref) {
+final Provider<DioClient> dioClientProvider = Provider<DioClient>((ref) {
   final talker = ref.watch(talkerProvider);
   final fingerprint = ref.watch(deviceFingerprintProvider);
-  
+
   return DioClient(
     talker: talker,
     deviceFingerprint: fingerprint,
     onUnauthorized: (message) {
-      logWarning('[DioClient] 🚨 Unauthorized request (401) detected: $message');
-      
+      logWarning(
+        '[DioClient] 🚨 Unauthorized request (401) detected: $message',
+      );
+
       final lowerMsg = message.toLowerCase();
       // DO NOT logout if missing fingerprint
       if (lowerMsg.contains('fingerprint')) return;
-      
+
       // ONLY logout on actual token issues
-      if (lowerMsg.contains('jwt') || 
-          lowerMsg.contains('expired') || 
+      if (lowerMsg.contains('jwt') ||
+          lowerMsg.contains('expired') ||
           lowerMsg.contains('invalid session') ||
           lowerMsg.contains('revoked')) {
         logWarning('[DioClient] 🚨 Force signing out due to invalid session.');

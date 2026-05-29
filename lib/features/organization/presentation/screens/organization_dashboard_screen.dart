@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,12 +12,20 @@ class OrganizationDashboardScreen extends ConsumerWidget {
     final ctx = ref.watch(appContextProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
-    final bgColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+
+    final bgColor = isDark
+        ? AppColors.darkBackground
+        : AppColors.lightBackground;
+    final surfaceColor = isDark
+        ? AppColors.darkSurface
+        : AppColors.lightSurface;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     if (ctx == null) {
       return Scaffold(
@@ -57,7 +64,10 @@ class OrganizationDashboardScreen extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 16, vertical: 24),
+        padding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 40 : 16,
+          vertical: 24,
+        ),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1280),
@@ -68,7 +78,9 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                 Flex(
                   direction: isDesktop ? Axis.horizontal : Axis.vertical,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: isDesktop ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                  crossAxisAlignment: isDesktop
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,8 +114,13 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: textColor,
                               side: BorderSide(color: borderColor),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                             child: const Text('Manage Regions'),
                           ),
@@ -118,14 +135,19 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               elevation: 0,
                             ),
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -135,23 +157,54 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 8, child: _buildStatsGrid(isDesktop, surfaceColor, borderColor, textColor, subTextColor)),
+                      Expanded(
+                        flex: 8,
+                        child: _buildStatsGrid(
+                          isDesktop,
+                          surfaceColor,
+                          borderColor,
+                          textColor,
+                          subTextColor,
+                        ),
+                      ),
                       const SizedBox(width: 24),
-                      Expanded(flex: 4, child: _LiveHeatmapWidget(surfaceColor: surfaceColor, borderColor: borderColor, textColor: textColor)),
+                      Expanded(
+                        flex: 4,
+                        child: _LiveHeatmapWidget(
+                          surfaceColor: surfaceColor,
+                          borderColor: borderColor,
+                          textColor: textColor,
+                        ),
+                      ),
                     ],
                   )
                 else
                   Column(
                     children: [
-                      _buildStatsGrid(isDesktop, surfaceColor, borderColor, textColor, subTextColor),
+                      _buildStatsGrid(
+                        isDesktop,
+                        surfaceColor,
+                        borderColor,
+                        textColor,
+                        subTextColor,
+                      ),
                       const SizedBox(height: 24),
-                      _LiveHeatmapWidget(surfaceColor: surfaceColor, borderColor: borderColor, textColor: textColor),
+                      _LiveHeatmapWidget(
+                        surfaceColor: surfaceColor,
+                        borderColor: borderColor,
+                        textColor: textColor,
+                      ),
                     ],
                   ),
 
                 const SizedBox(height: 24),
                 // Branch Directory
-                _BranchDirectoryTable(surfaceColor: surfaceColor, borderColor: borderColor, textColor: textColor, subTextColor: subTextColor),
+                _BranchDirectoryTable(
+                  surfaceColor: surfaceColor,
+                  borderColor: borderColor,
+                  textColor: textColor,
+                  subTextColor: subTextColor,
+                ),
                 const SizedBox(height: 40),
               ],
             ),
@@ -161,12 +214,18 @@ class OrganizationDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsGrid(bool isDesktop, Color surfaceColor, Color borderColor, Color textColor, Color subTextColor) {
+  Widget _buildStatsGrid(
+    bool isDesktop,
+    Color surfaceColor,
+    Color borderColor,
+    Color textColor,
+    Color subTextColor,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
         final crossAxisCount = isMobile ? 1 : 3;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: 16,
@@ -261,7 +320,10 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isHighlighted ? AppColors.primary : borderColor, width: isHighlighted ? 1.5 : 1),
+        border: Border.all(
+          color: isHighlighted ? AppColors.primary : borderColor,
+          width: isHighlighted ? 1.5 : 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -342,13 +404,18 @@ class _LiveHeatmapWidget extends StatefulWidget {
   final Color borderColor;
   final Color textColor;
 
-  const _LiveHeatmapWidget({required this.surfaceColor, required this.borderColor, required this.textColor});
+  const _LiveHeatmapWidget({
+    required this.surfaceColor,
+    required this.borderColor,
+    required this.textColor,
+  });
 
   @override
   State<_LiveHeatmapWidget> createState() => _LiveHeatmapWidgetState();
 }
 
-class _LiveHeatmapWidgetState extends State<_LiveHeatmapWidget> with SingleTickerProviderStateMixin {
+class _LiveHeatmapWidgetState extends State<_LiveHeatmapWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
   @override
@@ -400,7 +467,7 @@ class _LiveHeatmapWidgetState extends State<_LiveHeatmapWidget> with SingleTicke
                   icon: const Icon(Icons.fullscreen),
                   onPressed: () {},
                   visualDensity: VisualDensity.compact,
-                )
+                ),
               ],
             ),
           ),
@@ -415,7 +482,9 @@ class _LiveHeatmapWidgetState extends State<_LiveHeatmapWidget> with SingleTicke
                     child: Image.network(
                       'https://lh3.googleusercontent.com/aida-public/AB6AXuCdrKhsI7BflcKD0as8RskRtir45Qslz8RwL--Ku2RzDf5nH2bl7v9obWuKUE1glsqdsPaGRf_Ha1wNg3oOzWWH_aeF-p0dX0Q-0VM1ztxzOZh2-HOi8oClonkkx2IuaBibjC12KnHqHacMm-bw3SAzDwlHvJwi_nEZxqcigXZb0JizEn76WAynnWcF8IKLxsGQIjJA7ziWxSR7H4WGio821lANiu2HXGmwWrn4aCBRNiUnxwIyQQ4TQzNmOO7ClTH_fxRMqlp4sNVR',
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(color: widget.borderColor.withValues(alpha: 0.3)),
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: widget.borderColor.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
                 ),
@@ -439,7 +508,9 @@ class _LiveHeatmapWidgetState extends State<_LiveHeatmapWidget> with SingleTicke
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.8 * _pulseController.value),
+                              color: AppColors.primary.withValues(
+                                alpha: 0.8 * _pulseController.value,
+                              ),
                               blurRadius: 15 * _pulseController.value,
                               spreadRadius: 5 * _pulseController.value,
                             ),
@@ -532,7 +603,10 @@ class _BranchDirectoryTable extends StatelessWidget {
                           hintText: 'Search branches...',
                           prefixIcon: const Icon(Icons.search),
                           filled: true,
-                          fillColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBackground : AppColors.lightBackground,
+                          fillColor:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkBackground
+                              : AppColors.lightBackground,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: borderColor),
@@ -543,9 +617,14 @@ class _BranchDirectoryTable extends StatelessWidget {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.primary),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 0,
+                          ),
                         ),
                       ),
                     ),
@@ -562,28 +641,99 @@ class _BranchDirectoryTable extends StatelessWidget {
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(borderColor.withValues(alpha: 0.2)),
+              headingRowColor: WidgetStateProperty.all(
+                borderColor.withValues(alpha: 0.2),
+              ),
               dataRowMaxHeight: 70,
               dataRowMinHeight: 70,
               columns: [
-                DataColumn(label: Text('Branch Name', style: TextStyle(color: subTextColor, fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Region', style: TextStyle(color: subTextColor, fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Status', style: TextStyle(color: subTextColor, fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Today\'s Sales', style: TextStyle(color: subTextColor, fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Active Orders', style: TextStyle(color: subTextColor, fontWeight: FontWeight.w600))),
-                DataColumn(label: Text('Actions', style: TextStyle(color: subTextColor, fontWeight: FontWeight.w600))),
+                DataColumn(
+                  label: Text(
+                    'Branch Name',
+                    style: TextStyle(
+                      color: subTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Region',
+                    style: TextStyle(
+                      color: subTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Status',
+                    style: TextStyle(
+                      color: subTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Today\'s Sales',
+                    style: TextStyle(
+                      color: subTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Active Orders',
+                    style: TextStyle(
+                      color: subTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Actions',
+                    style: TextStyle(
+                      color: subTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
               rows: [
-                _buildRow('Downtown Core (Store #042)', '124 Main St, Metropolis', 'Northeast', true, '\$8,450', '42'),
-                _buildRow('Uptown Plaza (Store #018)', '890 High St, Metropolis', 'Northeast', true, '\$6,120', '28'),
-                _buildRow('Westside Mall (Store #105)', '400 Commerce Way, Suburbia', 'Midwest', false, '\$0', '0'),
+                _buildRow(
+                  'Downtown Core (Store #042)',
+                  '124 Main St, Metropolis',
+                  'Northeast',
+                  true,
+                  '\$8,450',
+                  '42',
+                ),
+                _buildRow(
+                  'Uptown Plaza (Store #018)',
+                  '890 High St, Metropolis',
+                  'Northeast',
+                  true,
+                  '\$6,120',
+                  '28',
+                ),
+                _buildRow(
+                  'Westside Mall (Store #105)',
+                  '400 Commerce Way, Suburbia',
+                  'Midwest',
+                  false,
+                  '\$0',
+                  '0',
+                ),
               ],
             ),
           ),
@@ -593,7 +743,13 @@ class _BranchDirectoryTable extends StatelessWidget {
             child: Center(
               child: TextButton(
                 onPressed: () {},
-                child: const Text('View All 142 Branches', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'View All 142 Branches',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ),
@@ -602,7 +758,14 @@ class _BranchDirectoryTable extends StatelessWidget {
     );
   }
 
-  DataRow _buildRow(String name, String address, String region, bool isOpen, String sales, String orders) {
+  DataRow _buildRow(
+    String name,
+    String address,
+    String region,
+    bool isOpen,
+    String sales,
+    String orders,
+  ) {
     return DataRow(
       cells: [
         DataCell(
@@ -610,9 +773,19 @@ class _BranchDirectoryTable extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(name, style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 15)),
+              Text(
+                name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                  fontSize: 15,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(address, style: TextStyle(fontSize: 12, color: subTextColor)),
+              Text(
+                address,
+                style: TextStyle(fontSize: 12, color: subTextColor),
+              ),
             ],
           ),
         ),
@@ -621,7 +794,9 @@ class _BranchDirectoryTable extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: isOpen ? AppColors.primary.withValues(alpha: 0.1) : borderColor.withValues(alpha: 0.3),
+              color: isOpen
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : borderColor.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
@@ -634,8 +809,21 @@ class _BranchDirectoryTable extends StatelessWidget {
             ),
           ),
         ),
-        DataCell(Text(sales, style: TextStyle(fontWeight: FontWeight.bold, color: isOpen ? textColor : subTextColor))),
-        DataCell(Text(orders, style: TextStyle(color: isOpen ? textColor : subTextColor))),
+        DataCell(
+          Text(
+            sales,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isOpen ? textColor : subTextColor,
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            orders,
+            style: TextStyle(color: isOpen ? textColor : subTextColor),
+          ),
+        ),
         DataCell(
           IconButton(
             icon: Icon(Icons.chevron_right, color: subTextColor),

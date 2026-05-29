@@ -40,17 +40,17 @@ class ProjectionEpoch {
 /// Authoritative snapshot identity, lineage, and replay baseline coordination.
 class SnapshotRegistry {
   final Talker _talker;
-  
+
   MenuSnapshot? _activeSnapshot;
   ProjectionEpoch _currentEpoch;
 
   SnapshotRegistry(this._talker)
-      : _currentEpoch = ProjectionEpoch(
-          projectionEpoch: 1,
-          runtimeEpoch: 1,
-          rebuildEpoch: 1,
-          generatedAt: DateTime.now(),
-        );
+    : _currentEpoch = ProjectionEpoch(
+        projectionEpoch: 1,
+        runtimeEpoch: 1,
+        rebuildEpoch: 1,
+        generatedAt: DateTime.now(),
+      );
 
   MenuSnapshot? get activeSnapshot => _activeSnapshot;
   ProjectionEpoch get currentEpoch => _currentEpoch;
@@ -58,15 +58,17 @@ class SnapshotRegistry {
   /// Registers a newly fetched or generated snapshot as the authoritative baseline.
   void registerBaseline(MenuSnapshot snapshot, {RebuildSource? source}) {
     _activeSnapshot = snapshot;
-    
+
     if (source != null) {
-      _talker.info('[SnapshotRegistry] Rebuild triggered by ${source.name}. Incrementing rebuild epoch.');
+      _talker.info(
+        '[SnapshotRegistry] Rebuild triggered by ${source.name}. Incrementing rebuild epoch.',
+      );
       _currentEpoch = _currentEpoch.incrementRebuild();
     }
 
     _talker.info(
       '[SnapshotRegistry] Registered baseline snapshot: ${snapshot.snapshotVersion} '
-      '(Epoch: ${_currentEpoch.projectionEpoch}.${_currentEpoch.runtimeEpoch}.${_currentEpoch.rebuildEpoch})'
+      '(Epoch: ${_currentEpoch.projectionEpoch}.${_currentEpoch.runtimeEpoch}.${_currentEpoch.rebuildEpoch})',
     );
   }
 
@@ -75,7 +77,7 @@ class SnapshotRegistry {
     if (eventRuntimeEpoch < _currentEpoch.runtimeEpoch) {
       _talker.warning(
         '[SnapshotRegistry] Rejected stale replay event. '
-        'Event epoch: $eventRuntimeEpoch, Current: ${_currentEpoch.runtimeEpoch}'
+        'Event epoch: $eventRuntimeEpoch, Current: ${_currentEpoch.runtimeEpoch}',
       );
       return false;
     }

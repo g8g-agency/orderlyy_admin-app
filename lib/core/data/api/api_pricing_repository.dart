@@ -10,7 +10,9 @@ class ApiPricingRepository implements PricingRepository {
   ApiPricingRepository(this._dioClient);
 
   @override
-  Future<Result<List<PricingRecordDto>>> getPricingHistory(String entityId) async {
+  Future<Result<List<PricingRecordDto>>> getPricingHistory(
+    String entityId,
+  ) async {
     try {
       final response = await _dioClient.get(
         '${ApiConstants.pricing}/history/$entityId',
@@ -19,11 +21,15 @@ class ApiPricingRepository implements PricingRepository {
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final history = data
-            .map((json) => PricingRecordDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => PricingRecordDto.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
         return Success(history);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch pricing history';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch pricing history';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -34,23 +40,29 @@ class ApiPricingRepository implements PricingRepository {
   }
 
   @override
-  Future<Result<List<ResolvedPriceProjectionDto>>> getResolvedPrices(List<String> entityIds) async {
+  Future<Result<List<ResolvedPriceProjectionDto>>> getResolvedPrices(
+    List<String> entityIds,
+  ) async {
     try {
       final response = await _dioClient.post(
         '${ApiConstants.pricing}/resolved',
-        data: {
-          'entity_ids': entityIds,
-        },
+        data: {'entity_ids': entityIds},
       );
 
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final projections = data
-            .map((json) => ResolvedPriceProjectionDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => ResolvedPriceProjectionDto.fromJson(
+                json as Map<String, dynamic>,
+              ),
+            )
             .toList();
         return Success(projections);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch resolved prices';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch resolved prices';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -61,17 +73,22 @@ class ApiPricingRepository implements PricingRepository {
   }
 
   @override
-  Future<Result<PricingRecordDto>> addPricingRecord(PricingRecordDto record) async {
+  Future<Result<PricingRecordDto>> addPricingRecord(
+    PricingRecordDto record,
+  ) async {
     try {
       final response = await _dioClient.post(
         ApiConstants.pricing,
-        data: record.toJson(), // Backend enforces append-only logic and version_num constraints
+        data: record
+            .toJson(), // Backend enforces append-only logic and version_num constraints
       );
 
       if (response.data['success'] == true) {
         return Success(PricingRecordDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to add pricing record';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to add pricing record';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

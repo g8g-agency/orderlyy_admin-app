@@ -36,8 +36,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     try {
-      final res = await ref.read(tenantSettingsProvider.future);
-      if (res != null && mounted) {
+      await ref.read(settingsProvider.notifier).fetchSettings();
+      if (!mounted) return;
+      final res = ref.read(activeSettingsProvider(null));
+      if (res != null) {
         setState(() {
           _notifyNewOrder = res.notifyNewOrder;
           _notifyOrderReady = res.notifyOrderReady;
@@ -48,7 +50,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _confirmationSound = res.confirmationSound;
           _qrAutoAssign = res.qrAutoAssign;
           _gstController.text = res.gstNumber;
-          _taxController.text = res.taxPercentage.toString();
+          _taxController.text = (res.defaultTaxBasisPoints / 100.0).toString();
         });
       }
     } catch (e) {
@@ -61,6 +63,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       final profile = await ref.read(userProfileProvider.future);
       final tenantId = profile?['tenant_id'];
+      final currentSettings = ref.read(activeSettingsProvider(null));
       if (tenantId != null) {
         final settings = TenantSettingsDto(
           tenantId: tenantId,
@@ -73,11 +76,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           confirmationSound: _confirmationSound,
           qrAutoAssign: _qrAutoAssign,
           gstNumber: _gstController.text.trim(),
-          taxPercentage: double.tryParse(_taxController.text) ?? 5.0,
+          defaultTaxBasisPoints: ((double.tryParse(_taxController.text) ?? 5.0) * 100).round(),
           updatedAt: DateTime.now(),
+          versionNum: currentSettings?.versionNum ?? 1,
         );
 
-        await ref.read(updateSettingsProvider)(settings);
+        await ref.read(settingsProvider.notifier).updateSettings(settings);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

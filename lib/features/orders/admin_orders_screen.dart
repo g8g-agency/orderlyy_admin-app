@@ -34,7 +34,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ordersAsync = ref.watch(ordersStreamProvider);
+    final ordersState = ref.watch(ordersProvider);
     final desktop = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
@@ -54,7 +54,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh_rounded, size: 22.r),
-            onPressed: () => ref.invalidate(ordersStreamProvider),
+            onPressed: () => ref.read(ordersProvider.notifier).loadOrders(forceRefresh: true),
           ),
           SizedBox(width: 8.w),
         ],
@@ -68,17 +68,22 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
         ),
       ),
       body: SafeArea(
-        child: ordersAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
-          ),
-          error: (err, stack) => Center(
-            child: Text(
-              'Error loading orders: $err',
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
-            ),
-          ),
-          data: (allOrders) {
+        child: Builder(
+          builder: (context) {
+            if (ordersState.error != null) {
+              return Center(
+                child: Text(
+                  'Error loading orders: ${ordersState.error}',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
+                ),
+              );
+            }
+            if (ordersState.isLoading && ordersState.ordersById.isEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              );
+            }
+            final allOrders = ordersState.ordersById.values.toList();
             // Apply filtering logic
             final filteredOrders = allOrders.where((order) {
               // 1. Search Query
@@ -837,7 +842,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
             ),
             itemBuilder: (context, index) {
               final item = order.items[index];
-              final linePrice = item.lineTotal.toStringAsFixed(2);
+              final linePrice = (item.lineTotalAmount / 100).toStringAsFixed(2);
 
               // Extract custom instructions if any
               final List<String> customizations = [];
@@ -909,7 +914,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
   Widget _buildKotLogsCard(OrderDto order) {
     // We will generate realistic stepper timestamps based on createdAt
     final dt = order.createdAt.toLocal();
-    final pad = (int n) => n.toString().padLeft(2, '0');
+    String pad(int n) => n.toString().padLeft(2, '0');
 
     // Mismatches or events
     final time1 = '${pad(dt.hour)}:${pad(dt.minute)}:${pad(dt.second)}';
@@ -1210,7 +1215,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
               onPressed: () {
                 // Perform state cancellation via notifier or provider
                 ref
-                    .read(updateOrderStatusProvider)(order.id, OrderStatus.cancelled);
+                    .read(ordersProvider.notifier)
+                    .transitionOrderStatus(order.id, OrderStatus.cancelled);
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1458,7 +1464,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       ),
                     ),
                     value: tempToday,
-                    activeColor: AppTheme.primary,
+                    activeThumbColor: AppTheme.primary,
                     contentPadding: EdgeInsets.zero,
                     onChanged: (val) {
                       setDialogState(() {

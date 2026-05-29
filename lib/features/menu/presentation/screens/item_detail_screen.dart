@@ -17,11 +17,7 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
   final MenuItemDto? item;
   final String? defaultCategoryId;
 
-  const ItemDetailScreen({
-    super.key,
-    this.item,
-    this.defaultCategoryId,
-  });
+  const ItemDetailScreen({super.key, this.item, this.defaultCategoryId});
 
   @override
   ConsumerState<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -45,7 +41,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
     _nameCtrl = TextEditingController(text: item?.name ?? '');
     _descCtrl = TextEditingController(text: item?.description ?? '');
-    _priceCtrl = TextEditingController(text: item != null ? item.price.toStringAsFixed(2) : '');
+    _priceCtrl = TextEditingController(
+      text: item != null ? (item.basePriceAmount / 100).toStringAsFixed(2) : '',
+    );
     _categoryId = item?.categoryId ?? widget.defaultCategoryId ?? '';
     _available = item?.isAvailable ?? true;
     _currentImageUrl = item?.imageUrl ?? '';
@@ -76,14 +74,20 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an item name'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text('Please enter an item name'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
 
     if (_categoryId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text('Please select a category'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -97,12 +101,15 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           categoryId: _categoryId,
           name: name,
           description: _descCtrl.text.trim(),
-          price: double.tryParse(_priceCtrl.text) ?? widget.item!.price,
-          imageUrl: _pickedImage != null ? _pickedImage!.path : _currentImageUrl,
+          basePriceAmount: ((double.tryParse(_priceCtrl.text) ?? (widget.item!.basePriceAmount / 100)) * 100).round(),
+          imageUrl: _pickedImage != null
+              ? _pickedImage!.path
+              : _currentImageUrl,
           isAvailable: _available,
           isVegetarian: widget.item!.isVegetarian,
           prepTimeMinutes: widget.item!.prepTimeMinutes,
           tags: widget.item!.tags,
+          versionNum: widget.item!.versionNum,
         );
         await ref.read(updateMenuItemProvider)(updated);
       } else {
@@ -113,12 +120,15 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           categoryId: _categoryId,
           name: name,
           description: _descCtrl.text.trim(),
-          price: double.tryParse(_priceCtrl.text) ?? 0.0,
-          imageUrl: _pickedImage != null ? _pickedImage!.path : _currentImageUrl,
+          basePriceAmount: ((double.tryParse(_priceCtrl.text) ?? 0.0) * 100).round(),
+          imageUrl: _pickedImage != null
+              ? _pickedImage!.path
+              : _currentImageUrl,
           isAvailable: _available,
           isVegetarian: false,
           prepTimeMinutes: 15,
           tags: [],
+          versionNum: 1,
         );
         await ref.read(createMenuItemProvider)(newItem);
       }
@@ -138,13 +148,15 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving: $e'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppTheme.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -179,7 +191,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, size: 22.r, color: AppTheme.secondary),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            size: 22.r,
+            color: AppTheme.secondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: PreferredSize(
@@ -211,27 +227,40 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
                         decoration: BoxDecoration(
-                          color: _available ? const Color(0xFF10B981).withValues(alpha: 0.1) : AppTheme.error.withValues(alpha: 0.1),
+                          color: _available
+                              ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                              : AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20.r),
                           border: Border.all(
-                            color: _available ? const Color(0xFF10B981) : AppTheme.error,
+                            color: _available
+                                ? const Color(0xFF10B981)
+                                : AppTheme.error,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _available ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                              _available
+                                  ? Icons.visibility_rounded
+                                  : Icons.visibility_off_rounded,
                               size: 14.r,
-                              color: _available ? const Color(0xFF10B981) : AppTheme.error,
+                              color: _available
+                                  ? const Color(0xFF10B981)
+                                  : AppTheme.error,
                             ),
                             SizedBox(width: 6.w),
                             Text(
                               _available ? 'Active' : 'Hidden',
                               style: AppTheme.labelSm.copyWith(
-                                color: _available ? const Color(0xFF10B981) : AppTheme.error,
+                                color: _available
+                                    ? const Color(0xFF10B981)
+                                    : AppTheme.error,
                               ),
                             ),
                           ],
@@ -248,9 +277,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                            side: const BorderSide(
+                              color: AppTheme.surfaceContainerHigh,
+                            ),
                             padding: EdgeInsets.symmetric(vertical: 14.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
                           ),
                           child: Text(
                             'Discard Changes',
@@ -269,14 +302,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                             backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 14.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
                             elevation: 0,
                           ),
                           child: _isSaving
                               ? SizedBox(
                                   width: 20.r,
                                   height: 20.r,
-                                  child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -316,32 +354,57 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: _pickedImage != null
-                          ? Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
-                          : _currentImageUrl != null && _currentImageUrl!.isNotEmpty
-                              ? (_currentImageUrl!.startsWith('/') || _currentImageUrl!.contains('cache')
-                                  ? Image.file(File(_currentImageUrl!), fit: BoxFit.cover)
-                                  : Image.network(_currentImageUrl!, fit: BoxFit.cover))
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.add_a_photo_outlined, size: 48.r, color: AppTheme.secondary),
-                                    SizedBox(height: 12.h),
-                                    Text(
-                                      'Tap to upload item photo',
-                                      style: AppTheme.bodyMd.copyWith(color: AppTheme.secondary),
-                                    ),
-                                  ],
+                          ? Image.file(
+                              File(_pickedImage!.path),
+                              fit: BoxFit.cover,
+                            )
+                          : _currentImageUrl != null &&
+                                _currentImageUrl!.isNotEmpty
+                          ? (_currentImageUrl!.startsWith('/') ||
+                                    _currentImageUrl!.contains('cache')
+                                ? Image.file(
+                                    File(_currentImageUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    _currentImageUrl!,
+                                    fit: BoxFit.cover,
+                                  ))
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_a_photo_outlined,
+                                  size: 48.r,
+                                  color: AppTheme.secondary,
                                 ),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  'Tap to upload item photo',
+                                  style: AppTheme.bodyMd.copyWith(
+                                    color: AppTheme.secondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                   SizedBox(height: 32.h),
 
                   // 3. Basic Info
-                  _buildSectionTitle(Icons.info_outline_rounded, 'Basic Details'),
+                  _buildSectionTitle(
+                    Icons.info_outline_rounded,
+                    'Basic Details',
+                  ),
                   SizedBox(height: 12.h),
-                  _buildInputField('Item Name', _nameCtrl, 'e.g. Signature Truffle Burger', onChanged: (v) => setState(() {})),
+                  _buildInputField(
+                    'Item Name',
+                    _nameCtrl,
+                    'e.g. Signature Truffle Burger',
+                    onChanged: (v) => setState(() {}),
+                  ),
                   SizedBox(height: 16.h),
-                  
+
                   // Category Dropdown
                   Text(
                     'Category',
@@ -349,7 +412,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   ),
                   SizedBox(height: 6.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(8.r),
@@ -357,13 +423,23 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: categories.any((c) => c.id == _categoryId) ? _categoryId : null,
+                        value: categories.any((c) => c.id == _categoryId)
+                            ? _categoryId
+                            : null,
                         isExpanded: true,
-                        hint: Text('Select Category', style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+                        hint: Text(
+                          'Select Category',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppTheme.secondary,
+                          ),
+                        ),
                         items: categories.isEmpty
                             ? []
                             : categories.map((c) {
-                                return DropdownMenuItem(value: c.id, child: Text(c.name));
+                                return DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.name),
+                                );
                               }).toList(),
                         onChanged: (val) {
                           if (val != null) setState(() => _categoryId = val);
@@ -374,7 +450,12 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   SizedBox(height: 16.h),
 
                   // Price
-                  _buildInputField('Base Price (₹)', _priceCtrl, 'e.g. 24.50', type: TextInputType.number),
+                  _buildInputField(
+                    'Base Price (₹)',
+                    _priceCtrl,
+                    'e.g. 24.50',
+                    type: TextInputType.number,
+                  ),
                   SizedBox(height: 32.h),
 
                   // 4. Description
@@ -398,14 +479,22 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       border: Border.all(color: AppTheme.surfaceContainerHigh),
                     ),
                     child: SwitchListTile(
-                      title: Text('Available on Menu', style: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.w700)),
-                      subtitle: Text('Toggle to instantly hide this item from diners', style: AppTheme.bodySm),
+                      title: Text(
+                        'Available on Menu',
+                        style: AppTheme.bodyMd.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Toggle to instantly hide this item from diners',
+                        style: AppTheme.bodySm,
+                      ),
                       value: _available,
-                      activeColor: AppTheme.primary,
+                      activeThumbColor: AppTheme.primary,
                       onChanged: (val) => setState(() => _available = val),
                     ),
                   ),
-                  
+
                   // Bottom padding
                   SizedBox(height: 60.h),
                 ],
@@ -454,11 +543,30 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           style: GoogleFonts.plusJakartaSans(fontSize: 14.sp),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.plusJakartaSans(color: AppTheme.secondary, fontSize: 14.sp),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.surfaceContainerHigh)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: AppTheme.primary)),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            hintStyle: GoogleFonts.plusJakartaSans(
+              color: AppTheme.secondary,
+              fontSize: 14.sp,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(
+                color: AppTheme.surfaceContainerHigh,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.r),
+              borderSide: const BorderSide(color: AppTheme.primary),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
           ),
         ),
       ],

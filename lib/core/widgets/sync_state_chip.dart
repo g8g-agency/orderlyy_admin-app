@@ -15,10 +15,7 @@ import '../theme/app_colors.dart';
 /// SyncStateChip(overrideState: SyncState.stale)
 /// ```
 class SyncStateChip extends ConsumerWidget {
-  const SyncStateChip({
-    super.key,
-    this.overrideState,
-  });
+  const SyncStateChip({super.key, this.overrideState});
 
   /// When non-null, drives the chip appearance.
   /// When null, the chip is invisible.

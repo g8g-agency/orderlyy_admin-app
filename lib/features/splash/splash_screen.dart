@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_theme.dart';
 
 // ── SplashScreen ──────────────────────────────────────────────────────────────
 // In mock mode: checks mock auth state only.
@@ -41,7 +40,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final primaryRed = const Color(0xFFE31E24);
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -57,10 +56,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
-                      colors: [
-                        primaryRed,
-                        Colors.transparent,
-                      ],
+                      colors: [primaryRed, Colors.transparent],
                       radius: 0.6,
                     ),
                   ),
@@ -76,50 +72,50 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               children: [
                 // Icon/Logo Graphic
                 Transform.rotate(
-                  angle: 12 * 3.1415926535 / 180, // 12 degrees
-                  child: Container(
-                    width: 96.r,
-                    height: 96.r,
-                    decoration: BoxDecoration(
-                      color: primaryRed,
-                      borderRadius: BorderRadius.circular(24.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: primaryRed.withOpacity(0.25),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                      angle: 12 * 3.1415926535 / 180, // 12 degrees
+                      child: Container(
+                        width: 96.r,
+                        height: 96.r,
+                        decoration: BoxDecoration(
+                          color: primaryRed,
+                          borderRadius: BorderRadius.circular(24.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryRed.withValues(alpha: 0.25),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                      ],
+                        child: Icon(
+                          Icons.restaurant_rounded,
+                          size: 48.r,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 800.ms)
+                    .scale(
+                      begin: const Offset(0.9, 0.9),
+                      curve: Curves.easeOutBack,
                     ),
-                    child: Icon(
-                      Icons.restaurant_rounded,
-                      size: 48.r,
-                      color: Colors.white,
-                    ),
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 800.ms)
-                .scale(
-                  begin: const Offset(0.9, 0.9),
-                  curve: Curves.easeOutBack,
-                ),
 
                 SizedBox(height: 24.h),
 
                 // Brand Name
                 Text(
-                  'Orderlyy',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 40.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF191C1D),
-                    letterSpacing: -1.0,
-                  ),
-                )
-                .animate(delay: 200.ms)
-                .fadeIn(duration: 500.ms)
-                .slideY(begin: 0.2, curve: Curves.easeOut),
+                      'Orderlyy',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 40.sp,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF191C1D),
+                        letterSpacing: -1.0,
+                      ),
+                    )
+                    .animate(delay: 200.ms)
+                    .fadeIn(duration: 500.ms)
+                    .slideY(begin: 0.2, curve: Curves.easeOut),
               ],
             ),
           ),
@@ -130,15 +126,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             left: 0,
             right: 0,
             child: Center(
-              child: Text(
-                'One app is enough for restaurant',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF5D3F3C).withOpacity(0.8),
-                ),
-              ).animate(delay: 500.ms).fadeIn(duration: 500.ms).slideY(begin: 0.2),
+              child:
+                  Text(
+                        'One app is enough for restaurant',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF5D3F3C).withValues(alpha: 0.8),
+                        ),
+                      )
+                      .animate(delay: 500.ms)
+                      .fadeIn(duration: 500.ms)
+                      .slideY(begin: 0.2),
             ),
           ),
         ],

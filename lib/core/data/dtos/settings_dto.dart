@@ -3,8 +3,9 @@
 
 class TenantSettingsDto {
   final String tenantId;
-  final String? branchId; // Composable hierarchy: null means tenant-level default
-  
+  final String?
+  branchId; // Composable hierarchy: null means tenant-level default
+
   // Operational Config
   final bool notifyNewOrder;
   final bool notifyOrderReady;
@@ -14,11 +15,11 @@ class TenantSettingsDto {
   final bool autoAccept;
   final String confirmationSound;
   final bool qrAutoAssign;
-  
+
   // Financial Defaults
   final String gstNumber;
   final int defaultTaxBasisPoints; // STRICTLY integer minor units (500 = 5%)
-  
+
   // OCC & Audit
   final DateTime updatedAt;
   final int versionNum;
@@ -53,7 +54,8 @@ class TenantSettingsDto {
         confirmationSound: json['confirmation_sound'] as String? ?? 'BEEP_01',
         qrAutoAssign: json['qr_auto_assign'] as bool? ?? true,
         gstNumber: json['gst_number'] as String? ?? '',
-        defaultTaxBasisPoints: (json['default_tax_basis_points'] as num?)?.toInt() ?? 500,
+        defaultTaxBasisPoints:
+            (json['default_tax_basis_points'] as num?)?.toInt() ?? 500,
         updatedAt: json['updated_at'] != null
             ? DateTime.parse(json['updated_at'] as String)
             : DateTime.now().toUtc(),
@@ -104,7 +106,8 @@ class TenantSettingsDto {
       confirmationSound: confirmationSound ?? this.confirmationSound,
       qrAutoAssign: qrAutoAssign ?? this.qrAutoAssign,
       gstNumber: gstNumber ?? this.gstNumber,
-      defaultTaxBasisPoints: defaultTaxBasisPoints ?? this.defaultTaxBasisPoints,
+      defaultTaxBasisPoints:
+          defaultTaxBasisPoints ?? this.defaultTaxBasisPoints,
       updatedAt: updatedAt ?? this.updatedAt,
       versionNum: versionNum ?? this.versionNum,
     );

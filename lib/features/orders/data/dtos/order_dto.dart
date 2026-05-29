@@ -12,7 +12,8 @@ abstract class ModifierOptionDto with _$ModifierOptionDto {
     required int priceInCents,
   }) = _ModifierOptionDto;
 
-  factory ModifierOptionDto.fromJson(Map<String, dynamic> json) => _$ModifierOptionDtoFromJson(json);
+  factory ModifierOptionDto.fromJson(Map<String, dynamic> json) =>
+      _$ModifierOptionDtoFromJson(json);
 }
 
 @freezed
@@ -25,7 +26,8 @@ abstract class MenuProductDto with _$MenuProductDto {
     required List<ModifierOptionDto> availableModifiers,
   }) = _MenuProductDto;
 
-  factory MenuProductDto.fromJson(Map<String, dynamic> json) => _$MenuProductDtoFromJson(json);
+  factory MenuProductDto.fromJson(Map<String, dynamic> json) =>
+      _$MenuProductDtoFromJson(json);
 }
 
 @freezed
@@ -39,7 +41,8 @@ abstract class OrderItemDto with _$OrderItemDto {
     required String status,
   }) = _OrderItemDto;
 
-  factory OrderItemDto.fromJson(Map<String, dynamic> json) => _$OrderItemDtoFromJson(json);
+  factory OrderItemDto.fromJson(Map<String, dynamic> json) =>
+      _$OrderItemDtoFromJson(json);
 }
 
 @freezed
@@ -55,5 +58,6 @@ abstract class OrderDto with _$OrderDto {
     @Default([]) List<String> cancelLogs,
   }) = _OrderDto;
 
-  factory OrderDto.fromJson(Map<String, dynamic> json) => _$OrderDtoFromJson(json);
+  factory OrderDto.fromJson(Map<String, dynamic> json) =>
+      _$OrderDtoFromJson(json);
 }

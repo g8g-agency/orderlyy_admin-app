@@ -10,14 +10,14 @@ import '../../domain/entities/sync_operation.dart';
 
 class RealtimeStateNotifier extends StateNotifier<RealtimeStateModel> {
   RealtimeStateNotifier()
-      : super(
-          RealtimeStateModel(
-            connectionState: RealtimeConnectionState.connected,
-            reconnectAttempts: 0,
-            maxReconnectAttempts: 5,
-            lastConnectedAt: DateTime.now(),
-          ),
-        );
+    : super(
+        RealtimeStateModel(
+          connectionState: RealtimeConnectionState.connected,
+          reconnectAttempts: 0,
+          maxReconnectAttempts: 5,
+          lastConnectedAt: DateTime.now(),
+        ),
+      );
 
   /// Simulates a sudden disconnect / reconnecting loop.
   void simulateDisconnect() {
@@ -73,7 +73,8 @@ class RealtimeStateNotifier extends StateNotifier<RealtimeStateModel> {
   /// Advance replay progress (call repeatedly during replay simulation).
   void advanceReplay(double delta) {
     final newProgress = ((state.replayProgress ?? 0.0) + delta).clamp(0.0, 1.0);
-    final remaining = ((state.replayEventsRemaining ?? 0) * (1 - newProgress)).round();
+    final remaining = ((state.replayEventsRemaining ?? 0) * (1 - newProgress))
+        .round();
     if (newProgress >= 1.0) {
       simulateReconnect();
     } else {
@@ -191,9 +192,11 @@ class SyncQueueNotifier extends StateNotifier<List<SyncOperation>> {
   /// Remove all discarded and succeeded operations from the queue.
   void pruneCompleted() {
     state = state
-        .where((op) =>
-            op.status != SyncOperationStatus.success &&
-            op.status != SyncOperationStatus.discarded)
+        .where(
+          (op) =>
+              op.status != SyncOperationStatus.success &&
+              op.status != SyncOperationStatus.discarded,
+        )
         .toList();
   }
 }
@@ -205,14 +208,14 @@ class SyncQueueNotifier extends StateNotifier<List<SyncOperation>> {
 /// Realtime connection state provider.
 final realtimeStateProvider =
     StateNotifierProvider<RealtimeStateNotifier, RealtimeStateModel>(
-  (ref) => RealtimeStateNotifier(),
-);
+      (ref) => RealtimeStateNotifier(),
+    );
 
 /// Sync queue provider.
 final syncQueueProvider =
     StateNotifierProvider<SyncQueueNotifier, List<SyncOperation>>(
-  (ref) => SyncQueueNotifier(),
-);
+      (ref) => SyncQueueNotifier(),
+    );
 
 /// Number of operations not yet synced (queued + retrying + inflight + failed + conflict).
 final pendingOpsCountProvider = Provider<int>((ref) {
@@ -231,8 +234,10 @@ final pendingOpsCountProvider = Provider<int>((ref) {
 final failedOpsCountProvider = Provider<int>((ref) {
   final queue = ref.watch(syncQueueProvider);
   return queue
-      .where((op) =>
-          op.status == SyncOperationStatus.failed ||
-          op.status == SyncOperationStatus.conflict)
+      .where(
+        (op) =>
+            op.status == SyncOperationStatus.failed ||
+            op.status == SyncOperationStatus.conflict,
+      )
       .length;
 });

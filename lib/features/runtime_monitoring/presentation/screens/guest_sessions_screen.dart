@@ -50,28 +50,29 @@ class GuestSession {
 }
 
 // Waiter calls state provider
-final waiterCallsProvider = StateNotifierProvider<WaiterCallsNotifier, List<WaiterCall>>((ref) {
-  return WaiterCallsNotifier();
-});
+final waiterCallsProvider =
+    StateNotifierProvider<WaiterCallsNotifier, List<WaiterCall>>((ref) {
+      return WaiterCallsNotifier();
+    });
 
 class WaiterCallsNotifier extends StateNotifier<List<WaiterCall>> {
   WaiterCallsNotifier()
-      : super([
-          WaiterCall(
-            id: 'call-1',
-            tableLabel: 'Table 5',
-            waitTime: '4m waiting',
-            requestType: 'Assistance',
-            isUrgent: true,
-          ),
-          WaiterCall(
-            id: 'call-2',
-            tableLabel: 'Table 12',
-            waitTime: '2m waiting',
-            requestType: 'Bill Request',
-            isUrgent: true,
-          ),
-        ]);
+    : super([
+        WaiterCall(
+          id: 'call-1',
+          tableLabel: 'Table 5',
+          waitTime: '4m waiting',
+          requestType: 'Assistance',
+          isUrgent: true,
+        ),
+        WaiterCall(
+          id: 'call-2',
+          tableLabel: 'Table 12',
+          waitTime: '2m waiting',
+          requestType: 'Bill Request',
+          isUrgent: true,
+        ),
+      ]);
 
   void removeCall(String id) {
     state = state.where((c) => c.id != id).toList();
@@ -79,48 +80,49 @@ class WaiterCallsNotifier extends StateNotifier<List<WaiterCall>> {
 }
 
 // Diner sessions state provider
-final guestSessionsProvider = StateNotifierProvider<GuestSessionsNotifier, List<GuestSession>>((ref) {
-  return GuestSessionsNotifier();
-});
+final guestSessionsProvider =
+    StateNotifierProvider<GuestSessionsNotifier, List<GuestSession>>((ref) {
+      return GuestSessionsNotifier();
+    });
 
 class GuestSessionsNotifier extends StateNotifier<List<GuestSession>> {
   GuestSessionsNotifier()
-      : super([
-          GuestSession(
-            id: 'session-1',
-            tableLabel: 'Table 4',
-            seatedTime: '25m seated',
-            isIdle: false,
-            guestNames: ['Sarah', 'Mike'],
-            guestAvatars: ['S', 'M'],
-            cartItems: ['2x Wagyu Burger', '1x Truffle Fries', '2x Craft Cola'],
-            cartTotal: 68.00,
-            status: 'Active',
-          ),
-          GuestSession(
-            id: 'session-2',
-            tableLabel: 'Table 8',
-            seatedTime: '45m seated',
-            idleTime: 'Idle 45m',
-            isIdle: true,
-            guestNames: ['James'],
-            guestAvatars: ['J'],
-            cartItems: ['1x Espresso'],
-            cartTotal: 4.50,
-            status: 'Idle Warning',
-          ),
-          GuestSession(
-            id: 'session-3',
-            tableLabel: 'Table 1',
-            seatedTime: '10m seated',
-            isIdle: false,
-            guestNames: ['Party of 3'],
-            guestAvatars: ['G1', 'G2', 'G3'],
-            cartItems: ['Browsing menu...'],
-            cartTotal: 0.00,
-            status: 'Active',
-          ),
-        ]);
+    : super([
+        GuestSession(
+          id: 'session-1',
+          tableLabel: 'Table 4',
+          seatedTime: '25m seated',
+          isIdle: false,
+          guestNames: ['Sarah', 'Mike'],
+          guestAvatars: ['S', 'M'],
+          cartItems: ['2x Wagyu Burger', '1x Truffle Fries', '2x Craft Cola'],
+          cartTotal: 68.00,
+          status: 'Active',
+        ),
+        GuestSession(
+          id: 'session-2',
+          tableLabel: 'Table 8',
+          seatedTime: '45m seated',
+          idleTime: 'Idle 45m',
+          isIdle: true,
+          guestNames: ['James'],
+          guestAvatars: ['J'],
+          cartItems: ['1x Espresso'],
+          cartTotal: 4.50,
+          status: 'Idle Warning',
+        ),
+        GuestSession(
+          id: 'session-3',
+          tableLabel: 'Table 1',
+          seatedTime: '10m seated',
+          isIdle: false,
+          guestNames: ['Party of 3'],
+          guestAvatars: ['G1', 'G2', 'G3'],
+          cartItems: ['Browsing menu...'],
+          cartTotal: 0.00,
+          status: 'Active',
+        ),
+      ]);
 }
 
 // ── Screen Class ──────────────────────────────────────────────────────────────
@@ -157,13 +159,15 @@ class GuestSessionsScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 6.r,
-                  height: 6.r,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true)).fadeOut(duration: 500.ms),
+                      width: 6.r,
+                      height: 6.r,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .fadeOut(duration: 500.ms),
                 SizedBox(width: 6.w),
                 Text(
                   'Live Sync',
@@ -245,7 +249,10 @@ class GuestSessionsScreen extends ConsumerWidget {
                     SizedBox(width: 8.w),
                     if (calls.isNotEmpty)
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 2.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10.r),
@@ -275,7 +282,9 @@ class GuestSessionsScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceContainerLowest,
                           borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: AppTheme.surfaceContainerHigh),
+                          border: Border.all(
+                            color: AppTheme.surfaceContainerHigh,
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -349,18 +358,17 @@ class GuestSessionsScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 40.h),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: desktop ? 4 : (MediaQuery.of(context).size.width >= 600 ? 2 : 1),
+                  crossAxisCount: desktop
+                      ? 4
+                      : (MediaQuery.of(context).size.width >= 600 ? 2 : 1),
                   crossAxisSpacing: 12.w,
                   mainAxisSpacing: 12.h,
                   childAspectRatio: desktop ? 1.05 : 1.25,
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final session = sessions[i];
-                    return _SessionGridCard(session: session);
-                  },
-                  childCount: sessions.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, i) {
+                  final session = sessions[i];
+                  return _SessionGridCard(session: session);
+                }, childCount: sessions.length),
               ),
             ),
           ],
@@ -376,10 +384,7 @@ class GuestSessionsScreen extends ConsumerWidget {
         Container(
           width: 8.r,
           height: 8.r,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         SizedBox(width: 6.w),
         Text(
@@ -515,7 +520,9 @@ class _WaiterCallCard extends ConsumerWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.onSurface,
-                    side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                    side: const BorderSide(
+                      color: AppTheme.surfaceContainerHigh,
+                    ),
                     minimumSize: Size(0, 32.h),
                     padding: EdgeInsets.symmetric(vertical: 8.h),
                     shape: RoundedRectangleBorder(
@@ -609,7 +616,9 @@ class _SessionGridCard extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 9.sp,
                     fontWeight: FontWeight.w800,
-                    color: session.isIdle ? AppTheme.primary : AppTheme.secondary,
+                    color: session.isIdle
+                        ? AppTheme.primary
+                        : AppTheme.secondary,
                   ),
                 ),
               ),
@@ -624,7 +633,9 @@ class _SessionGridCard extends StatelessWidget {
               Row(
                 children: List.generate(session.guestAvatars.length, (i) {
                   return Container(
-                    margin: EdgeInsets.only(right: i == session.guestAvatars.length - 1 ? 0 : 4.w),
+                    margin: EdgeInsets.only(
+                      right: i == session.guestAvatars.length - 1 ? 0 : 4.w,
+                    ),
                     child: CircleAvatar(
                       radius: 12.r,
                       backgroundColor: AppTheme.surfaceContainerLow,
@@ -684,8 +695,12 @@ class _SessionGridCard extends StatelessWidget {
                             item,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 11.sp,
-                              color: isItalic ? AppTheme.secondary : AppTheme.onSurface,
-                              fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+                              color: isItalic
+                                  ? AppTheme.secondary
+                                  : AppTheme.onSurface,
+                              fontStyle: isItalic
+                                  ? FontStyle.italic
+                                  : FontStyle.normal,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -712,7 +727,11 @@ class _SessionGridCard extends StatelessWidget {
           SizedBox(height: 12.h),
 
           // Card Footer
-          Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+          Divider(
+            height: 1.h,
+            thickness: 1.h,
+            color: AppTheme.surfaceContainerHigh,
+          ),
           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,13 +1,35 @@
+// ── Admin App Router ──────────────────────────────────────────────────────────
+// Implements a deterministic, layered routing state machine:
+//
+//   LAYER 1: Auth loading          → /splash
+//   LAYER 2: Unauthenticated       → /admin/login
+//   LAYER 3: Bootstrap gate        → /admin/loading | /admin/bootstrap-error
+//   LAYER 4: Bootstrap resolved    → /onboarding | /admin/dashboard
+//   LAYER 5: Context flag gates    → /change-password | /subscription-expired | /account-suspended
+//
+// INVARIANT:
+//   The dashboard (and ALL operational routes behind ShellRoute) MUST NOT render
+//   until BootstrapStatus.tenantReady. This is enforced by the redirect logic
+//   and by RuntimeReadyGate wrapping all ShellRoute children.
+//
+// IMPORTANT: ref.read() is used (not ref.watch()) inside the redirect callback
+// to avoid GoRouter recreating itself on every provider change. The RouterNotifier
+// triggers refreshListenable instead.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/bootstrap_provider.dart';
+import '../../core/auth/bootstrap_state.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/auth/admin_login_screen.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../features/auth/subscription_expired_screen.dart';
 import '../../features/auth/account_suspended_screen.dart';
+import '../../features/auth/bootstrap_loading_screen.dart';
+import '../../features/auth/bootstrap_error_screen.dart';
 import '../../features/onboarding/presentation/screens/setup_dashboard_screen.dart';
 import '../../features/dashboard/admin_dashboard_screen.dart';
 import '../../features/profile/admin_profile_screen.dart';
@@ -30,17 +52,16 @@ import '../../features/tables_infrastructure/presentation/screens/table_manageme
 import '../../features/kds/presentation/screens/kds_management_screen.dart';
 import '../../features/audit/audit_logs_screen.dart';
 import '../../features/menu/presentation/screens/occ_conflict_screen.dart';
+import '../../features/runtime_monitoring/presentation/screens/runtime_observability_screen.dart';
+import '../../features/runtime_monitoring/presentation/screens/historical_replay_explorer.dart';
+import '../../features/runtime_monitoring/presentation/screens/correlation_tree_explorer_screen.dart';
 import '../runtime/runtime_ready_gate.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  // ── RouterNotifier drives GoRouter.refreshListenable ─────────────────────
-  // Every time auth state changes (login/logout/restore), the notifier fires
-  // notifyListeners() → GoRouter re-runs redirect → correct screen shown.
-  // CRITICAL: We use ref.read here instead of ref.watch. Watching the notifier
-  // would cause Riverpod to completely recreate the GoRouter instance on every
-  // notifyListeners(), resetting navigation history and causing redirect loops.
+  // RouterNotifier fires notifyListeners on auth + bootstrap changes.
+  // Using ref.read (not ref.watch) prevents GoRouter recreation on each notify.
   final notifier = ref.read(routerNotifierProvider);
 
   return GoRouter(
@@ -48,178 +69,138 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: (context, state) {
-      // ── Read auth state directly from providers (reactive via notifier) ───
       final authState = ref.read(authNotifierProvider);
-      final currentUserId = authState.userId;
-      final resolvedCtx = ref.read(appContextProvider);
+      final bootstrapState = ref.read(bootstrapProvider);
+      final appCtx = ref.read(appContextProvider);
       final loc = state.matchedLocation;
 
       debugPrint(
-        '[ROUTER] location=$loc authStatus=${authState.status} userId=$currentUserId',
+        '[ROUTER] loc=$loc '
+        'auth=${authState.status} '
+        'bootstrap=${bootstrapState.status}',
       );
 
+      // ── Debug always accessible ─────────────────────────────────────────────
+      if (loc == '/debug') return null;
+
+      // ── LAYER 1: Auth loading ───────────────────────────────────────────────
       if (authState.status == AuthStatus.loading) {
-        debugPrint(
-          '[ROUTER] ⏳ Auth status is loading. Redirecting to /splash',
-        );
+        debugPrint('[ROUTER] ⏳ Auth loading → /splash');
         return loc == '/splash' ? null : '/splash';
       }
 
-      // Debug route always accessible
-      if (loc == '/debug') {
-        debugPrint('[ROUTER] 🛠️ Debug route allowed (redirectResult=null)');
-        return null;
-      }
-
-      // ── 2. Determine Login / Role flags ────────────────────────────────────
-      final isAdminLoggedIn =
-          authState.status == AuthStatus.authenticated &&
-          currentUserId != null &&
-          !currentUserId.startsWith('staff-');
-
-      const publicRoutes = {
-        '/splash',
-        '/admin/login',
-      };
-
-      final isPublicRoute = publicRoutes.contains(loc);
-
-      // ── 3. Unauthenticated redirects ────────────────────────────────────────
+      // ── LAYER 2: Unauthenticated ────────────────────────────────────────────
       if (authState.status == AuthStatus.unauthenticated) {
-        if (!isPublicRoute) {
-          debugPrint(
-            '[ROUTER] 🔒 Protected route "$loc" accessed without session → redirectResult=/admin/login',
-          );
+        const publicRoutes = {'/splash', '/admin/login'};
+        if (!publicRoutes.contains(loc)) {
+          debugPrint('[ROUTER] 🔒 Unauthenticated → /admin/login');
           return '/admin/login';
         }
         if (loc == '/splash') {
-          debugPrint(
-            '[ROUTER] ℹ️ Unauthenticated on splash → redirectResult=/admin/login',
-          );
+          debugPrint('[ROUTER] ℹ️ Unauthenticated on splash → /admin/login');
           return '/admin/login';
         }
-        debugPrint(
-          '[ROUTER] ✅ Public route "$loc" allowed for unauthenticated (redirectResult=null)',
-        );
         return null;
       }
 
-      // ── 4. Authenticated redirects ──────────────────────────────────────────
-      if (authState.status == AuthStatus.authenticated) {
-        // A. Resolve flags from context if admin is logged in
-        if (isAdminLoggedIn && resolvedCtx != null) {
-          final flags = resolvedCtx.flags;
-          if (flags.mustChangePassword && loc != '/change-password') {
-            debugPrint(
-              '[ROUTER] 🔑 Admin password change required → redirectResult=/change-password',
-            );
-            return '/change-password';
-          }
-          if (flags.subscriptionExpired && loc != '/subscription-expired') {
-            debugPrint(
-              '[ROUTER] 💳 Subscription expired → redirectResult=/subscription-expired',
-            );
-            return '/subscription-expired';
-          }
-          if (flags.accountSuspended && loc != '/account-suspended') {
-            debugPrint(
-              '[ROUTER] 🚫 Account suspended → redirectResult=/account-suspended',
-            );
-            return '/account-suspended';
-          }
-          final isOnboardingIncomplete = !resolvedCtx.onboarding.isComplete || flags.onboardingRequired;
+      // ── From here: authState.status == AuthStatus.authenticated ────────────
 
-          const onboardingAllowedRoutes = {
-            '/onboarding',
-            '/admin/menu',
-            '/admin/categories',
-            '/admin/tables',
-            '/admin/taxes',
-            '/admin/staff',
-            '/admin/kds',
-          };
+      // ── LAYER 3: Bootstrap gate (HARD INVARIANT) ────────────────────────────
+      // The dashboard and ALL operational routes are completely unreachable
+      // until BootstrapStatus.tenantReady. This is non-negotiable.
 
-          const operationalRoutes = {
-            '/admin/dashboard',
-            '/admin/orders',
-            '/admin/live-floorplan',
-            '/admin/analytics',
-            '/admin/inventory',
-            '/admin/profile',
-            '/admin/settings',
-            '/admin/pricing',
-            '/admin/overrides',
-            '/admin/audit',
-            '/admin/occ-conflict',
-            '/admin/organization',
-            '/admin/guest-sessions',
-            '/admin/devices',
-          };
+      // Bootstrap not yet started or in-flight
+      if (bootstrapState.status == BootstrapStatus.idle ||
+          bootstrapState.status == BootstrapStatus.loading) {
+        if (loc != '/admin/loading') {
+          debugPrint('[ROUTER] ⏳ Bootstrap in flight → /admin/loading');
+          return '/admin/loading';
+        }
+        return null;
+      }
 
-          if (isOnboardingIncomplete) {
-            // Block access to operational routes during setup
-            if (operationalRoutes.contains(loc) || (!onboardingAllowedRoutes.contains(loc) && loc.startsWith('/admin'))) {
-              debugPrint(
-                '[ROUTER] 📋 Onboarding incomplete, blocking operational route "$loc" → redirectResult=/onboarding',
-              );
-              return '/onboarding';
-            }
-          } else {
-            // Onboarding is complete, lock out the setup screen
-            if (loc == '/onboarding') {
-              debugPrint(
-                '[ROUTER] ✅ Onboarding complete, redirecting away from setup → redirectResult=/admin/dashboard',
-              );
-              return '/admin/dashboard';
-            }
-          }
+      // Bootstrap failed (network or server error) — hard block
+      if (bootstrapState.isFailure) {
+        if (loc != '/admin/bootstrap-error') {
+          debugPrint('[ROUTER] ❌ Bootstrap failed → /admin/bootstrap-error');
+          return '/admin/bootstrap-error';
+        }
+        return null;
+      }
+
+      // ── LAYER 4: Bootstrap resolved ─────────────────────────────────────────
+      // Either BootstrapStatus.onboardingRequired or BootstrapStatus.tenantReady
+
+      // Redirect away from bootstrap transient screens now that it's resolved
+      if (loc == '/admin/loading' || loc == '/admin/bootstrap-error') {
+        if (bootstrapState.requiresOnboarding) {
+          debugPrint('[ROUTER] 📋 Bootstrap resolved → /onboarding');
+          return '/onboarding';
+        }
+        debugPrint('[ROUTER] ✅ Bootstrap resolved → /admin/dashboard');
+        return '/admin/dashboard';
+      }
+
+      // Authenticated on public routes — route to workspace destination
+      const publicRoutes = {'/splash', '/admin/login'};
+      if (publicRoutes.contains(loc)) {
+        if (bootstrapState.requiresOnboarding) {
+          debugPrint('[ROUTER] 📋 Authenticated on public → /onboarding');
+          return '/onboarding';
+        }
+        debugPrint('[ROUTER] ✅ Authenticated on public → /admin/dashboard');
+        return '/admin/dashboard';
+      }
+
+      // Onboarding required — hard block on all operational routes
+      if (bootstrapState.requiresOnboarding) {
+        const onboardingAllowed = {
+          '/onboarding',
+          '/admin/menu',
+          '/admin/categories',
+          '/admin/tables',
+          '/admin/taxes',
+          '/admin/staff',
+          '/admin/kds',
+        };
+        if (loc.startsWith('/admin') && !onboardingAllowed.contains(loc)) {
+          debugPrint('[ROUTER] 📋 Onboarding required, blocking "$loc" → /onboarding');
+          return '/onboarding';
+        }
+        return null;
+      }
+
+      // ── LAYER 5: tenantReady — context flag gates ───────────────────────────
+      // Only reached when bootstrapState.status == BootstrapStatus.tenantReady.
+      if (appCtx != null) {
+        final flags = appCtx.flags;
+
+        if (flags.accountSuspended && loc != '/account-suspended') {
+          debugPrint('[ROUTER] 🚫 Account suspended → /account-suspended');
+          return '/account-suspended';
+        }
+        if (flags.subscriptionExpired && loc != '/subscription-expired') {
+          debugPrint('[ROUTER] 💳 Subscription expired → /subscription-expired');
+          return '/subscription-expired';
+        }
+        if (flags.mustChangePassword && loc != '/change-password') {
+          debugPrint('[ROUTER] 🔑 Must change password → /change-password');
+          return '/change-password';
         }
 
-        // B. If on splash or other public routes, route to dashboard (or onboarding)
-        if (isPublicRoute) {
-          if (isAdminLoggedIn) {
-            final isOnboardingIncomplete = resolvedCtx != null && (!resolvedCtx.onboarding.isComplete || resolvedCtx.flags.onboardingRequired);
-            final target = isOnboardingIncomplete ? '/onboarding' : '/admin/dashboard';
-            debugPrint(
-              '[ROUTER] ✅ Admin logged in on public route → redirectResult=$target',
-            );
-            return target;
-          }
-        }
-
-        // C. Protect admin / staff routes
-        final isProtectedAdmin = loc.startsWith('/admin') && loc != '/admin/login';
-
-        if (isProtectedAdmin && !isAdminLoggedIn) {
-          debugPrint(
-            '[ROUTER] 🔒 Protected admin route accessed by non-admin → redirectResult=/admin/login',
-          );
-          return '/admin/login';
-        }
-
-        // STRICT RUNTIME GOVERNANCE GUARDS
-        if (isProtectedAdmin) {
-          if (resolvedCtx == null || resolvedCtx.tenant.id.isEmpty) {
-            debugPrint('[ROUTER] 🚫 Missing Tenant scope. Redirecting to initialization.');
-            // return '/initialization'; // Or handle appropriately
-          }
-          
-          // Note: In a fully wired app, we would read ref.read(projectionReadinessProvider) here.
-          // If projection is NOT ready, we should not allow entry to operational screens.
-          // if (!isProjectionReady) {
-          //    debugPrint('[ROUTER] ⏳ Projection rebuilding. Halting navigation.');
-          //    return '/syncing';
-          // }
+        // Onboarding complete — lock out the setup screen
+        if (loc == '/onboarding') {
+          debugPrint('[ROUTER] ✅ Onboarding done → /admin/dashboard');
+          return '/admin/dashboard';
         }
       }
 
-      debugPrint(
-        '[ROUTER] ✅ No redirect needed for $loc (redirectResult=null)',
-      );
+      debugPrint('[ROUTER] ✅ No redirect for $loc');
       return null;
     },
+
     routes: [
-      // ── Debug ──────────────────────────────────────────────────────────────
+      // ── Debug ─────────────────────────────────────────────────────────────
       GoRoute(
         path: '/debug',
         name: 'debug',
@@ -233,14 +214,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashScreen(),
       ),
 
-      // ── Admin Auth ───────────────────────────────────────────────────────
+      // ── Admin Auth ────────────────────────────────────────────────────────
       GoRoute(
         path: '/admin/login',
         name: 'admin-login',
         builder: (context, state) => const AdminLoginScreen(),
       ),
 
-      // ── Post-Login Gated Routes ──────────────────────────────────────────
+      // ── Bootstrap States (hard gate screens) ──────────────────────────────
+      GoRoute(
+        path: '/admin/loading',
+        name: 'admin-loading',
+        builder: (context, state) => const BootstrapLoadingScreen(),
+      ),
+      GoRoute(
+        path: '/admin/bootstrap-error',
+        name: 'admin-bootstrap-error',
+        builder: (context, state) => const BootstrapErrorScreen(),
+      ),
+
+      // ── Post-Login Gated Routes ───────────────────────────────────────────
       GoRoute(
         path: '/change-password',
         name: 'change-password',
@@ -262,7 +255,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SetupDashboardScreen(),
       ),
 
-      // ── Admin App ───────────────────────────────────────────────────────
+      // ── Admin Operational App ─────────────────────────────────────────────
+      // ALL routes here are wrapped in RuntimeReadyGate as a secondary invariant
+      // enforcer — it renders a loading screen if bootstrap is not tenantReady.
       ShellRoute(
         builder: (context, state, child) => RuntimeReadyGate(child: child),
         routes: [
@@ -342,8 +337,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const TaxManagementScreen(),
           ),
           GoRoute(
-            path: '/admin/tables',
-            name: 'admin-tabls',
+            path: '/admin/table-management',
+            name: 'admin-table-management',
             builder: (context, state) => const TableManagementScreen(),
           ),
           GoRoute(
@@ -365,6 +360,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/occ-conflict',
             name: 'admin-occ-conflict',
             builder: (context, state) => const OccConflictScreen(),
+          ),
+          GoRoute(
+            path: '/admin/runtime-observability',
+            name: 'admin-runtime-observability',
+            builder: (context, state) => const RuntimeObservabilityScreen(),
+          ),
+          GoRoute(
+            path: '/admin/runtime-observability/replay/:runId',
+            name: 'admin-runtime-replay',
+            builder: (context, state) => HistoricalReplayExplorerScreen(
+              runId: state.pathParameters['runId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/runtime-observability/replay/:runId/tree/:correlationId',
+            name: 'admin-runtime-replay-tree',
+            builder: (context, state) => CorrelationTreeExplorerScreen(
+              runId: state.pathParameters['runId']!,
+              correlationId: state.pathParameters['correlationId']!,
+            ),
           ),
         ],
       ),

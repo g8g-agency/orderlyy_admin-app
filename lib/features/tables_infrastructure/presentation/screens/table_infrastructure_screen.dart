@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_colors.dart';
+
 import '../../../../core/theme/app_theme.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../data/dtos/table_dto.dart';
@@ -14,7 +14,9 @@ import '../state/table_infrastructure_providers.dart';
 // ── Local State & Interaction Providers ───────────────────────────────────────
 enum EditorTool { select, drawZone, addLabel, multiSelect }
 
-final selectedToolProvider = StateProvider<EditorTool>((ref) => EditorTool.select);
+final selectedToolProvider = StateProvider<EditorTool>(
+  (ref) => EditorTool.select,
+);
 
 // Table node layout positioning coordinates local state (mapped by table ID)
 class NodePosition {
@@ -45,9 +47,12 @@ class NodePosition {
   }
 }
 
-final tablePositionsProvider = StateNotifierProvider<TablePositionsNotifier, Map<String, NodePosition>>((ref) {
-  return TablePositionsNotifier();
-});
+final tablePositionsProvider =
+    StateNotifierProvider<TablePositionsNotifier, Map<String, NodePosition>>((
+      ref,
+    ) {
+      return TablePositionsNotifier();
+    });
 
 class TablePositionsNotifier extends StateNotifier<Map<String, NodePosition>> {
   TablePositionsNotifier() : super({});
@@ -60,10 +65,7 @@ class TablePositionsNotifier extends StateNotifier<Map<String, NodePosition>> {
       // Default spacing logic
       final row = i ~/ 3;
       final col = i % 3;
-      initial[t.id] = NodePosition(
-        x: 0.15 + (col * 0.2),
-        y: 0.2 + (row * 0.2),
-      );
+      initial[t.id] = NodePosition(x: 0.15 + (col * 0.2), y: 0.2 + (row * 0.2));
     }
     state = initial;
   }
@@ -81,27 +83,18 @@ class TablePositionsNotifier extends StateNotifier<Map<String, NodePosition>> {
 
   void selectNode(String id) {
     state = state.map((key, val) {
-      return MapEntry(
-        key,
-        val.copyWith(isSelected: key == id),
-      );
+      return MapEntry(key, val.copyWith(isSelected: key == id));
     });
   }
 
   void clearSelection() {
     state = state.map((key, val) {
-      return MapEntry(
-        key,
-        val.copyWith(isSelected: false),
-      );
+      return MapEntry(key, val.copyWith(isSelected: false));
     });
   }
 
   void addPosition(String id, double x, double y) {
-    state = {
-      ...state,
-      id: NodePosition(x: x, y: y),
-    };
+    state = {...state, id: NodePosition(x: x, y: y)};
   }
 }
 
@@ -177,7 +170,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
         ),
       ),
       body: tablesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
         error: (err, stack) => Center(
           child: Text(
             'Error loading tables: $err',
@@ -190,7 +185,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
             ref.read(tablePositionsProvider.notifier).initialize(tables);
             // Default select all tables for bulk builder
             if (checkedTables.isEmpty) {
-              ref.read(checkedQrTablesProvider.notifier).state = tables.map((t) => t.id).toSet();
+              ref.read(checkedQrTablesProvider.notifier).state = tables
+                  .map((t) => t.id)
+                  .toSet();
             }
           });
 
@@ -207,7 +204,8 @@ class TableInfrastructureScreen extends ConsumerWidget {
                     child: Column(
                       children: [
                         // Mobile Toolbar (Top scroll)
-                        if (!desktop) _buildMobileToolbar(context, ref, selectedTool),
+                        if (!desktop)
+                          _buildMobileToolbar(context, ref, selectedTool),
 
                         Expanded(
                           child: Stack(
@@ -233,7 +231,8 @@ class TableInfrastructureScreen extends ConsumerWidget {
 
                                     return Stack(
                                       children: tables.map((table) {
-                                        final pos = tablePositions[table.id] ??
+                                        final pos =
+                                            tablePositions[table.id] ??
                                             NodePosition(x: 0.3, y: 0.3);
 
                                         final pixelX = pos.x * canvasWidth;
@@ -279,7 +278,11 @@ class TableInfrastructureScreen extends ConsumerWidget {
   }
 
   // ── Vector Tools Layouts ────────────────────────────────────────────────────
-  Widget _buildSidebarTools(BuildContext context, WidgetRef ref, EditorTool tool) {
+  Widget _buildSidebarTools(
+    BuildContext context,
+    WidgetRef ref,
+    EditorTool tool,
+  ) {
     return Container(
       width: 260.w,
       height: double.infinity,
@@ -299,10 +302,34 @@ class TableInfrastructureScreen extends ConsumerWidget {
           SizedBox(height: 12.h),
 
           // Tools list
-          _buildToolBtn(ref, EditorTool.select, 'Select / Move', Icons.near_me_rounded, tool),
-          _buildToolBtn(ref, EditorTool.drawZone, 'Draw Zone Area', Icons.architecture, tool),
-          _buildToolBtn(ref, EditorTool.addLabel, 'Add Custom Label', Icons.label_outline_rounded, tool),
-          _buildToolBtn(ref, EditorTool.multiSelect, 'Multi-Select', Icons.check_box_outlined, tool),
+          _buildToolBtn(
+            ref,
+            EditorTool.select,
+            'Select / Move',
+            Icons.near_me_rounded,
+            tool,
+          ),
+          _buildToolBtn(
+            ref,
+            EditorTool.drawZone,
+            'Draw Zone Area',
+            Icons.architecture,
+            tool,
+          ),
+          _buildToolBtn(
+            ref,
+            EditorTool.addLabel,
+            'Add Custom Label',
+            Icons.label_outline_rounded,
+            tool,
+          ),
+          _buildToolBtn(
+            ref,
+            EditorTool.multiSelect,
+            'Multi-Select',
+            Icons.check_box_outlined,
+            tool,
+          ),
 
           SizedBox(height: 24.h),
           Divider(height: 1.h, color: AppTheme.surfaceContainerHigh),
@@ -326,9 +353,24 @@ class TableInfrastructureScreen extends ConsumerWidget {
               mainAxisSpacing: 10.h,
               childAspectRatio: 1.1,
               children: [
-                _buildLibraryShapeCard(context, ref, 'Round', Icons.circle_outlined),
-                _buildLibraryShapeCard(context, ref, 'Rectangle', Icons.crop_din_rounded),
-                _buildLibraryShapeCard(context, ref, 'Booth Table', Icons.table_rows_rounded),
+                _buildLibraryShapeCard(
+                  context,
+                  ref,
+                  'Round',
+                  Icons.circle_outlined,
+                ),
+                _buildLibraryShapeCard(
+                  context,
+                  ref,
+                  'Rectangle',
+                  Icons.crop_din_rounded,
+                ),
+                _buildLibraryShapeCard(
+                  context,
+                  ref,
+                  'Booth Table',
+                  Icons.table_rows_rounded,
+                ),
               ],
             ),
           ),
@@ -337,7 +379,11 @@ class TableInfrastructureScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMobileToolbar(BuildContext context, WidgetRef ref, EditorTool tool) {
+  Widget _buildMobileToolbar(
+    BuildContext context,
+    WidgetRef ref,
+    EditorTool tool,
+  ) {
     return Container(
       height: 48.h,
       color: AppTheme.surfaceContainerLowest,
@@ -345,10 +391,29 @@ class TableInfrastructureScreen extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         children: [
-          _buildMobileToolIcon(ref, EditorTool.select, Icons.near_me_rounded, tool),
-          _buildMobileToolIcon(ref, EditorTool.drawZone, Icons.architecture, tool),
-          _buildMobileToolIcon(ref, EditorTool.multiSelect, Icons.check_box_outlined, tool),
-          VerticalDivider(width: 16.w, thickness: 1.w, color: AppTheme.surfaceContainerHigh),
+          _buildMobileToolIcon(
+            ref,
+            EditorTool.select,
+            Icons.near_me_rounded,
+            tool,
+          ),
+          _buildMobileToolIcon(
+            ref,
+            EditorTool.drawZone,
+            Icons.architecture,
+            tool,
+          ),
+          _buildMobileToolIcon(
+            ref,
+            EditorTool.multiSelect,
+            Icons.check_box_outlined,
+            tool,
+          ),
+          VerticalDivider(
+            width: 16.w,
+            thickness: 1.w,
+            color: AppTheme.surfaceContainerHigh,
+          ),
           _buildMobileShapeTextBtn(context, ref, 'Round'),
           SizedBox(width: 8.w),
           _buildMobileShapeTextBtn(context, ref, 'Rectangle'),
@@ -358,7 +423,12 @@ class TableInfrastructureScreen extends ConsumerWidget {
   }
 
   Widget _buildToolBtn(
-      WidgetRef ref, EditorTool current, String text, IconData icon, EditorTool active) {
+    WidgetRef ref,
+    EditorTool current,
+    String text,
+    IconData icon,
+    EditorTool active,
+  ) {
     final isSel = current == active;
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
@@ -368,10 +438,14 @@ class TableInfrastructureScreen extends ConsumerWidget {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: isSel ? AppTheme.primaryContainer.withValues(alpha: 0.08) : Colors.transparent,
+            color: isSel
+                ? AppTheme.primaryContainer.withValues(alpha: 0.08)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(
-              color: isSel ? AppTheme.primaryContainer.withValues(alpha: 0.2) : Colors.transparent,
+              color: isSel
+                  ? AppTheme.primaryContainer.withValues(alpha: 0.2)
+                  : Colors.transparent,
             ),
           ),
           child: Row(
@@ -397,22 +471,40 @@ class TableInfrastructureScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMobileToolIcon(WidgetRef ref, EditorTool current, IconData icon, EditorTool active) {
+  Widget _buildMobileToolIcon(
+    WidgetRef ref,
+    EditorTool current,
+    IconData icon,
+    EditorTool active,
+  ) {
     final isSel = current == active;
     return Container(
       margin: EdgeInsets.only(right: 6.w),
       child: IconButton(
-        icon: Icon(icon, color: isSel ? AppTheme.primary : AppTheme.secondary, size: 20.r),
-        style: IconButton.styleFrom(
-          backgroundColor: isSel ? AppTheme.primaryContainer.withValues(alpha: 0.1) : Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        icon: Icon(
+          icon,
+          color: isSel ? AppTheme.primary : AppTheme.secondary,
+          size: 20.r,
         ),
-        onPressed: () => ref.read(selectedToolProvider.notifier).state = current,
+        style: IconButton.styleFrom(
+          backgroundColor: isSel
+              ? AppTheme.primaryContainer.withValues(alpha: 0.1)
+              : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        onPressed: () =>
+            ref.read(selectedToolProvider.notifier).state = current,
       ),
     );
   }
 
-  Widget _buildMobileShapeTextBtn(BuildContext context, WidgetRef ref, String text) {
+  Widget _buildMobileShapeTextBtn(
+    BuildContext context,
+    WidgetRef ref,
+    String text,
+  ) {
     return ElevatedButton(
       onPressed: () => _addLibraryTable(context, ref, text),
       style: ElevatedButton.styleFrom(
@@ -421,17 +513,27 @@ class TableInfrastructureScreen extends ConsumerWidget {
         elevation: 0,
         minimumSize: Size(80.w, 36.h),
         side: const BorderSide(color: AppTheme.surfaceContainerHigh),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
         padding: EdgeInsets.symmetric(horizontal: 12.w),
       ),
       child: Text(
         text,
-        style: GoogleFonts.plusJakartaSans(fontSize: 11.sp, fontWeight: FontWeight.w700),
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
 
-  Widget _buildLibraryShapeCard(BuildContext context, WidgetRef ref, String label, IconData icon) {
+  Widget _buildLibraryShapeCard(
+    BuildContext context,
+    WidgetRef ref,
+    String label,
+    IconData icon,
+  ) {
     return InkWell(
       onTap: () {
         _addLibraryTable(context, ref, label);
@@ -446,11 +548,7 @@ class TableInfrastructureScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: AppTheme.secondary,
-              size: 24.r,
-            ),
+            Icon(icon, color: AppTheme.secondary, size: 24.r),
             SizedBox(height: 6.h),
             Text(
               label,
@@ -467,11 +565,17 @@ class TableInfrastructureScreen extends ConsumerWidget {
   }
 
   void _addLibraryTable(BuildContext context, WidgetRef ref, String shapeType) {
-    final label = shapeType == 'Round' ? 'R-${math.Random().nextInt(20) + 1}' 
-        : shapeType == 'Rectangle' ? 'T-${math.Random().nextInt(20) + 1}' 
+    final label = shapeType == 'Round'
+        ? 'R-${math.Random().nextInt(20) + 1}'
+        : shapeType == 'Rectangle'
+        ? 'T-${math.Random().nextInt(20) + 1}'
         : 'B-${math.Random().nextInt(20) + 1}';
-        
-    final capacity = shapeType == 'Round' ? 2 : shapeType == 'Rectangle' ? 4 : 6;
+
+    final capacity = shapeType == 'Round'
+        ? 2
+        : shapeType == 'Rectangle'
+        ? 4
+        : 6;
 
     ref.read(tablesFutureProvider.notifier).addTable(label, capacity);
 
@@ -505,7 +609,8 @@ class TableInfrastructureScreen extends ConsumerWidget {
                   border: Border.all(
                     color: AppTheme.secondary.withValues(alpha: 0.3),
                     width: 2.w,
-                    style: BorderStyle.none, // We will paint dashes or simple border
+                    style: BorderStyle
+                        .none, // We will paint dashes or simple border
                   ),
                 ),
                 child: Center(
@@ -611,7 +716,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
         // Drag update relative to canvas size
         final dx = details.delta.dx / canvasWidth;
         final dy = details.delta.dy / canvasHeight;
-        ref.read(tablePositionsProvider.notifier).updatePosition(table.id, dx, dy);
+        ref
+            .read(tablePositionsProvider.notifier)
+            .updatePosition(table.id, dx, dy);
       },
       onTap: () {
         ref.read(tablePositionsProvider.notifier).selectNode(table.id);
@@ -657,7 +764,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w800,
-                      color: pos.isSelected ? AppTheme.primary : AppTheme.onSurface,
+                      color: pos.isSelected
+                          ? AppTheme.primary
+                          : AppTheme.onSurface,
                     ),
                   ),
                   Text(
@@ -683,45 +792,29 @@ class TableInfrastructureScreen extends ConsumerWidget {
                       color: AppTheme.primary,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 12.r,
-                    ),
+                    child: Icon(Icons.check, color: Colors.white, size: 12.r),
                   ),
                 ),
 
               // Selection border handles (only when selected)
               if (pos.isSelected) ...[
-                Positioned(
-                  top: -4.h,
-                  left: -4.w,
-                  child: _buildHandleDot(),
-                ),
-                Positioned(
-                  top: -4.h,
-                  right: -4.w,
-                  child: _buildHandleDot(),
-                ),
-                Positioned(
-                  bottom: -4.h,
-                  left: -4.w,
-                  child: _buildHandleDot(),
-                ),
-                Positioned(
-                  bottom: -4.h,
-                  right: -4.w,
-                  child: _buildHandleDot(),
-                ),
+                Positioned(top: -4.h, left: -4.w, child: _buildHandleDot()),
+                Positioned(top: -4.h, right: -4.w, child: _buildHandleDot()),
+                Positioned(bottom: -4.h, left: -4.w, child: _buildHandleDot()),
+                Positioned(bottom: -4.h, right: -4.w, child: _buildHandleDot()),
                 Positioned(
                   top: -16.h,
                   right: -16.w,
                   child: GestureDetector(
                     onTap: () {
-                      ref.read(tablesFutureProvider.notifier).deleteTable(table.id);
+                      ref
+                          .read(tablesFutureProvider.notifier)
+                          .deleteTable(table.id);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Deleting Table ${table.tableNumber}...'),
+                          content: Text(
+                            'Deleting Table ${table.tableNumber}...',
+                          ),
                           behavior: SnackBarBehavior.floating,
                           backgroundColor: AppTheme.error,
                         ),
@@ -733,7 +826,11 @@ class TableInfrastructureScreen extends ConsumerWidget {
                         color: AppTheme.error,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.delete_rounded, color: Colors.white, size: 14.r),
+                      child: Icon(
+                        Icons.delete_rounded,
+                        color: Colors.white,
+                        size: 14.r,
+                      ),
                     ),
                   ),
                 ),
@@ -830,7 +927,8 @@ class _SingleQrCodeDialog extends ConsumerStatefulWidget {
   const _SingleQrCodeDialog({required this.table});
 
   @override
-  ConsumerState<_SingleQrCodeDialog> createState() => _SingleQrCodeDialogState();
+  ConsumerState<_SingleQrCodeDialog> createState() =>
+      _SingleQrCodeDialogState();
 }
 
 class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
@@ -847,7 +945,9 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(tableInfrastructureRepositoryProvider);
-      if (forceRotate || widget.table.qrCodeToken == null || widget.table.qrCodeToken!.isEmpty) {
+      if (forceRotate ||
+          widget.table.qrCodeToken == null ||
+          widget.table.qrCodeToken!.isEmpty) {
         _qrToken = await repo.rotateQrCode(widget.table.id);
       } else {
         // Technically backend rotation is the easiest way to generate one if it's missing,
@@ -856,7 +956,9 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading QR: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading QR: $e')));
       }
     } finally {
       if (mounted) {
@@ -877,7 +979,10 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
         children: [
           Text(
             'Table ${widget.table.tableNumber} QR Code',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16.sp),
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 16.sp,
+            ),
           ),
           IconButton(
             icon: Icon(Icons.close, size: 20.r, color: AppTheme.secondary),
@@ -892,7 +997,9 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
             SizedBox(
               width: 200.r,
               height: 200.r,
-              child: const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+              child: const Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
             )
           else if (_qrToken != null)
             Container(
@@ -922,14 +1029,19 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
           SizedBox(height: 16.h),
           Text(
             'Token: ${_qrToken ?? 'N/A'}',
-            style: GoogleFonts.jetBrainsMono(fontSize: 10.sp, color: AppTheme.secondary),
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 10.sp,
+              color: AppTheme.secondary,
+            ),
           ),
           SizedBox(height: 24.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               OutlinedButton.icon(
-                onPressed: _isLoading ? null : () => _fetchOrRotateToken(forceRotate: true),
+                onPressed: _isLoading
+                    ? null
+                    : () => _fetchOrRotateToken(forceRotate: true),
                 icon: Icon(Icons.refresh_rounded, size: 16.r),
                 label: const Text('Rotate Token'),
                 style: OutlinedButton.styleFrom(
@@ -958,7 +1070,8 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
 // Separate StatefulWidget to handle internal checkbox state and generation progress
 class _MassQrBuilderPanel extends ConsumerStatefulWidget {
   @override
-  ConsumerState<_MassQrBuilderPanel> createState() => _MassQrBuilderPanelState();
+  ConsumerState<_MassQrBuilderPanel> createState() =>
+      _MassQrBuilderPanelState();
 }
 
 class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
@@ -994,7 +1107,9 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: Text(
           'QR Package Ready!',
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
@@ -1011,12 +1126,18 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
             Text(
               'Successfully compiled $count high-resolution tables access cards.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13.sp),
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 13.sp,
+              ),
             ),
             SizedBox(height: 6.h),
             Text(
               'File: orderlyy_qr_package.pdf (1.2 MB)',
-              style: GoogleFonts.jetBrainsMono(fontSize: 10.sp, color: AppTheme.secondary),
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 10.sp,
+                color: AppTheme.secondary,
+              ),
             ),
           ],
         ),
@@ -1046,7 +1167,9 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
       ),
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 32.h),
       child: tablesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
         error: (err, _) => Text('Error loading: $err'),
         data: (tables) {
           return Column(
@@ -1087,7 +1210,11 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                     ],
                   ),
                   IconButton(
-                    icon: Icon(Icons.close_rounded, size: 20.r, color: AppTheme.secondary),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      size: 20.r,
+                      color: AppTheme.secondary,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -1152,13 +1279,19 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                           } else {
                             next.add(t.id);
                           }
-                          ref.read(checkedQrTablesProvider.notifier).state = next;
+                          ref.read(checkedQrTablesProvider.notifier).state =
+                              next;
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 8.h,
+                          ),
                           decoration: BoxDecoration(
                             color: isChecked
-                                ? AppTheme.primaryContainer.withValues(alpha: 0.04)
+                                ? AppTheme.primaryContainer.withValues(
+                                    alpha: 0.04,
+                                  )
                                 : AppTheme.background,
                             borderRadius: BorderRadius.circular(8.r),
                             border: Border.all(
@@ -1173,7 +1306,9 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                                 isChecked
                                     ? Icons.check_box_rounded
                                     : Icons.check_box_outline_blank_rounded,
-                                color: isChecked ? AppTheme.primary : AppTheme.secondary,
+                                color: isChecked
+                                    ? AppTheme.primary
+                                    : AppTheme.secondary,
                                 size: 20.r,
                               ),
                               SizedBox(width: 10.w),
@@ -1190,7 +1325,9 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                                 isChecked ? 'Included' : 'Excluded',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 10.sp,
-                                  color: isChecked ? AppTheme.primary : AppTheme.secondary,
+                                  color: isChecked
+                                      ? AppTheme.primary
+                                      : AppTheme.secondary,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),

@@ -59,17 +59,21 @@ class StaffProfile {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-final staffProfileProvider = StateProvider<StaffProfile>((ref) => StaffProfile(
-      staffId: 'waiter_001',
-      name: 'Alex Johnson',
-      role: 'Waiter',
-      branch: 'Downtown Branch',
-      section: 'Section A',
-      shiftStatus: 'On Shift',
-      shiftStartedAt: DateTime.now().subtract(const Duration(hours: 2, minutes: 14)),
-      permissions: {'table_view', 'order_manage', 'billing_view'},
-      syncStateLabel: 'Fresh',
-    ));
+final staffProfileProvider = StateProvider<StaffProfile>(
+  (ref) => StaffProfile(
+    staffId: 'waiter_001',
+    name: 'Alex Johnson',
+    role: 'Waiter',
+    branch: 'Downtown Branch',
+    section: 'Section A',
+    shiftStatus: 'On Shift',
+    shiftStartedAt: DateTime.now().subtract(
+      const Duration(hours: 2, minutes: 14),
+    ),
+    permissions: {'table_view', 'order_manage', 'billing_view'},
+    syncStateLabel: 'Fresh',
+  ),
+);
 
 // All known permissions in display order
 const _allPermissions = <String, String>{
@@ -134,7 +138,9 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
         elevation: 0,
@@ -178,7 +184,11 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
 
   // ── Profile Header ──────────────────────────────────────────────────────────
 
-  Widget _buildProfileHeader(BuildContext context, StaffProfile profile, bool isDark) {
+  Widget _buildProfileHeader(
+    BuildContext context,
+    StaffProfile profile,
+    bool isDark,
+  ) {
     final isOnShift = profile.shiftStatus == 'On Shift';
     return Container(
       margin: const EdgeInsets.all(16),
@@ -237,7 +247,11 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.location_on_rounded, size: 14, color: Colors.grey[500]),
+              Icon(
+                Icons.location_on_rounded,
+                size: 14,
+                color: Colors.grey[500],
+              ),
               const SizedBox(width: 4),
               Text(
                 profile.branch,
@@ -255,16 +269,25 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.grid_view_rounded, size: 12, color: AppColors.primary),
+                    const Icon(
+                      Icons.grid_view_rounded,
+                      size: 12,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       profile.section,
@@ -280,7 +303,10 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
               const SizedBox(width: 10),
               // Live shift status badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isOnShift
                       ? AppColors.success.withValues(alpha: 0.12)
@@ -336,17 +362,16 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
         children: _allPermissions.entries.map((entry) {
           final hasPermission = profile.permissions.contains(entry.key);
-          return _PermissionChip(
-            label: entry.value,
-            granted: hasPermission,
-          );
+          return _PermissionChip(label: entry.value, granted: hasPermission);
         }).toList(),
       ),
     );
@@ -363,7 +388,9 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         children: [
@@ -394,11 +421,7 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(
-                  Icons.sync_rounded,
-                  size: 18,
-                  color: Colors.grey[500],
-                ),
+                Icon(Icons.sync_rounded, size: 18, color: Colors.grey[500]),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -407,7 +430,10 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isFresh
                         ? AppColors.success.withValues(alpha: 0.12)
@@ -438,7 +464,11 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
 
   // ── Account ──────────────────────────────────────────────────────────────────
 
-  Widget _buildAccountSection(BuildContext context, StaffProfile profile, bool isDark) {
+  Widget _buildAccountSection(
+    BuildContext context,
+    StaffProfile profile,
+    bool isDark,
+  ) {
     final isManager = profile.role == 'Manager';
 
     return Container(
@@ -446,13 +476,18 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Column(
         children: [
           ListTile(
             leading: const Icon(Icons.badge_rounded, color: AppColors.primary),
-            title: const Text('Change Display Name', style: TextStyle(fontWeight: FontWeight.w600)),
+            title: const Text(
+              'Change Display Name',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -460,14 +495,25 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
               );
             },
           ),
-          Divider(height: 1, indent: 56, color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
           ListTile(
             leading: const Icon(Icons.pin_rounded, color: AppColors.primary),
-            title: const Text('Change PIN', style: TextStyle(fontWeight: FontWeight.w600)),
+            title: const Text(
+              'Change PIN',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showChangePinDialog(context, isDark),
           ),
-          Divider(height: 1, indent: 56, color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          Divider(
+            height: 1,
+            indent: 56,
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
           ListTile(
             enabled: isManager,
             leading: Icon(
@@ -577,13 +623,17 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
   }
 
   Widget _divider(bool isDark) => Divider(
-        height: 1,
-        indent: 16,
-        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-      );
+    height: 1,
+    indent: 16,
+    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+  );
 
   String _formatTime(DateTime dt) {
-    final h = dt.hour > 12 ? dt.hour - 12 : dt.hour == 0 ? 12 : dt.hour;
+    final h = dt.hour > 12
+        ? dt.hour - 12
+        : dt.hour == 0
+        ? 12
+        : dt.hour;
     final m = dt.minute.toString().padLeft(2, '0');
     final period = dt.hour >= 12 ? 'PM' : 'AM';
     return '$h:$m $period';
@@ -598,7 +648,10 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-        title: const Text('Change PIN', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text(
+          'Change PIN',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -648,7 +701,9 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -656,7 +711,10 @@ class _StaffProfileScreenState extends ConsumerState<StaffProfileScreen> {
                 const SnackBar(content: Text('PIN changed successfully')),
               );
             },
-            child: const Text('Change PIN', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Change PIN',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),
@@ -671,16 +729,16 @@ class _RoleBadge extends StatelessWidget {
   const _RoleBadge({required this.role});
 
   Color get _color => switch (role) {
-        'Manager' => AppColors.error,
-        'Supervisor' => AppColors.secondary,
-        _ => AppColors.primary,
-      };
+    'Manager' => AppColors.error,
+    'Supervisor' => AppColors.secondary,
+    _ => AppColors.primary,
+  };
 
   IconData get _icon => switch (role) {
-        'Manager' => Icons.admin_panel_settings_rounded,
-        'Supervisor' => Icons.supervisor_account_rounded,
-        _ => Icons.person_rounded,
-      };
+    'Manager' => Icons.admin_panel_settings_rounded,
+    'Supervisor' => Icons.supervisor_account_rounded,
+    _ => Icons.person_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -803,7 +861,8 @@ class _PulseDot extends StatefulWidget {
   State<_PulseDot> createState() => _PulseDotState();
 }
 
-class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
 

@@ -7,7 +7,9 @@ import 'dart:developer' as dev;
 final taxRepositoryProvider = Provider<TaxRepository>((ref) {
   return TaxRepository(
     Supabase.instance.client,
-    ref.read(authNotifierProvider).userId, // Using userId as tenantId for single-tenant mode
+    ref
+        .read(authNotifierProvider)
+        .userId, // Using userId as tenantId for single-tenant mode
   );
 });
 
@@ -30,8 +32,10 @@ class TaxRepository {
           .eq('tenant_id', _tenantId)
           .isFilter('deleted_at', null)
           .order('priority', ascending: false);
-      
-      List<TaxProfileDto> profiles = profileRes.map((p) => TaxProfileDto.fromJson(p)).toList();
+
+      List<TaxProfileDto> profiles = profileRes
+          .map((p) => TaxProfileDto.fromJson(p))
+          .toList();
 
       if (profiles.isEmpty) return [];
 
@@ -44,17 +48,24 @@ class TaxRepository {
           .inFilter('tax_profile_id', profileIds)
           .eq('is_active', true)
           .isFilter('deleted_at', null);
-      
+
       final rates = ratesRes.map((r) => TaxRateDto.fromJson(r)).toList();
 
       // Merge active rate into profile dto for UI display
       return profiles.map((p) {
         final activeRates = rates.where((r) => r.taxProfileId == p.id).toList();
-        final effectiveBp = activeRates.fold<int>(0, (sum, rate) => sum + rate.rateBasisPoints);
+        final effectiveBp = activeRates.fold<int>(
+          0,
+          (sum, rate) => sum + rate.rateBasisPoints,
+        );
         return p.copyWith(effectiveBasisPoints: effectiveBp);
       }).toList();
     } catch (e, st) {
-      dev.log('[TaxRepo] Error fetching tax profiles', error: e, stackTrace: st);
+      dev.log(
+        '[TaxRepo] Error fetching tax profiles',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -84,7 +95,7 @@ class TaxRepository {
           .insert(profileData)
           .select()
           .single();
-      
+
       final newProfileId = insertedProfile['id'] as String;
 
       // 2. Create corresponding Rate
@@ -97,7 +108,6 @@ class TaxRepository {
       };
 
       await _supabase.from('tax_rates').insert(rateData);
-
     } catch (e, st) {
       dev.log('[TaxRepo] Error creating tax profile', error: e, stackTrace: st);
       rethrow;
@@ -125,7 +135,7 @@ class TaxRepository {
           })
           .eq('id', id)
           .eq('tenant_id', _tenantId);
-      
+
       // 2. If rate changed, deactivate old rate and append new rate
       if (newRateBasisPoints != currentRateBasisPoints) {
         // Deactivate existing
@@ -135,7 +145,7 @@ class TaxRepository {
             .eq('tax_profile_id', id)
             .eq('tenant_id', _tenantId)
             .eq('is_active', true);
-        
+
         // Append new
         await _supabase.from('tax_rates').insert({
           'tenant_id': _tenantId,

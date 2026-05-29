@@ -4,10 +4,11 @@ import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/table_dt
 import '../../../../core/network/network_providers.dart';
 import '../../../../core/network/dio_client.dart';
 
-final tableInfrastructureRepositoryProvider = Provider<TableInfrastructureRepository>((ref) {
-  final dio = ref.watch(dioClientProvider);
-  return ApiTableInfrastructureRepository(dio);
-});
+final tableInfrastructureRepositoryProvider =
+    Provider<TableInfrastructureRepository>((ref) {
+      final dio = ref.watch(dioClientProvider);
+      return ApiTableInfrastructureRepository(dio);
+    });
 
 abstract class TableInfrastructureRepository {
   Future<List<TableDto>> getTables(String tenantId, String branchId);
@@ -17,14 +18,17 @@ abstract class TableInfrastructureRepository {
   Future<String> rotateQrCode(String tableId);
 }
 
-class ApiTableInfrastructureRepository implements TableInfrastructureRepository {
+class ApiTableInfrastructureRepository
+    implements TableInfrastructureRepository {
   final DioClient _dio;
 
   ApiTableInfrastructureRepository(this._dio);
 
   @override
   Future<List<TableDto>> getTables(String tenantId, String branchId) async {
-    final res = await _dio.get('/v1/admin/tables?branch_id=$branchId&limit=100');
+    final res = await _dio.get(
+      '/v1/admin/tables?branch_id=$branchId&limit=100',
+    );
     final data = res.data['data'] as List;
     return data.map((json) => TableDto.fromJson(json)).toList();
   }
@@ -37,7 +41,10 @@ class ApiTableInfrastructureRepository implements TableInfrastructureRepository 
 
   @override
   Future<TableDto> updateTable(TableDto table) async {
-    final res = await _dio.patch('/v1/admin/tables/${table.id}', data: table.toJson());
+    final res = await _dio.patch(
+      '/v1/admin/tables/${table.id}',
+      data: table.toJson(),
+    );
     return TableDto.fromJson(res.data['data']);
   }
 

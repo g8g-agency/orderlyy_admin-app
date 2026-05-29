@@ -1,6 +1,5 @@
 // lib/features/menu/presentation/state/menu_providers.dart
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -44,7 +43,7 @@ class MenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
   int _lastOverlayRevision = 0;
 
   MenuSnapshotNotifier(this._repository, this._ref, this._talker)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     // Automatically load when initialized
     loadMenu();
   }
@@ -55,9 +54,12 @@ class MenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
     state = const AsyncValue.loading();
     try {
       final branchId = _ref.read(branchIdProvider);
-      
+
       // Perform schema verification and migration before fetching/serving
-      final migration = SnapshotMigration(repository: _repository, talker: _talker);
+      final migration = SnapshotMigration(
+        repository: _repository,
+        talker: _talker,
+      );
       await migration.verifyAndMigrate(branchId);
 
       final isConnected = await _ref.read(networkInfoProvider).isConnected;
@@ -81,7 +83,10 @@ class MenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
     }
   }
 
-  Future<void> _fetch({required String branchId, bool forceRefresh = false}) async {
+  Future<void> _fetch({
+    required String branchId,
+    bool forceRefresh = false,
+  }) async {
     try {
       final snapshot = await _repository.getMenuSnapshot(
         branchId: branchId,
@@ -128,13 +133,16 @@ class MenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
   }
 }
 
-final menuSnapshotProvider = StateNotifierProvider<MenuSnapshotNotifier, AsyncValue<MenuSnapshot>>((ref) {
-  final repository = ref.watch(menuSnapshotRepositoryProvider);
-  final talker = ref.watch(talkerProvider);
-  // Re-run if branch changes
-  ref.watch(branchIdProvider);
-  return MenuSnapshotNotifier(repository, ref, talker);
-});
+final menuSnapshotProvider =
+    StateNotifierProvider<MenuSnapshotNotifier, AsyncValue<MenuSnapshot>>((
+      ref,
+    ) {
+      final repository = ref.watch(menuSnapshotRepositoryProvider);
+      final talker = ref.watch(talkerProvider);
+      // Re-run if branch changes
+      ref.watch(branchIdProvider);
+      return MenuSnapshotNotifier(repository, ref, talker);
+    });
 
 class MenuAvailabilityNotifier extends StateNotifier<Map<String, bool>> {
   final MenuRepository _repository;
@@ -151,15 +159,15 @@ class MenuAvailabilityNotifier extends StateNotifier<Map<String, bool>> {
   }
 
   void updateAvailability(Map<String, bool> availabilityMap) {
-    state = { ...state, ...availabilityMap };
+    state = {...state, ...availabilityMap};
   }
-
 }
 
-final menuAvailabilityProvider = StateNotifierProvider<MenuAvailabilityNotifier, Map<String, bool>>((ref) {
-  final repository = ref.watch(menuSnapshotRepositoryProvider);
-  return MenuAvailabilityNotifier(repository, ref);
-});
+final menuAvailabilityProvider =
+    StateNotifierProvider<MenuAvailabilityNotifier, Map<String, bool>>((ref) {
+      final repository = ref.watch(menuSnapshotRepositoryProvider);
+      return MenuAvailabilityNotifier(repository, ref);
+    });
 
 // Derived Providers
 final availableItemsProvider = Provider<List<MenuItem>>((ref) {
@@ -208,7 +216,8 @@ class MenuStalenessInfo {
 
 final staleMenuProvider = Provider<MenuStalenessInfo>((ref) {
   final snapshotState = ref.watch(menuSnapshotProvider);
-  final isConnected = ref.watch(menuSnapshotProvider.notifier).isOfflineCache == false;
+  final isConnected =
+      ref.watch(menuSnapshotProvider.notifier).isOfflineCache == false;
 
   final lastSync = snapshotState.maybeWhen(
     data: (s) => s.generatedAt ?? DateTime.now(),
@@ -231,11 +240,15 @@ final staleMenuProvider = Provider<MenuStalenessInfo>((ref) {
 });
 
 // Legacy compatibility providers
-class LegacyMenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
+class LegacyMenuSnapshotNotifier
+    extends StateNotifier<AsyncValue<MenuSnapshot>> {
   final Ref _ref;
 
   LegacyMenuSnapshotNotifier(this._ref) : super(const AsyncValue.loading()) {
-    _ref.listen<AsyncValue<MenuSnapshot>>(menuSnapshotProvider, (previous, next) {
+    _ref.listen<AsyncValue<MenuSnapshot>>(menuSnapshotProvider, (
+      previous,
+      next,
+    ) {
       state = next;
     }, fireImmediately: true);
   }
@@ -245,7 +258,9 @@ class LegacyMenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>>
   }
 
   Future<void> loadMenu({bool forceRefresh = false}) async {
-    await _ref.read(menuSnapshotProvider.notifier).loadMenu(forceRefresh: forceRefresh);
+    await _ref
+        .read(menuSnapshotProvider.notifier)
+        .loadMenu(forceRefresh: forceRefresh);
   }
 
   Future<void> refresh() async {
@@ -253,7 +268,9 @@ class LegacyMenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>>
   }
 
   void updateAvailability(Map<String, bool> availabilityMap) {
-    _ref.read(menuAvailabilityProvider.notifier).updateAvailability(availabilityMap);
+    _ref
+        .read(menuAvailabilityProvider.notifier)
+        .updateAvailability(availabilityMap);
     state.whenData((snapshot) {
       final updatedItems = snapshot.items.map((item) {
         if (availabilityMap.containsKey(item.id)) {
@@ -273,11 +290,16 @@ class LegacyMenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>>
   }
 }
 
-final menuSnapshotNotifierProvider = StateNotifierProvider<LegacyMenuSnapshotNotifier, AsyncValue<MenuSnapshot>>((ref) {
-  return LegacyMenuSnapshotNotifier(ref);
-});
+final menuSnapshotNotifierProvider =
+    StateNotifierProvider<LegacyMenuSnapshotNotifier, AsyncValue<MenuSnapshot>>(
+      (ref) {
+        return LegacyMenuSnapshotNotifier(ref);
+      },
+    );
 
-final publicMenuProductsProvider = Provider<List<orders_entities.MenuProduct>>((ref) {
+final publicMenuProductsProvider = Provider<List<orders_entities.MenuProduct>>((
+  ref,
+) {
   final menuSnapshotAsync = ref.watch(menuSnapshotNotifierProvider);
   return menuSnapshotAsync.maybeWhen(
     data: (snapshot) => snapshot.toMenuProducts(),
@@ -294,87 +316,3 @@ final menuAvailabilityPollingProvider = Provider.autoDispose<void>((ref) {
   // Supervisory only: no availability polling required for client sessions.
 });
 
-class _AvailabilityPollingScheduler {
-  static const Duration _baseInterval = Duration(seconds: 15);
-  static const Duration _maxRetryBackoff = Duration(seconds: 60);
-
-  final MenuRepository repository;
-  final NetworkInfo networkInfo;
-  final MenuSnapshotNotifier notifier;
-  final Talker talker;
-  final String branchId;
-  final Random _random = Random.secure();
-
-  bool _disposed = false;
-  bool _inFlight = false;
-  int _revision = 0;
-  int _retryCount = 0;
-  Timer? _timer;
-
-  _AvailabilityPollingScheduler({
-    required this.repository,
-    required this.networkInfo,
-    required this.notifier,
-    required this.talker,
-    required this.branchId,
-  });
-
-  void start() {
-    _scheduleNext(const Duration(milliseconds: 200));
-  }
-
-  void dispose() {
-    _disposed = true;
-    _timer?.cancel();
-    _timer = null;
-  }
-
-  void _scheduleNext(Duration delay) {
-    if (_disposed) return;
-    _timer?.cancel();
-    _timer = Timer(delay, _runPoll);
-  }
-
-  Duration _nextHealthyInterval() {
-    final jitterSeconds = 2 + _random.nextInt(4); // 2-5s
-    final subtract = _random.nextBool();
-    final jitter = Duration(seconds: jitterSeconds);
-    return subtract ? (_baseInterval - jitter) : (_baseInterval + jitter);
-  }
-
-  Duration _nextRetryInterval() {
-    final exp = 1 << _retryCount.clamp(0, 5);
-    final backoff = Duration(seconds: 2 * exp);
-    final bounded = backoff > _maxRetryBackoff ? _maxRetryBackoff : backoff;
-    final jitterMs = _random.nextInt(1200);
-    return bounded + Duration(milliseconds: jitterMs);
-  }
-
-  Future<void> _runPoll() async {
-    if (_disposed || _inFlight) return;
-    _inFlight = true;
-    try {
-      final isConnected = await networkInfo.isConnected;
-      if (!isConnected) {
-        _retryCount = (_retryCount + 1).clamp(0, 8);
-        _scheduleNext(_nextRetryInterval());
-        return;
-      }
-
-      final availability = await repository.getItemAvailability(branchId: branchId);
-      _revision += 1;
-      notifier.reconcileAvailability(
-        authoritativeAvailability: availability,
-        revision: _revision,
-      );
-      _retryCount = 0;
-      _scheduleNext(_nextHealthyInterval());
-    } catch (error) {
-      _retryCount = (_retryCount + 1).clamp(0, 8);
-      talker.warning('[MenuPolling] Poll failed, scheduling retry: $error');
-      _scheduleNext(_nextRetryInterval());
-    } finally {
-      _inFlight = false;
-    }
-  }
-}

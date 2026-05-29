@@ -38,7 +38,8 @@ class SetupDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text('Failed to load setup status: $err'),
               TextButton(
-                onPressed: () => ref.read(onboardingNotifierProvider.notifier).hydrate(),
+                onPressed: () =>
+                    ref.read(onboardingNotifierProvider.notifier).hydrate(),
                 child: const Text('Retry'),
               ),
             ],
@@ -57,7 +58,7 @@ class SetupDashboardScreen extends ConsumerWidget {
           if (status.hasTables) completed++;
           if (status.hasStaff) completed++;
           if (status.hasKdsStations) completed++;
-          
+
           final progress = completed / 6.0;
 
           return SingleChildScrollView(
@@ -70,26 +71,29 @@ class SetupDashboardScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Welcome to Orderlli, ${appContext?.tenant.name ?? 'Owner'}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "Let's get your restaurant ready for operations. Complete these essential setup steps to start taking orders.",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Progress Overview
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: AppTheme.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: AppTheme.primaryContainer.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,7 +107,8 @@ class SetupDashboardScreen extends ConsumerWidget {
                               ),
                               Text(
                                 '${(progress * 100).toInt()}%',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
                                       color: AppTheme.primaryContainer,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -114,30 +119,37 @@ class SetupDashboardScreen extends ConsumerWidget {
                           LinearProgressIndicator(
                             value: progress,
                             backgroundColor: AppTheme.background,
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryContainer),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppTheme.primaryContainer,
+                            ),
                             minHeight: 8,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             "Stage: ${status.setupStage.replaceAll('_', ' ')}",
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Checklist Cards
                     Text(
                       'Setup Checklist',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     _ChecklistCard(
                       title: 'Create First Menu Category',
-                      description: 'Group your items (e.g. Starters, Mains, Drinks)',
+                      description:
+                          'Group your items (e.g. Starters, Mains, Drinks)',
                       isCompleted: status.hasCategories,
                       icon: Icons.category_rounded,
                       onTap: () {
@@ -147,7 +159,8 @@ class SetupDashboardScreen extends ConsumerWidget {
 
                     _ChecklistCard(
                       title: 'Configure Taxes',
-                      description: 'Set up GST, VAT or other local tax profiles',
+                      description:
+                          'Set up GST, VAT or other local tax profiles',
                       isCompleted: status.hasTaxProfiles,
                       icon: Icons.request_quote_rounded,
                       onTap: () {
@@ -190,8 +203,8 @@ class SetupDashboardScreen extends ConsumerWidget {
                           height: 52,
                           child: ElevatedButton(
                             onPressed: () {
-                               // Manual redirect
-                               context.go('/admin/dashboard');
+                              // Manual redirect
+                              context.go('/admin/dashboard');
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryContainer,
@@ -201,10 +214,16 @@ class SetupDashboardScreen extends ConsumerWidget {
                               ),
                               elevation: 0,
                             ),
-                            child: const Text('Complete Setup', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Complete Setup',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                      )
+                      ),
                   ],
                 ),
               ),
@@ -239,13 +258,17 @@ class _ChecklistCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isCompleted ? Colors.green.withValues(alpha: 0.5) : Colors.transparent,
+          color: isCompleted
+              ? Colors.green.withValues(alpha: 0.5)
+              : Colors.transparent,
         ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: isCompleted ? Colors.green.withValues(alpha: 0.2) : AppTheme.background,
+          backgroundColor: isCompleted
+              ? Colors.green.withValues(alpha: 0.2)
+              : AppTheme.background,
           child: Icon(
             isCompleted ? Icons.check_circle_rounded : icon,
             color: isCompleted ? Colors.green : Colors.grey,
@@ -261,9 +284,7 @@ class _ChecklistCard extends StatelessWidget {
         ),
         subtitle: Text(
           description,
-          style: TextStyle(
-            color: isCompleted ? Colors.grey : Colors.grey[400],
-          ),
+          style: TextStyle(color: isCompleted ? Colors.grey : Colors.grey[400]),
         ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
         onTap: onTap,

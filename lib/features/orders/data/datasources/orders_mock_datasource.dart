@@ -35,12 +35,14 @@ class OrdersMockDataSource extends MockDataSource<OrderDto> {
             menuItemId: 'menu-1',
             menuItemName: 'Butter Chicken',
             quantity: 2,
-            unitPrice: 350.0,
+            unitPriceAmount: 35000,
+            lineTotalAmount: 70000,
           ),
         ],
-        totalAmount: 700.0,
+        totalAmount: 70000,
         createdAt: DateTime.now().subtract(Duration(minutes: 10)),
         updatedAt: DateTime.now().subtract(Duration(minutes: 10)),
+        versionNum: 1,
       ),
       OrderDto(
         id: 'order-2',
@@ -54,12 +56,14 @@ class OrdersMockDataSource extends MockDataSource<OrderDto> {
             menuItemId: 'menu-2',
             menuItemName: 'Paneer Tikka',
             quantity: 1,
-            unitPrice: 280.0,
+            unitPriceAmount: 28000,
+            lineTotalAmount: 28000,
           ),
         ],
-        totalAmount: 280.0,
+        totalAmount: 28000,
         createdAt: DateTime.now().subtract(Duration(minutes: 20)),
         updatedAt: DateTime.now().subtract(Duration(minutes: 15)),
+        versionNum: 1,
       ),
     ]);
   }
@@ -97,6 +101,7 @@ class OrdersMockDataSource extends MockDataSource<OrderDto> {
       notes: dto.notes,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      versionNum: 1,
     );
 
     _mockOrders.add(newOrder);

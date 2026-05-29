@@ -4,12 +4,12 @@ class DailySummaryProjectionDto {
   final String tenantId;
   final String? branchId;
   final DateTime date;
-  
+
   // MINOR UNITS
   final int totalRevenueAmount;
   final int totalTaxAmount;
   final int totalDiscountAmount;
-  
+
   final int totalOrderCount;
   final int averageOrderValueAmount;
 
@@ -34,9 +34,11 @@ class DailySummaryProjectionDto {
       date: DateTime.parse(json['date'] as String),
       totalRevenueAmount: (json['total_revenue_amount'] as num?)?.toInt() ?? 0,
       totalTaxAmount: (json['total_tax_amount'] as num?)?.toInt() ?? 0,
-      totalDiscountAmount: (json['total_discount_amount'] as num?)?.toInt() ?? 0,
+      totalDiscountAmount:
+          (json['total_discount_amount'] as num?)?.toInt() ?? 0,
       totalOrderCount: (json['total_order_count'] as num?)?.toInt() ?? 0,
-      averageOrderValueAmount: (json['average_order_value_amount'] as num?)?.toInt() ?? 0,
+      averageOrderValueAmount:
+          (json['average_order_value_amount'] as num?)?.toInt() ?? 0,
       generatedAt: DateTime.parse(json['generated_at'] as String),
     );
   }

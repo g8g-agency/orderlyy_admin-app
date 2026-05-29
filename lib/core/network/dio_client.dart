@@ -21,32 +21,36 @@ class DioClient {
     required Talker talker,
     required this.deviceFingerprint,
     this.onUnauthorized,
-  })  : _talker = talker,
-        _dio = Dio(
-          BaseOptions(
-            baseUrl: AppConfig.instance.apiBaseUrl,
-            connectTimeout: const Duration(seconds: 15),
-            receiveTimeout: const Duration(seconds: 15),
-            sendTimeout: const Duration(seconds: 15),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-          ),
-        ) {
-    
+  }) : _talker = talker,
+       _dio = Dio(
+         BaseOptions(
+           baseUrl: AppConfig.instance.apiBaseUrl,
+           connectTimeout: const Duration(seconds: 15),
+           receiveTimeout: const Duration(seconds: 15),
+           sendTimeout: const Duration(seconds: 15),
+           headers: {
+             'Content-Type': 'application/json',
+             'Accept': 'application/json',
+           },
+         ),
+       ) {
     // Auth & Trace Interceptor
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           // 1. Inject Trace ID
           options.headers['x-request-id'] = _uuid.v4();
-          
+
           // 2. Inject Device Fingerprint
           options.headers['X-Device-Fingerprint'] = deviceFingerprint;
-          
+
           // 3. Inject Idempotency-Key for unsafe mutations
-          if (['POST', 'PUT', 'PATCH', 'DELETE'].contains(options.method.toUpperCase())) {
+          if ([
+            'POST',
+            'PUT',
+            'PATCH',
+            'DELETE',
+          ].contains(options.method.toUpperCase())) {
             // Only inject if not already provided
             options.headers['Idempotency-Key'] ??= _uuid.v4();
           }
@@ -58,21 +62,22 @@ class DioClient {
             } else {
               final session = Supabase.instance.client.auth.currentSession;
               if (session != null) {
-                options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+                options.headers['Authorization'] =
+                    'Bearer ${session.accessToken}';
               }
             }
           } catch (_) {
             options.headers['Authorization'] = 'Bearer mock-jwt-token';
           }
-          
+
           return handler.next(options);
         },
         onError: (DioException err, handler) async {
           if (err.response?.statusCode == 401) {
-             if (kUseMockRepositories) {
-                return handler.next(err);
-             }
-             return _handleTokenRefresh(err, handler);
+            if (kUseMockRepositories) {
+              return handler.next(err);
+            }
+            return _handleTokenRefresh(err, handler);
           }
           return handler.next(err);
         },
@@ -99,7 +104,10 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  Future<void> _handleTokenRefresh(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> _handleTokenRefresh(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     if (_isRefreshing) {
       // Queue the request
       _retryQueue.add({'err': err, 'handler': handler});
@@ -110,10 +118,10 @@ class DioClient {
     try {
       final response = await Supabase.instance.client.auth.refreshSession();
       final newSession = response.session;
-      
+
       if (newSession != null) {
         final newToken = newSession.accessToken;
-        
+
         // Retry the original request
         final opts = err.requestOptions;
         opts.headers['Authorization'] = 'Bearer $newToken';
@@ -140,41 +148,99 @@ class DioClient {
     }
   }
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options, CancelToken? cancelToken}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     try {
-      return await _dio.get(path, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
+      return await _dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, CancelToken? cancelToken}) async {
+  Future<Response> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     try {
-      return await _dio.post(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
+      return await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<Response> put(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, CancelToken? cancelToken}) async {
+  Future<Response> put(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     try {
-      return await _dio.put(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
+      return await _dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<Response> patch(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, CancelToken? cancelToken}) async {
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     try {
-      return await _dio.patch(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
+      return await _dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<Response> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, CancelToken? cancelToken}) async {
+  Future<Response> delete(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     try {
-      return await _dio.delete(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
+      return await _dio.delete(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -183,7 +249,7 @@ class DioClient {
   ApiException _handleDioError(DioException error) {
     final response = error.response;
     final payload = response?.data;
-    
+
     // Try to parse structured backend error
     String message = error.message ?? 'Unknown network error';
     String codeStr = 'UNKNOWN';
@@ -208,7 +274,9 @@ class DioClient {
     if (statusCode == 404) code = ApiErrorCode.notFound;
     if (statusCode == 409) code = ApiErrorCode.conflict;
     if (statusCode == 422) code = ApiErrorCode.validationError;
-    if (statusCode != null && statusCode >= 500) code = ApiErrorCode.serverError;
+    if (statusCode != null && statusCode >= 500) {
+      code = ApiErrorCode.serverError;
+    }
 
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
@@ -218,10 +286,6 @@ class DioClient {
       message = 'Network connection error: $message';
     }
 
-    return ApiException(
-      code: code,
-      message: message,
-      details: details,
-    );
+    return ApiException(code: code, message: message, details: details);
   }
 }

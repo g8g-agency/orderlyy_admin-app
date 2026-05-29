@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 class RestaurantContextDto {
   final TenantDto activeTenant;
@@ -16,21 +15,32 @@ class RestaurantContextDto {
   });
 
   factory RestaurantContextDto.fromJson(Map<String, dynamic> json) {
-    if (json['activeTenant'] == null) throw const FormatException('Missing activeTenant');
-    if (json['activeBranch'] == null) throw const FormatException('Missing activeBranch');
-    
+    if (json['activeTenant'] == null) {
+      throw const FormatException('Missing activeTenant');
+    }
+    if (json['activeBranch'] == null) {
+      throw const FormatException('Missing activeBranch');
+    }
+
     return RestaurantContextDto(
-      activeTenant: TenantDto.fromJson(json['activeTenant'] as Map<String, dynamic>),
-      activeBranch: BranchDto.fromJson(json['activeBranch'] as Map<String, dynamic>),
-      roles: (json['roles'] as List<dynamic>?)
+      activeTenant: TenantDto.fromJson(
+        json['activeTenant'] as Map<String, dynamic>,
+      ),
+      activeBranch: BranchDto.fromJson(
+        json['activeBranch'] as Map<String, dynamic>,
+      ),
+      roles:
+          (json['roles'] as List<dynamic>?)
               ?.map((e) => RoleDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      capabilities: (json['capabilities'] as List<dynamic>?)
+      capabilities:
+          (json['capabilities'] as List<dynamic>?)
               ?.map((e) => CapabilityDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      featureAccess: (json['featureAccess'] as List<dynamic>?)
+      featureAccess:
+          (json['featureAccess'] as List<dynamic>?)
               ?.map((e) => FeatureAccessDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -55,9 +65,13 @@ class TenantDto {
 
   factory TenantDto.fromJson(Map<String, dynamic> json) {
     if (json['id'] == null) throw const FormatException('Missing tenant id');
-    if (json['name'] == null) throw const FormatException('Missing tenant name');
-    if (json['slug'] == null) throw const FormatException('Missing tenant slug');
-    
+    if (json['name'] == null) {
+      throw const FormatException('Missing tenant name');
+    }
+    if (json['slug'] == null) {
+      throw const FormatException('Missing tenant slug');
+    }
+
     return TenantDto(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -85,8 +99,10 @@ class BranchDto {
 
   factory BranchDto.fromJson(Map<String, dynamic> json) {
     if (json['id'] == null) throw const FormatException('Missing branch id');
-    if (json['name'] == null) throw const FormatException('Missing branch name');
-    
+    if (json['name'] == null) {
+      throw const FormatException('Missing branch name');
+    }
+
     return BranchDto(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -101,35 +117,27 @@ class RoleDto {
   final String id;
   final String name;
 
-  const RoleDto({
-    required this.id,
-    required this.name,
-  });
+  const RoleDto({required this.id, required this.name});
 
   factory RoleDto.fromJson(Map<String, dynamic> json) {
     if (json['id'] == null) throw const FormatException('Missing role id');
     if (json['name'] == null) throw const FormatException('Missing role name');
-    
-    return RoleDto(
-      id: json['id'] as String,
-      name: json['name'] as String,
-    );
+
+    return RoleDto(id: json['id'] as String, name: json['name'] as String);
   }
 }
 
 class CapabilityDto {
   final String code; // e.g., 'menu.write', 'orders.refund'
 
-  const CapabilityDto({
-    required this.code,
-  });
+  const CapabilityDto({required this.code});
 
   factory CapabilityDto.fromJson(Map<String, dynamic> json) {
-    if (json['code'] == null) throw const FormatException('Missing capability code');
-    
-    return CapabilityDto(
-      code: json['code'] as String,
-    );
+    if (json['code'] == null) {
+      throw const FormatException('Missing capability code');
+    }
+
+    return CapabilityDto(code: json['code'] as String);
   }
 }
 
@@ -137,14 +145,13 @@ class FeatureAccessDto {
   final String featureKey;
   final bool isEnabled;
 
-  const FeatureAccessDto({
-    required this.featureKey,
-    required this.isEnabled,
-  });
+  const FeatureAccessDto({required this.featureKey, required this.isEnabled});
 
   factory FeatureAccessDto.fromJson(Map<String, dynamic> json) {
-    if (json['featureKey'] == null) throw const FormatException('Missing featureKey');
-    
+    if (json['featureKey'] == null) {
+      throw const FormatException('Missing featureKey');
+    }
+
     return FeatureAccessDto(
       featureKey: json['featureKey'] as String,
       isEnabled: json['isEnabled'] as bool? ?? false,

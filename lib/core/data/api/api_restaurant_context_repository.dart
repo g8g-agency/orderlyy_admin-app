@@ -16,7 +16,7 @@ class ApiRestaurantContextRepository implements RestaurantContextRepository {
   Future<Result<RestaurantContextDto>> fetchContext({String? branchId}) async {
     try {
       final queryParams = branchId != null ? {'branchId': branchId} : null;
-      
+
       final response = await _dioClient.get(
         ApiConstants.restaurantContext,
         queryParameters: queryParams,
@@ -28,10 +28,17 @@ class ApiRestaurantContextRepository implements RestaurantContextRepository {
           final contextDto = RestaurantContextDto.fromJson(data);
           return Success(contextDto);
         } on FormatException catch (e) {
-          return Failure(ApiFailure('Invalid context payload: ${e.message}', ApiErrorCode.validationError));
+          return Failure(
+            ApiFailure(
+              'Invalid context payload: ${e.message}',
+              ApiErrorCode.validationError,
+            ),
+          );
         }
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch restaurant context';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch restaurant context';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

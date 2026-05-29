@@ -104,7 +104,9 @@ class TaxRateDto {
       rateBasisPoints: json['rate_basis_points'] as int,
       priority: json['priority'] as int? ?? 100,
       effectiveFrom: DateTime.parse(json['effective_from'] as String),
-      effectiveTo: json['effective_to'] != null ? DateTime.parse(json['effective_to'] as String) : null,
+      effectiveTo: json['effective_to'] != null
+          ? DateTime.parse(json['effective_to'] as String)
+          : null,
       isActive: json['is_active'] as bool? ?? true,
     );
   }

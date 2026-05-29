@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import '../repositories/tables_repository.dart';
 import '../dtos/table_dto.dart';
+import '../../network/api_exception.dart';
 import '../../network/local_sync_client.dart';
 
 class MockTablesRepository implements TablesRepository {
@@ -32,6 +33,69 @@ class MockTablesRepository implements TablesRepository {
   }
 
   void _broadcast() => _tablesController.add(List.from(_tables!));
+
+  // ── Phase 9 implementations ─────────────────────────────────────────────────
+  @override
+  Future<Result<List<RestaurantTableDto>>> getTablesPaginated({
+    String? sectionId,
+    int page = 1,
+    int limit = 200,
+    bool includeDeleted = false,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 350));
+    await _ensureLoaded();
+    final res = _tables!.where((t) {
+      if (sectionId != null && t.sectionId != sectionId) return false;
+      return true;
+    }).toList()..sort((a, b) => a.label.compareTo(b.label));
+    return Success(res);
+  }
+
+  @override
+  Future<Result<RestaurantTableDto>> createTableEntity(
+    RestaurantTableDto table,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    await _ensureLoaded();
+    final newTable = table.copyWith(versionNum: 1);
+    _tables!.add(newTable);
+    _broadcast();
+    LocalSyncClient().broadcastEvent('table_update', newTable.toJson());
+    return Success(newTable);
+  }
+
+  @override
+  Future<Result<RestaurantTableDto>> updateTableEntity(
+    RestaurantTableDto table,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    await _ensureLoaded();
+    final idx = _tables!.indexWhere((t) => t.id == table.id);
+    if (idx == -1) return Failure(ApiFailure('Table not found', ApiErrorCode.notFound));
+    if (_tables![idx].versionNum != table.versionNum) {
+      return Failure(ApiFailure('Conflict', ApiErrorCode.conflict));
+    }
+    final updated = table.copyWith(versionNum: table.versionNum + 1);
+    _tables![idx] = updated;
+    _broadcast();
+    LocalSyncClient().broadcastEvent('table_update', updated.toJson());
+    return Success(updated);
+  }
+
+  @override
+  Future<Result<void>> deleteTableEntity(String tableId, int currentVersion) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    await _ensureLoaded();
+    final idx = _tables!.indexWhere((t) => t.id == tableId);
+    if (idx == -1) return Failure(ApiFailure('Table not found', ApiErrorCode.notFound));
+    if (_tables![idx].versionNum != currentVersion) {
+      return Failure(ApiFailure('Conflict', ApiErrorCode.conflict));
+    }
+    _tables!.removeAt(idx);
+    _broadcast();
+    LocalSyncClient().broadcastEvent('table_delete', {'id': tableId});
+    return const Success(null);
+  }
 
   // ── Fetch tables ──────────────────────────────────────────────────────────
   @override

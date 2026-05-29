@@ -42,7 +42,8 @@ class RestaurantTableDto {
   final int capacity;
   final TableStatus status;
   final String? activeOrderId;
-  final String? sectionId; // Normalized reference to a section/floor, NOT tightly coupled to layout logic
+  final String?
+  sectionId; // Normalized reference to a section/floor, NOT tightly coupled to layout logic
   final DateTime updatedAt;
   final int versionNum;
   final DateTime? deletedAt;
@@ -66,12 +67,20 @@ class RestaurantTableDto {
         tenantId: json['tenant_id'] as String,
         label: (json['label'] ?? json['table_num'] ?? '') as String,
         capacity: json['capacity'] as int? ?? 4,
-        status: TableStatus.fromString((json['status'] ?? 'available') as String),
+        status: TableStatus.fromString(
+          (json['status'] ?? 'available') as String,
+        ),
         activeOrderId: json['active_order_id'] as String?,
         sectionId: (json['section_id'] ?? json['floor']?.toString()) as String?,
-        updatedAt: DateTime.parse(json['updated_at'] ?? json['created_at'] ?? DateTime.now().toUtc().toIso8601String()),
+        updatedAt: DateTime.parse(
+          json['updated_at'] ??
+              json['created_at'] ??
+              DateTime.now().toUtc().toIso8601String(),
+        ),
         versionNum: json['version_num'] as int? ?? 1,
-        deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+        deletedAt: json['deleted_at'] != null
+            ? DateTime.parse(json['deleted_at'] as String)
+            : null,
       );
 
   Map<String, dynamic> toJson() => {

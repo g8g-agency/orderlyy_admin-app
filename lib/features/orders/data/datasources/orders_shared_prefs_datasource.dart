@@ -21,7 +21,9 @@ class OrdersSharedPrefsDataSource {
     if (data == null) return [];
     final list = data['orders'] as List?;
     if (list == null) return [];
-    return list.map((e) => OrderDto.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => OrderDto.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<OrderDto?> getCachedOrderById(String id) async {
@@ -32,12 +34,19 @@ class OrdersSharedPrefsDataSource {
 
   Future<OrderDto?> getActiveOrderForTable(String tableId) async {
     final list = await getCachedOrders();
-    final index = list.indexWhere((o) => o.tableId == tableId && o.status != OrderStatus.served && o.status != OrderStatus.cancelled);
+    final index = list.indexWhere(
+      (o) =>
+          o.tableId == tableId &&
+          o.status != OrderStatus.served &&
+          o.status != OrderStatus.cancelled,
+    );
     return index != -1 ? list[index] : null;
   }
 
   Future<void> cacheOrders(List<OrderDto> orders) async {
-    await _storage.write(_key, {'orders': orders.map((o) => o.toJson()).toList()});
+    await _storage.write(_key, {
+      'orders': orders.map((o) => o.toJson()).toList(),
+    });
     _controller.add(orders);
   }
 

@@ -2,7 +2,7 @@
 // The UI layer ONLY depends on this contract — never on Supabase directly.
 // Implementations: MockAuthRepository (dev) | SupabaseAuthRepository (prod)
 
-import '../network/api_exception.dart';
+import '../../network/api_exception.dart';
 import '../dtos/auth_dto.dart';
 
 abstract class AuthRepository {

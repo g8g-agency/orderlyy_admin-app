@@ -4,7 +4,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../../core/providers/repository_providers.dart' show sharedPreferencesProvider;
+import '../../../../core/providers/repository_providers.dart'
+    show sharedPreferencesProvider;
 import '../repositories/orders_repository_interface.dart';
 import '../repositories/orders_repository_factory.dart';
 import '../datasources/orders_mock_datasource.dart';

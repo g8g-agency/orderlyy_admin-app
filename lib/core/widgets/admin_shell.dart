@@ -41,7 +41,12 @@ class AdminShell extends StatelessWidget {
                   backgroundColor: AppTheme.surfaceContainerLowest,
                   elevation: 0,
                   surfaceTintColor: Colors.transparent,
-                  title: Text(title, style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800)),
+                  title: Text(
+                    title,
+                    style: AppTheme.titleLg.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   actions: actions,
                 ),
           drawer: isDesktop ? null : const _AdminSidebarWidget(),
@@ -64,7 +69,9 @@ class AdminShell extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: AppTheme.surfaceContainerLowest,
                               border: Border(
-                                bottom: BorderSide(color: AppTheme.surfaceContainerHigh),
+                                bottom: BorderSide(
+                                  color: AppTheme.surfaceContainerHigh,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -72,7 +79,9 @@ class AdminShell extends StatelessWidget {
                               children: [
                                 Text(
                                   title,
-                                  style: AppTheme.headlineSm.copyWith(fontWeight: FontWeight.w800),
+                                  style: AppTheme.headlineSm.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                                 if (actions != null) Row(children: actions!),
                               ],
@@ -84,7 +93,10 @@ class AdminShell extends StatelessWidget {
                               color: AppTheme.background,
                               padding: disablePadding
                                   ? EdgeInsets.zero
-                                  : const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                                  : const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                      vertical: 24,
+                                    ),
                               child: body,
                             ),
                           ),
@@ -96,7 +108,10 @@ class AdminShell extends StatelessWidget {
               : Padding(
                   padding: disablePadding
                       ? EdgeInsets.zero
-                      : const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      : const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                   child: body,
                 ),
         );
@@ -117,7 +132,9 @@ class _AdminSidebarWidget extends ConsumerWidget {
     final email = user?.email ?? 'admin@orderlli.com';
     final initial = email.isNotEmpty ? email[0].toUpperCase() : 'A';
     final name = email.split('@').first;
-    final capitalizedName = name.isNotEmpty ? name[0].toUpperCase() + name.substring(1) : 'Admin';
+    final capitalizedName = name.isNotEmpty
+        ? name[0].toUpperCase() + name.substring(1)
+        : 'Admin';
 
     // Safely get current route
     String currentUri = '';
@@ -274,7 +291,10 @@ class _AdminSidebarWidget extends ConsumerWidget {
                       ),
                       Text(
                         email,
-                        style: GoogleFonts.plusJakartaSans(fontSize: 10.sp, color: AppTheme.secondary),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.sp,
+                          color: AppTheme.secondary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -284,7 +304,11 @@ class _AdminSidebarWidget extends ConsumerWidget {
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: Icon(Icons.logout_rounded, color: AppTheme.error, size: 18.r),
+                  icon: Icon(
+                    Icons.logout_rounded,
+                    color: AppTheme.error,
+                    size: 18.r,
+                  ),
                   onPressed: () async {
                     final authService = ref.read(authServiceProvider);
                     await authService.signOut();
@@ -342,7 +366,9 @@ class _NavItem extends StatelessWidget {
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: active ? AppTheme.primaryContainer.withOpacity(0.08) : Colors.transparent,
+              color: active
+                  ? AppTheme.primaryContainer.withValues(alpha: 0.08)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

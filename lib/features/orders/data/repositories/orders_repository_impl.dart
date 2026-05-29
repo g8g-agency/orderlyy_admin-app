@@ -34,7 +34,11 @@ class OrdersRepositoryImpl implements OrdersRepository {
     return local.watchCachedOrders().map((list) {
       return list
           .map((dto) => dto.toDomain())
-          .where((o) => o.status != OrderStatus.completed && o.status != OrderStatus.cancelled)
+          .where(
+            (o) =>
+                o.status != OrderStatus.completed &&
+                o.status != OrderStatus.cancelled,
+          )
           .toList();
     });
   }

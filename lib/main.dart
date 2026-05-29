@@ -66,15 +66,19 @@ Future<void> main() async {
   }
 
   // Supabase initialization with Secure Token Storage
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: SupabaseConstants.supabaseUrl);
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: SupabaseConstants.supabaseAnonKey);
-  
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: SupabaseConstants.supabaseUrl,
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: SupabaseConstants.supabaseAnonKey,
+  );
+
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
-    authOptions: FlutterAuthClientOptions(
-      localStorage: SecureLocalStorage(),
-    ),
+    authOptions: FlutterAuthClientOptions(localStorage: SecureLocalStorage()),
   );
 
   runApp(

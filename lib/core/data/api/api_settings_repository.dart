@@ -13,7 +13,7 @@ class ApiSettingsRepository implements SettingsRepository {
   Future<Result<TenantSettingsDto>> getSettings({String? branchId}) async {
     try {
       final queryParams = <String, dynamic>{
-        if (branchId != null) 'branch_id': branchId,
+        'branch_id': ?branchId,
       };
 
       final response = await _dioClient.get(
@@ -24,7 +24,8 @@ class ApiSettingsRepository implements SettingsRepository {
       if (response.data['success'] == true) {
         return Success(TenantSettingsDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch settings';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to fetch settings';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -35,7 +36,9 @@ class ApiSettingsRepository implements SettingsRepository {
   }
 
   @override
-  Future<Result<TenantSettingsDto>> updateSettings(TenantSettingsDto settings) async {
+  Future<Result<TenantSettingsDto>> updateSettings(
+    TenantSettingsDto settings,
+  ) async {
     try {
       final response = await _dioClient.patch(
         ApiConstants.settings,
@@ -45,7 +48,8 @@ class ApiSettingsRepository implements SettingsRepository {
       if (response.data['success'] == true) {
         return Success(TenantSettingsDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update settings';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to update settings';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

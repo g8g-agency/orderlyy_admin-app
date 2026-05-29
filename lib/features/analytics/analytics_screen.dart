@@ -36,26 +36,35 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ordersAsync = ref.watch(ordersStreamProvider);
+    final ordersState = ref.watch(ordersProvider);
 
-    return ordersAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppTheme.background,
-        body: Center(
-          child: CircularProgressIndicator(color: AppTheme.primaryContainer),
-        ),
-      ),
-      error: (err, _) => Scaffold(
-        backgroundColor: AppTheme.background,
-        body: Center(
-          child: Text(
-            'Sync Error: $err',
-            style: GoogleFonts.inter(color: AppTheme.error),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-      data: (allOrders) {
+    return Builder(
+      builder: (context) {
+        if (ordersState.error != null) {
+          return Scaffold(
+            backgroundColor: AppTheme.background,
+            body: Center(
+              child: Text(
+                'Sync Error: ${ordersState.error}',
+                style: GoogleFonts.inter(color: AppTheme.error),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        if (ordersState.isLoading && ordersState.ordersById.isEmpty) {
+          return const Scaffold(
+            backgroundColor: AppTheme.background,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.primaryContainer,
+              ),
+            ),
+          );
+        }
+
+        final allOrders = ordersState.ordersById.values.toList();
         final orders = _filterByPeriod(allOrders, _periodIndex);
 
         final totalRevenue = orders

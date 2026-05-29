@@ -11,17 +11,13 @@ import '../../../../core/theme/app_text_styles.dart';
 // Demo Providers (self-contained)
 // ---------------------------------------------------------------------------
 
-final demoRealtimeStateProvider =
-    StateProvider<String>((ref) => 'connected');
+final demoRealtimeStateProvider = StateProvider<String>((ref) => 'connected');
 
-final demoReplayProgressProvider =
-    StateProvider<double>((ref) => 0.47);
+final demoReplayProgressProvider = StateProvider<double>((ref) => 0.47);
 
-final demoPendingOpsProvider =
-    StateProvider<int>((ref) => 3);
+final demoPendingOpsProvider = StateProvider<int>((ref) => 3);
 
-final demoFailedOpsProvider =
-    StateProvider<int>((ref) => 1);
+final demoFailedOpsProvider = StateProvider<int>((ref) => 1);
 
 // ---------------------------------------------------------------------------
 // Model for timeline events
@@ -77,26 +73,30 @@ class RealtimeStatusScreen extends ConsumerWidget {
     final failedOps = ref.watch(demoFailedOpsProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final borderColor =
-        isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final surfaceColor = isDark
+        ? AppColors.darkSurface
+        : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: Text(
           'Realtime Status',
           style: AppTextStyles.h3.copyWith(color: textPrimary),
         ),
         centerTitle: false,
-        backgroundColor:
-            isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        backgroundColor: isDark
+            ? AppColors.darkSurface
+            : AppColors.lightSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         bottom: PreferredSize(
@@ -130,8 +130,9 @@ class RealtimeStatusScreen extends ConsumerWidget {
                 children: [
                   Text(
                     'Replay progress',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: textSecondary),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   ClipRRect(
@@ -141,14 +142,14 @@ class RealtimeStatusScreen extends ConsumerWidget {
                       minHeight: 6,
                       backgroundColor: borderColor,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF3D8EF0)),
+                        Color(0xFF3D8EF0),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${(replayProgress * 100).toStringAsFixed(0)}% complete',
-                    style: AppTextStyles.caption
-                        .copyWith(color: textSecondary),
+                    style: AppTextStyles.caption.copyWith(color: textSecondary),
                   ),
                 ],
               ),
@@ -174,10 +175,7 @@ class RealtimeStatusScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // ── Sync Queue KPIs ──────────────────────────────────────────────
-          _SectionHeader(
-            title: 'Sync Queue',
-            textPrimary: textPrimary,
-          ),
+          _SectionHeader(title: 'Sync Queue', textPrimary: textPrimary),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -212,10 +210,7 @@ class RealtimeStatusScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // ── Quick Actions ────────────────────────────────────────────────
-          _SectionHeader(
-            title: 'Quick Actions',
-            textPrimary: textPrimary,
-          ),
+          _SectionHeader(title: 'Quick Actions', textPrimary: textPrimary),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -384,8 +379,7 @@ class _StatusCard extends StatelessWidget {
           const SizedBox(height: 12),
           // Status pill
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
               color: cfg.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(100),
@@ -541,8 +535,9 @@ class _TimelineItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     event.timeAgo,
-                    style:
-                        AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -613,8 +608,7 @@ class _KpiChip extends StatelessWidget {
                 ),
                 Text(
                   label,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: textSecondary),
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
                 ),
               ],
             ),
@@ -649,10 +643,7 @@ class _ActionButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon, size: 20),
-        label: Text(
-          label,
-          style: AppTextStyles.button.copyWith(fontSize: 13),
-        ),
+        label: Text(label, style: AppTextStyles.button.copyWith(fontSize: 13)),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
@@ -728,8 +719,7 @@ class _SimulationPanel extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.science_rounded,
-                  color: textSecondary, size: 18),
+              Icon(Icons.science_rounded, color: textSecondary, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Simulate State',
@@ -746,38 +736,37 @@ class _SimulationPanel extends ConsumerWidget {
             runSpacing: 8,
             children: states.map((s) {
               final (label, color, icon) = s;
-              final current =
-                  ref.watch(demoRealtimeStateProvider);
+              final current = ref.watch(demoRealtimeStateProvider);
               final isActive = current == label;
               return GestureDetector(
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  ref
-                      .read(demoRealtimeStateProvider.notifier)
-                      .state = label;
+                  ref.read(demoRealtimeStateProvider.notifier).state = label;
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isActive
                         ? color.withValues(alpha: 0.18)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(
-                      color: isActive
-                          ? color
-                          : borderColor,
+                      color: isActive ? color : borderColor,
                       width: isActive ? 1.5 : 1,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(icon,
-                          color: isActive ? color : textSecondary,
-                          size: 16),
+                      Icon(
+                        icon,
+                        color: isActive ? color : textSecondary,
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         label,

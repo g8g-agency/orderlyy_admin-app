@@ -11,10 +11,11 @@ final kdsRepositoryProvider = Provider<KdsRepository>((ref) {
   );
 });
 
-final kitchenStationsProvider = FutureProvider.autoDispose<List<KitchenStationDto>>((ref) async {
-  final repo = ref.watch(kdsRepositoryProvider);
-  return repo.getStations();
-});
+final kitchenStationsProvider =
+    FutureProvider.autoDispose<List<KitchenStationDto>>((ref) async {
+      final repo = ref.watch(kdsRepositoryProvider);
+      return repo.getStations();
+    });
 
 class KdsRepository {
   final SupabaseClient _supabase;
@@ -33,7 +34,7 @@ class KdsRepository {
           .eq('tenant_id', _tenantId)
           .isFilter('deleted_at', null)
           .order('display_order', ascending: true);
-      
+
       return res.map((json) => KitchenStationDto.fromJson(json)).toList();
     } catch (e, st) {
       dev.log('[KdsRepo] Error fetching stations', error: e, stackTrace: st);
@@ -64,7 +65,8 @@ class KdsRepository {
     }
   }
 
-  Future<void> updateStation(String id, {
+  Future<void> updateStation(
+    String id, {
     required String name,
     String? description,
     bool? isDefault,
@@ -73,8 +75,8 @@ class KdsRepository {
 
     final data = <String, dynamic>{
       'name': name,
-      if (description != null) 'description': description,
-      if (isDefault != null) 'is_default': isDefault,
+      'description': ?description,
+      'is_default': ?isDefault,
     };
 
     await _supabase

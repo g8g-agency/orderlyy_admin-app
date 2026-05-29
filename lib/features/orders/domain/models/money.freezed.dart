@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Money {
 
- double get amount; String get currency;
+ int get amountInCents;// STRICTLY integer minor units
+ String get currency;
 /// Create a copy of Money
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $MoneyCopyWith<Money> get copyWith => _$MoneyCopyWithImpl<Money>(this as Money, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Money&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Money&&(identical(other.amountInCents, amountInCents) || other.amountInCents == amountInCents)&&(identical(other.currency, currency) || other.currency == currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,amount,currency);
+int get hashCode => Object.hash(runtimeType,amountInCents,currency);
 
 @override
 String toString() {
-  return 'Money(amount: $amount, currency: $currency)';
+  return 'Money(amountInCents: $amountInCents, currency: $currency)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $MoneyCopyWith<$Res>  {
   factory $MoneyCopyWith(Money value, $Res Function(Money) _then) = _$MoneyCopyWithImpl;
 @useResult
 $Res call({
- double amount, String currency
+ int amountInCents, String currency
 });
 
 
@@ -65,10 +66,10 @@ class _$MoneyCopyWithImpl<$Res>
 
 /// Create a copy of Money
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? amount = null,Object? currency = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? amountInCents = null,Object? currency = null,}) {
   return _then(_self.copyWith(
-amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as double,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+amountInCents: null == amountInCents ? _self.amountInCents : amountInCents // ignore: cast_nullable_to_non_nullable
+as int,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -154,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double amount,  String currency)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int amountInCents,  String currency)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Money() when $default != null:
-return $default(_that.amount,_that.currency);case _:
+return $default(_that.amountInCents,_that.currency);case _:
   return orElse();
 
 }
@@ -175,10 +176,10 @@ return $default(_that.amount,_that.currency);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double amount,  String currency)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int amountInCents,  String currency)  $default,) {final _that = this;
 switch (_that) {
 case _Money():
-return $default(_that.amount,_that.currency);case _:
+return $default(_that.amountInCents,_that.currency);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +196,10 @@ return $default(_that.amount,_that.currency);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double amount,  String currency)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int amountInCents,  String currency)?  $default,) {final _that = this;
 switch (_that) {
 case _Money() when $default != null:
-return $default(_that.amount,_that.currency);case _:
+return $default(_that.amountInCents,_that.currency);case _:
   return null;
 
 }
@@ -210,10 +211,11 @@ return $default(_that.amount,_that.currency);case _:
 @JsonSerializable()
 
 class _Money extends Money {
-  const _Money({required this.amount, this.currency = 'INR'}): super._();
+  const _Money({required this.amountInCents, this.currency = 'INR'}): super._();
   factory _Money.fromJson(Map<String, dynamic> json) => _$MoneyFromJson(json);
 
-@override final  double amount;
+@override final  int amountInCents;
+// STRICTLY integer minor units
 @override@JsonKey() final  String currency;
 
 /// Create a copy of Money
@@ -229,16 +231,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Money&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Money&&(identical(other.amountInCents, amountInCents) || other.amountInCents == amountInCents)&&(identical(other.currency, currency) || other.currency == currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,amount,currency);
+int get hashCode => Object.hash(runtimeType,amountInCents,currency);
 
 @override
 String toString() {
-  return 'Money(amount: $amount, currency: $currency)';
+  return 'Money(amountInCents: $amountInCents, currency: $currency)';
 }
 
 
@@ -249,7 +251,7 @@ abstract mixin class _$MoneyCopyWith<$Res> implements $MoneyCopyWith<$Res> {
   factory _$MoneyCopyWith(_Money value, $Res Function(_Money) _then) = __$MoneyCopyWithImpl;
 @override @useResult
 $Res call({
- double amount, String currency
+ int amountInCents, String currency
 });
 
 
@@ -266,10 +268,10 @@ class __$MoneyCopyWithImpl<$Res>
 
 /// Create a copy of Money
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? amount = null,Object? currency = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? amountInCents = null,Object? currency = null,}) {
   return _then(_Money(
-amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as double,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+amountInCents: null == amountInCents ? _self.amountInCents : amountInCents // ignore: cast_nullable_to_non_nullable
+as int,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

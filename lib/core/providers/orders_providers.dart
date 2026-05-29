@@ -41,9 +41,18 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   OrdersNotifier(this._repository) : super(const OrdersState());
 
   /// Fetches backend-resolved order projections.
-  Future<void> loadOrders({OrderStatus? status, String? tableId, bool forceRefresh = false}) async {
+  Future<void> loadOrders({
+    OrderStatus? status,
+    String? tableId,
+    bool forceRefresh = false,
+  }) async {
     if (state.isLoading) return;
-    if (state.ordersById.isNotEmpty && !forceRefresh && status == null && tableId == null) return;
+    if (state.ordersById.isNotEmpty &&
+        !forceRefresh &&
+        status == null &&
+        tableId == null) {
+      return;
+    }
 
     state = state.copyWith(isLoading: true, error: null);
 
@@ -53,20 +62,22 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     );
 
     if (result is Success<List<OrderDto>>) {
-      final newOrders = forceRefresh ? <String, OrderDto>{} : Map<String, OrderDto>.from(state.ordersById);
-      for (final order in result.data) {
+      final newOrders = forceRefresh
+          ? <String, OrderDto>{}
+          : Map<String, OrderDto>.from(state.ordersById);
+      for (final order in result.value) {
         newOrders[order.id] = order;
       }
       state = state.copyWith(isLoading: false, ordersById: newOrders);
     } else if (result is Failure<List<OrderDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
   /// Creates a new order using an idempotency key to prevent double-billing on reconnects.
   Future<Result<OrderDto>> createOrder(OrderDto order) async {
     final idempotencyKey = _uuid.v4(); // Generate unique key for this intent
-    
+
     final result = await _repository.createOrderEntity(
       order,
       idempotencyKey: idempotencyKey,
@@ -74,7 +85,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
 
     if (result is Success<OrderDto>) {
       final newOrders = Map<String, OrderDto>.from(state.ordersById);
-      newOrders[result.data.id] = result.data;
+      newOrders[result.value.id] = result.value;
       state = state.copyWith(ordersById: newOrders);
     }
 
@@ -82,7 +93,10 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   }
 
   /// Safely advances the order state machine.
-  Future<Result<OrderDto>> transitionOrderStatus(String orderId, OrderStatus newStatus) async {
+  Future<Result<OrderDto>> transitionOrderStatus(
+    String orderId,
+    OrderStatus newStatus,
+  ) async {
     final order = state.ordersById[orderId];
     if (order == null) return Failure(ApiFailure('Order not found locally'));
 
@@ -97,10 +111,10 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
 
     if (result is Success<OrderDto>) {
       final newOrders = Map<String, OrderDto>.from(state.ordersById);
-      newOrders[result.data.id] = result.data;
+      newOrders[result.value.id] = result.value;
       state = state.copyWith(ordersById: newOrders);
     } else if (result is Failure<OrderDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         // Deterministic reload on OCC Conflict (another surface mutated it)
         await loadOrders(forceRefresh: true);
       }
@@ -110,7 +124,10 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   }
 
   /// Updates items, delegating all financial computation to the backend.
-  Future<Result<OrderDto>> updateOrderItems(String orderId, List<OrderItemDto> items) async {
+  Future<Result<OrderDto>> updateOrderItems(
+    String orderId,
+    List<OrderItemDto> items,
+  ) async {
     final order = state.ordersById[orderId];
     if (order == null) return Failure(ApiFailure('Order not found locally'));
 
@@ -125,10 +142,10 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
 
     if (result is Success<OrderDto>) {
       final newOrders = Map<String, OrderDto>.from(state.ordersById);
-      newOrders[result.data.id] = result.data;
+      newOrders[result.value.id] = result.value;
       state = state.copyWith(ordersById: newOrders);
     } else if (result is Failure<OrderDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadOrders(forceRefresh: true);
       }
     }
@@ -140,10 +157,10 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   /// Overwrites local state ONLY if the remote version is strictly newer.
   void reconcileRemoteUpdate(OrderDto remoteOrder) {
     final current = state.ordersById[remoteOrder.id];
-    
+
     // Sequence validation: Reject stale events
     if (current != null && remoteOrder.versionNum <= current.versionNum) {
-      return; 
+      return;
     }
 
     final newOrders = Map<String, OrderDto>.from(state.ordersById);
@@ -153,29 +170,38 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final ordersProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((ref) {
+final ordersProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((
+  ref,
+) {
   final repo = ref.watch(ordersRepositoryProvider);
   return OrdersNotifier(repo);
 });
 
-final activeTableOrdersProvider = Provider.family<List<OrderDto>, String>((ref, tableId) {
+final activeTableOrdersProvider = Provider.family<List<OrderDto>, String>((
+  ref,
+  tableId,
+) {
   final state = ref.watch(ordersProvider);
   return state.ordersById.values
-      .where((o) => o.tableId == tableId && o.status != OrderStatus.cancelled && o.status != OrderStatus.served)
+      .where(
+        (o) =>
+            o.tableId == tableId &&
+            o.status != OrderStatus.cancelled &&
+            o.status != OrderStatus.served,
+      )
       .toList();
 });
 
 // ── Offline UI Compatibility (Deprecated for direct mutations, kept for dev toggle)
 final isOnlineProvider = StateNotifierProvider<IsOnlineNotifier, bool>((ref) {
   final queue = ref.watch(offlineSyncQueueProvider);
-  return IsOnlineNotifier(queue, ref);
+  return IsOnlineNotifier(queue);
 });
 
 class IsOnlineNotifier extends StateNotifier<bool> {
   final OfflineSyncQueue _queue;
-  final Ref _ref;
 
-  IsOnlineNotifier(this._queue, this._ref) : super(_queue.isOnline());
+  IsOnlineNotifier(this._queue) : super(_queue.isOnline());
 
   Future<void> toggleOnline() async {
     final newStatus = !state;

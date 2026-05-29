@@ -87,7 +87,8 @@ class _RealtimeBannerState extends State<RealtimeBanner>
   }
 
   void _updateVisibility() {
-    final visible = widget.state != RealtimeState.connected &&
+    final visible =
+        widget.state != RealtimeState.connected &&
         widget.state != RealtimeState.critical;
     if (visible) {
       _fadeController.forward();
@@ -150,8 +151,10 @@ class _RealtimeBannerState extends State<RealtimeBanner>
                 if (widget.reconnectAttempt > 0) ...[
                   const SizedBox(width: 6),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0x33000000),
                       borderRadius: BorderRadius.circular(10),
@@ -199,8 +202,7 @@ class _RealtimeBannerState extends State<RealtimeBanner>
               const SizedBox(height: 4),
               LinearProgressIndicator(
                 backgroundColor: Colors.white.withValues(alpha: 0.25),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 minHeight: 2,
               ),
             ],
@@ -249,7 +251,9 @@ class _RealtimeBannerState extends State<RealtimeBanner>
                     child: Container(
                       constraints: const BoxConstraints(minHeight: 44),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0x33000000),
                         borderRadius: BorderRadius.circular(8),

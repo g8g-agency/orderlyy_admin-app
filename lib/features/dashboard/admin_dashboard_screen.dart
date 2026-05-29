@@ -17,7 +17,8 @@ final currentNavIndexProvider = StateProvider<int>((ref) => 0);
 final storeOpenProvider = StateProvider<bool>((ref) => true);
 
 // ── Responsive Layout Breakpoint ──────────────────────────────────────────────
-bool isDesktop(BuildContext context) => MediaQuery.of(context).size.width >= 960;
+bool isDesktop(BuildContext context) =>
+    MediaQuery.of(context).size.width >= 960;
 
 // ── Root Shell ────────────────────────────────────────────────────────────────
 class AdminDashboardScreen extends ConsumerWidget {
@@ -47,10 +48,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               color: AppTheme.surfaceContainerHigh,
             ),
             Expanded(
-              child: IndexedStack(
-                index: navIndex,
-                children: screens,
-              ),
+              child: IndexedStack(index: navIndex, children: screens),
             ),
           ],
         ),
@@ -59,10 +57,7 @@ class AdminDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: IndexedStack(
-        index: navIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: navIndex, children: screens),
       bottomNavigationBar: _BottomNav(
         currentIndex: navIndex,
         onTap: (i) => ref.read(currentNavIndexProvider.notifier).state = i,
@@ -99,11 +94,7 @@ class _DesktopSidebar extends ConsumerWidget {
             padding: EdgeInsets.symmetric(horizontal: 8.w),
             child: Row(
               children: [
-                Icon(
-                  Icons.store_rounded,
-                  color: AppTheme.primary,
-                  size: 28.r,
-                ),
+                Icon(Icons.store_rounded, color: AppTheme.primary, size: 28.r),
                 SizedBox(width: 10.w),
                 Text(
                   'KitchenSync',
@@ -647,11 +638,7 @@ class _MoreTab extends ConsumerWidget {
                                   color: t.color.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8.r),
                                 ),
-                                child: Icon(
-                                  t.icon,
-                                  color: t.color,
-                                  size: 18.r,
-                                ),
+                                child: Icon(t.icon, color: t.color, size: 18.r),
                               ),
                               const Spacer(),
                               Text(
@@ -775,41 +762,50 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
         ? name[0].toUpperCase() + name.substring(1)
         : 'Chef Alex';
 
-    final ordersAsync = ref.watch(ordersStreamProvider);
+    final ordersState = ref.watch(ordersProvider);
     final isStoreOpen = ref.watch(storeOpenProvider);
 
-    return ordersAsync.when(
-      error: (err, _) => Scaffold(
+    if (ordersState.error != null) {
+      return Scaffold(
         backgroundColor: AppTheme.background,
         body: Center(
           child: Text(
-            'Sync Error: $err',
+            'Sync Error: ${ordersState.error}',
             style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
           ),
         ),
-      ),
-      loading: () => const Scaffold(
+      );
+    }
+
+    if (ordersState.isLoading && ordersState.ordersById.isEmpty) {
+      return const Scaffold(
         backgroundColor: AppTheme.background,
         body: Center(
           child: CircularProgressIndicator(color: AppTheme.primaryContainer),
         ),
-      ),
-      data: (allOrders) {
-        final today = _todayOrders(allOrders);
-        final totalSales = today.fold<double>(0, (s, o) => s + o.totalAmount);
-        final activeDinersCount = today.map((o) => o.tableId).toSet().length;
+      );
+    }
 
-        const activeStatuses = [
-          OrderStatus.pending,
-          OrderStatus.preparing,
-          OrderStatus.ready,
-        ];
-        final unresolvedOrders = allOrders
-            .where((o) => activeStatuses.contains(o.status))
-            .toList();
+    final allOrders = ordersState.ordersById.values.toList();
+    final today = _todayOrders(allOrders);
+    final totalSales = today.fold<double>(
+      0,
+      (s, o) => s + (o.totalAmount / 100),
+    ); // Use minor units divided by 100
+    final activeDinersCount = today.map((o) => o.tableId).toSet().length;
 
-        // Feed orders (live processing, max 3)
-        final liveOrders = allOrders
+    const activeStatuses = [
+      OrderStatus.pending,
+      OrderStatus.preparing,
+      OrderStatus.ready,
+    ];
+    final unresolvedOrders = allOrders
+        .where((o) => activeStatuses.contains(o.status))
+        .toList();
+
+    // Feed orders (live processing, max 3)
+    final liveOrders =
+        allOrders
             .where(
               (o) =>
                   o.status != OrderStatus.served &&
@@ -817,290 +813,283 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
             )
             .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        final feedOrders = liveOrders.take(3).toList();
+    final feedOrders = liveOrders.take(3).toList();
 
-        return Scaffold(
-          backgroundColor: AppTheme.background,
-          appBar: isDesktop(context)
-              ? null
-              : AppBar(
-                  backgroundColor: AppTheme.surfaceContainerLowest,
-                  elevation: 0,
-                  toolbarHeight: 56.h,
-                  automaticallyImplyLeading: false,
-                  title: Row(
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: isDesktop(context)
+          ? null
+          : AppBar(
+              backgroundColor: AppTheme.surfaceContainerLowest,
+              elevation: 0,
+              toolbarHeight: 56.h,
+              automaticallyImplyLeading: false,
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.store_rounded,
+                    color: AppTheme.primary,
+                    size: 24.r,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'KitchenSync',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  // Bell icon
+                  Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Icon(
-                        Icons.store_rounded,
-                        color: AppTheme.primary,
-                        size: 24.r,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'KitchenSync',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.primary,
+                      IconButton(
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          color: AppTheme.onSurface,
+                          size: 22.r,
                         ),
+                        onPressed: () =>
+                            _showNotifications(context, unresolvedOrders),
                       ),
-                      const Spacer(),
-                      // Bell icon
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.notifications_outlined,
-                              color: AppTheme.onSurface,
-                              size: 22.r,
-                            ),
-                            onPressed: () => _showNotifications(
-                              context,
-                              unresolvedOrders,
+                      if (unresolvedOrders.isNotEmpty)
+                        Positioned(
+                          top: 10.h,
+                          right: 10.w,
+                          child: Container(
+                            width: 8.r,
+                            height: 8.r,
+                            decoration: BoxDecoration(
+                              color: AppTheme.error,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppTheme.surfaceContainerLowest,
+                                width: 1.5,
+                              ),
                             ),
                           ),
-                          if (unresolvedOrders.isNotEmpty)
-                            Positioned(
-                              top: 10.h,
-                              right: 10.w,
-                              child: Container(
-                                width: 8.r,
-                                height: 8.r,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.error,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: AppTheme.surfaceContainerLowest,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                        ),
                     ],
-                  ),
-                  bottom: PreferredSize(
-                    preferredSize: Size.fromHeight(1.h),
-                    child: Divider(
-                      height: 1.h,
-                      thickness: 1.h,
-                      color: AppTheme.surfaceContainerHigh,
-                    ),
-                  ),
-                ),
-          body: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                // Riverpod stream triggers auto update
-              },
-              color: AppTheme.primary,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop(context) ? 32.w : 16.w,
-                      vertical: 24.h,
-                    ),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        // ── Store Header + Greeting ───────────────────────────
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '$_greeting, $capitalizedName',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize:
-                                          isDesktop(context) ? 28.sp : 22.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppTheme.onSurface,
-                                      letterSpacing: -0.5,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    'Morning Shift • Orderlyy Operating Pulse',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 12.sp,
-                                      color: AppTheme.secondary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-
-                            // Store Status Toggle Pill
-                            GestureDetector(
-                              onTap: () {
-                                ref.read(storeOpenProvider.notifier).state =
-                                    !isStoreOpen;
-                              },
-                              child: AnimatedContainer(
-                                duration: 200.ms,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 14.w,
-                                  vertical: 8.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.surfaceContainerLowest,
-                                  borderRadius: BorderRadius.circular(30.r),
-                                  border: Border.all(
-                                    color: isStoreOpen
-                                        ? AppTheme.primaryContainer
-                                            .withValues(alpha: 0.3)
-                                        : AppTheme.surfaceContainerHigh,
-                                    width: 1.5.w,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x04000000),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    AnimatedContainer(
-                                      duration: 200.ms,
-                                      width: 8.r,
-                                      height: 8.r,
-                                      decoration: BoxDecoration(
-                                        color: isStoreOpen
-                                            ? AppTheme.primary
-                                            : AppTheme.secondary,
-                                        shape: BoxShape.circle,
-                                        boxShadow: isStoreOpen
-                                            ? [
-                                                BoxShadow(
-                                                  color: AppTheme.primary
-                                                      .withValues(alpha: 0.5),
-                                                  blurRadius: 6,
-                                                  spreadRadius: 1,
-                                                )
-                                              ]
-                                            : null,
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      isStoreOpen
-                                          ? 'Service Open'
-                                          : 'Service Closed',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.onSurface,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // ── Real-Time Pulse Cards Grid ────────────────────────
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final cols = isDesktop(context) ? 4 : 2;
-                            return GridView.count(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              crossAxisCount: cols,
-                              crossAxisSpacing: 12.w,
-                              mainAxisSpacing: 12.h,
-                              childAspectRatio: isDesktop(context) ? 1.6 : 1.3,
-                              children: [
-                                _PulseCard(
-                                  title: 'Active Diners',
-                                  value: '$activeDinersCount',
-                                  subtitle: '+4 since last hour',
-                                  icon: Icons.groups_rounded,
-                                  color: AppTheme.primary,
-                                ),
-                                _PulseCard(
-                                  title: "Today's GMV",
-                                  value: _fmtCurrency(totalSales),
-                                  subtitle: '↑ 12% vs yesterday',
-                                  icon: Icons.payments_rounded,
-                                  color: AppTheme.primary,
-                                ),
-                                _PulseCard(
-                                  title: 'Avg. Turn Time',
-                                  value: '42m',
-                                  subtitle: 'On target',
-                                  icon: Icons.timer_rounded,
-                                  color: Colors.teal,
-                                  isBadge: true,
-                                ),
-                                _PulseCard(
-                                  title: 'Unresolved Issues',
-                                  value: '${unresolvedOrders.length}',
-                                  subtitle: 'Requires attention',
-                                  icon: Icons.warning_amber_rounded,
-                                  color: AppTheme.error,
-                                  isError: true,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // ── Main Split Section (Alerts + Sparkline) ───────────
-                        if (isDesktop(context))
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: _buildUrgentActionCenter(context),
-                              ),
-                              SizedBox(width: 24.w),
-                              Expanded(
-                                flex: 3,
-                                child: _buildRevenuePulseChart(),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          _buildUrgentActionCenter(context),
-                          SizedBox(height: 24.h),
-                          _buildRevenuePulseChart(),
-                        ],
-                        SizedBox(height: 24.h),
-
-                        // ── Quick-Access Launchpad ────────────────────────────
-                        _buildQuickActionsLaunchpad(context, ref),
-                        SizedBox(height: 28.h),
-
-                        // ── Live Order List Feed ──────────────────────────────
-                        _buildLiveOrdersList(context, ref, feedOrders, liveOrders),
-                      ]),
-                    ),
                   ),
                 ],
               ),
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(1.h),
+                child: Divider(
+                  height: 1.h,
+                  thickness: 1.h,
+                  color: AppTheme.surfaceContainerHigh,
+                ),
+              ),
             ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            // Riverpod stream triggers auto update
+          },
+          color: AppTheme.primary,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop(context) ? 32.w : 16.w,
+                  vertical: 24.h,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // ── Store Header + Greeting ───────────────────────────
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$_greeting, $capitalizedName',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: isDesktop(context) ? 28.sp : 22.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.onSurface,
+                                  letterSpacing: -0.5,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Morning Shift • Orderlyy Operating Pulse',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12.sp,
+                                  color: AppTheme.secondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+
+                        // Store Status Toggle Pill
+                        GestureDetector(
+                          onTap: () {
+                            ref.read(storeOpenProvider.notifier).state =
+                                !isStoreOpen;
+                          },
+                          child: AnimatedContainer(
+                            duration: 200.ms,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14.w,
+                              vertical: 8.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(30.r),
+                              border: Border.all(
+                                color: isStoreOpen
+                                    ? AppTheme.primaryContainer.withValues(
+                                        alpha: 0.3,
+                                      )
+                                    : AppTheme.surfaceContainerHigh,
+                                width: 1.5.w,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x04000000),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedContainer(
+                                  duration: 200.ms,
+                                  width: 8.r,
+                                  height: 8.r,
+                                  decoration: BoxDecoration(
+                                    color: isStoreOpen
+                                        ? AppTheme.primary
+                                        : AppTheme.secondary,
+                                    shape: BoxShape.circle,
+                                    boxShadow: isStoreOpen
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.primary
+                                                  .withValues(alpha: 0.5),
+                                              blurRadius: 6,
+                                              spreadRadius: 1,
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  isStoreOpen
+                                      ? 'Service Open'
+                                      : 'Service Closed',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // ── Real-Time Pulse Cards Grid ────────────────────────
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final cols = isDesktop(context) ? 4 : 2;
+                        return GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: cols,
+                          crossAxisSpacing: 12.w,
+                          mainAxisSpacing: 12.h,
+                          childAspectRatio: isDesktop(context) ? 1.6 : 1.3,
+                          children: [
+                            _PulseCard(
+                              title: 'Active Diners',
+                              value: '$activeDinersCount',
+                              subtitle: '+4 since last hour',
+                              icon: Icons.groups_rounded,
+                              color: AppTheme.primary,
+                            ),
+                            _PulseCard(
+                              title: "Today's GMV",
+                              value: _fmtCurrency(totalSales),
+                              subtitle: '↑ 12% vs yesterday',
+                              icon: Icons.payments_rounded,
+                              color: AppTheme.primary,
+                            ),
+                            _PulseCard(
+                              title: 'Avg. Turn Time',
+                              value: '42m',
+                              subtitle: 'On target',
+                              icon: Icons.timer_rounded,
+                              color: Colors.teal,
+                              isBadge: true,
+                            ),
+                            _PulseCard(
+                              title: 'Unresolved Issues',
+                              value: '${unresolvedOrders.length}',
+                              subtitle: 'Requires attention',
+                              icon: Icons.warning_amber_rounded,
+                              color: AppTheme.error,
+                              isError: true,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // ── Main Split Section (Alerts + Sparkline) ───────────
+                    if (isDesktop(context))
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildUrgentActionCenter(context),
+                          ),
+                          SizedBox(width: 24.w),
+                          Expanded(flex: 3, child: _buildRevenuePulseChart()),
+                        ],
+                      )
+                    else ...[
+                      _buildUrgentActionCenter(context),
+                      SizedBox(height: 24.h),
+                      _buildRevenuePulseChart(),
+                    ],
+                    SizedBox(height: 24.h),
+
+                    // ── Quick-Access Launchpad ────────────────────────────
+                    _buildQuickActionsLaunchpad(context, ref),
+                    SizedBox(height: 28.h),
+
+                    // ── Live Order List Feed ──────────────────────────────
+                    _buildLiveOrdersList(context, ref, feedOrders, liveOrders),
+                  ]),
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -1296,7 +1285,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                         0.38,
                         0.55,
                         0.62,
-                        0.7
+                        0.7,
                       ],
                     ),
                   ),
@@ -1359,22 +1348,22 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
       (
         icon: Icons.restaurant_menu_rounded,
         label: 'Edit Menu',
-        onTap: () => context.push('/admin/menu')
+        onTap: () => context.push('/admin/menu'),
       ),
       (
         icon: Icons.local_offer_outlined,
         label: 'Add Discount',
-        onTap: () => context.push('/admin/pricing')
+        onTap: () => context.push('/admin/pricing'),
       ),
       (
         icon: Icons.table_restaurant_rounded,
         label: 'Live Floor',
-        onTap: () => context.push('/admin/live-floorplan')
+        onTap: () => context.push('/admin/live-floorplan'),
       ),
       (
         icon: Icons.qr_code_rounded,
         label: 'Export QR',
-        onTap: () => context.push('/admin/tables')
+        onTap: () => context.push('/admin/tables'),
       ),
     ];
 
@@ -1394,9 +1383,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
           children: actions.map((a) {
             return Expanded(
               child: Padding(
-                padding: EdgeInsets.only(
-                  right: a == actions.last ? 0 : 10.w,
-                ),
+                padding: EdgeInsets.only(right: a == actions.last ? 0 : 10.w),
                 child: InkWell(
                   onTap: a.onTap,
                   borderRadius: BorderRadius.circular(16.r),
@@ -1476,8 +1463,10 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                 SizedBox(width: 8.w),
                 if (liveOrders.isNotEmpty)
                   Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryContainer.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20.r),
@@ -1553,9 +1542,9 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
           ...feedOrders.asMap().entries.map((e) {
             final o = e.value;
             return Padding(
-              padding: EdgeInsets.only(bottom: 10.h),
-              child: _LiveOrderCard(order: o),
-            )
+                  padding: EdgeInsets.only(bottom: 10.h),
+                  child: _LiveOrderCard(order: o),
+                )
                 .animate(delay: Duration(milliseconds: 60 * e.key))
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.05);
@@ -1664,10 +1653,7 @@ class _PulseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: AppTheme.surfaceContainerHigh,
-          width: 1.w,
-        ),
+        border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
         boxShadow: const [
           BoxShadow(
             color: Color(0x02000000),
@@ -1684,11 +1670,7 @@ class _PulseCard extends StatelessWidget {
             child: CircleAvatar(
               radius: 16.r,
               backgroundColor: AppTheme.background,
-              child: Icon(
-                icon,
-                color: color,
-                size: 16.r,
-              ),
+              child: Icon(icon, color: color, size: 16.r),
             ),
           ),
           Column(
@@ -1883,20 +1865,20 @@ class _LiveOrderCard extends StatelessWidget {
   const _LiveOrderCard({required this.order});
 
   Color get _statusColor => switch (order.status) {
-        OrderStatus.pending => const Color(0xFFF59E0B),
-        OrderStatus.preparing => const Color(0xFF3B82F6),
-        OrderStatus.ready => const Color(0xFF10B981),
-        OrderStatus.confirmed => const Color(0xFF8B5CF6),
-        _ => AppTheme.secondary,
-      };
+    OrderStatus.pending => const Color(0xFFF59E0B),
+    OrderStatus.preparing => const Color(0xFF3B82F6),
+    OrderStatus.ready => const Color(0xFF10B981),
+    OrderStatus.confirmed => const Color(0xFF8B5CF6),
+    _ => AppTheme.secondary,
+  };
 
   String get _statusLabel => switch (order.status) {
-        OrderStatus.pending => 'PENDING',
-        OrderStatus.preparing => 'PREPARING',
-        OrderStatus.ready => 'READY',
-        OrderStatus.confirmed => 'CONFIRMED',
-        _ => order.status.name.toUpperCase(),
-      };
+    OrderStatus.pending => 'PENDING',
+    OrderStatus.preparing => 'PREPARING',
+    OrderStatus.ready => 'READY',
+    OrderStatus.confirmed => 'CONFIRMED',
+    _ => order.status.name.toUpperCase(),
+  };
 
   String get _timeAgo {
     final diff = DateTime.now().difference(order.createdAt.toLocal());
@@ -1911,9 +1893,9 @@ class _LiveOrderCard extends StatelessWidget {
     final itemSummary = order.items.isEmpty
         ? 'No items'
         : order.items
-            .take(2)
-            .map((i) => '${i.menuItemName} ×${i.quantity}')
-            .join('  ·  ');
+              .take(2)
+              .map((i) => '${i.menuItemName} ×${i.quantity}')
+              .join('  ·  ');
     final hasMore = order.items.length > 2;
 
     return Container(
@@ -1972,8 +1954,10 @@ class _LiveOrderCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 3.h,
+                      ),
                       decoration: BoxDecoration(
                         color: _statusColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20.r),
@@ -2236,14 +2220,7 @@ class _RevenueSparklinePainter extends CustomPainter {
       final p1 = yesterdayPoints[i];
       final p2 = yesterdayPoints[i + 1];
       final controlX = p1.dx + (p2.dx - p1.dx) / 2;
-      yesterdayPath.cubicTo(
-        controlX,
-        p1.dy,
-        controlX,
-        p2.dy,
-        p2.dx,
-        p2.dy,
-      );
+      yesterdayPath.cubicTo(controlX, p1.dy, controlX, p2.dy, p2.dx, p2.dy);
     }
 
     // Draw Yesterday's dashed path
@@ -2268,23 +2245,9 @@ class _RevenueSparklinePainter extends CustomPainter {
       final p2 = todayPoints[i + 1];
       final controlX = p1.dx + (p2.dx - p1.dx) / 2;
 
-      todayPath.cubicTo(
-        controlX,
-        p1.dy,
-        controlX,
-        p2.dy,
-        p2.dx,
-        p2.dy,
-      );
+      todayPath.cubicTo(controlX, p1.dy, controlX, p2.dy, p2.dx, p2.dy);
 
-      areaPath.cubicTo(
-        controlX,
-        p1.dy,
-        controlX,
-        p2.dy,
-        p2.dx,
-        p2.dy,
-      );
+      areaPath.cubicTo(controlX, p1.dy, controlX, p2.dy, p2.dx, p2.dy);
     }
 
     areaPath.lineTo(width, height);
@@ -2348,7 +2311,11 @@ class _RevenueSparklinePainter extends CustomPainter {
 
   // Draws a dashed line along a path
   void _drawDashedPath(
-      Canvas canvas, Path path, Color color, double strokeWidth) {
+    Canvas canvas,
+    Path path,
+    Color color,
+    double strokeWidth,
+  ) {
     final paint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth

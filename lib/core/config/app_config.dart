@@ -34,34 +34,44 @@ class AppConfig {
 
     _instance = AppConfig._(
       environment: resolvedEnv,
-      apiBaseUrl: apiBaseUrl ?? const String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://localhost:3001',
-      ),
-      websocketUrl: websocketUrl ?? const String.fromEnvironment(
-        'WEBSOCKET_URL',
-        defaultValue: 'ws://localhost:3001/ws',
-      ),
-      enableLogging: enableLogging ?? const bool.fromEnvironment(
-        'ENABLE_LOGGING',
-        defaultValue: true,
-      ),
-      enableSentry: enableSentry ?? const bool.fromEnvironment(
-        'ENABLE_SENTRY',
-        defaultValue: false,
-      ),
-      featureFlags: featureFlags ?? {
-        'useOfflineMode': const bool.fromEnvironment('FLAG_OFFLINE_MODE', defaultValue: true),
-        'experimentalKds': const bool.fromEnvironment('FLAG_EXPERIMENTAL_KDS', defaultValue: false),
-        'enableExperimentalRealtime': const bool.fromEnvironment(
-          'FLAG_EXPERIMENTAL_REALTIME',
-          defaultValue: false,
-        ),
-        'enableExperimentalOcc': const bool.fromEnvironment(
-          'FLAG_EXPERIMENTAL_OCC',
-          defaultValue: false,
-        ),
-      },
+      apiBaseUrl:
+          apiBaseUrl ??
+          const String.fromEnvironment(
+            'API_BASE_URL',
+            defaultValue: 'http://localhost:3001',
+          ),
+      websocketUrl:
+          websocketUrl ??
+          const String.fromEnvironment(
+            'WEBSOCKET_URL',
+            defaultValue: 'ws://localhost:3001/ws',
+          ),
+      enableLogging:
+          enableLogging ??
+          const bool.fromEnvironment('ENABLE_LOGGING', defaultValue: true),
+      enableSentry:
+          enableSentry ??
+          const bool.fromEnvironment('ENABLE_SENTRY', defaultValue: false),
+      featureFlags:
+          featureFlags ??
+          {
+            'useOfflineMode': const bool.fromEnvironment(
+              'FLAG_OFFLINE_MODE',
+              defaultValue: true,
+            ),
+            'experimentalKds': const bool.fromEnvironment(
+              'FLAG_EXPERIMENTAL_KDS',
+              defaultValue: false,
+            ),
+            'enableExperimentalRealtime': const bool.fromEnvironment(
+              'FLAG_EXPERIMENTAL_REALTIME',
+              defaultValue: false,
+            ),
+            'enableExperimentalOcc': const bool.fromEnvironment(
+              'FLAG_EXPERIMENTAL_OCC',
+              defaultValue: false,
+            ),
+          },
     );
   }
 

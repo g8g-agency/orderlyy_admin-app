@@ -36,7 +36,8 @@ class RealtimeSyncManager {
 
   bool get isReconnecting => _isReconnecting;
 
-  final StreamController<SyncEvent> _eventController = StreamController<SyncEvent>.broadcast();
+  final StreamController<SyncEvent> _eventController =
+      StreamController<SyncEvent>.broadcast();
 
   RealtimeSyncManager(this.ref) {
     // Start listening to the event processing pipeline
@@ -50,7 +51,9 @@ class RealtimeSyncManager {
 
   static bool _isEnabled() {
     try {
-      final flag = AppConfig.instance.featureFlags['enableExperimentalRealtime'] ?? false;
+      final flag =
+          AppConfig.instance.featureFlags['enableExperimentalRealtime'] ??
+          false;
       return !kIsWeb &&
           !Platform.environment.containsKey('FLUTTER_TEST') &&
           flag;
@@ -79,11 +82,15 @@ class RealtimeSyncManager {
           }
         },
         onDone: () {
-          debugPrint('[SYNC] Local WebSocket closed. Reconnecting in 3 seconds...');
+          debugPrint(
+            '[SYNC] Local WebSocket closed. Reconnecting in 3 seconds...',
+          );
           Future.delayed(const Duration(seconds: 3), connectLocal);
         },
         onError: (err) {
-          debugPrint('[SYNC] Local WebSocket error: $err. Reconnecting in 3s...');
+          debugPrint(
+            '[SYNC] Local WebSocket error: $err. Reconnecting in 3s...',
+          );
           Future.delayed(const Duration(seconds: 3), connectLocal);
         },
       );
@@ -122,7 +129,9 @@ class RealtimeSyncManager {
   Future<void> _processSyncEvent(SyncEvent event) async {
     // 1. Idempotency Check (Duplicate Screening)
     if (_processedKeys.contains(event.idempotencyKey)) {
-      debugPrint('[SYNC] Screened out duplicate event with key: ${event.idempotencyKey}');
+      debugPrint(
+        '[SYNC] Screened out duplicate event with key: ${event.idempotencyKey}',
+      );
       return;
     }
     _processedKeys.add(event.idempotencyKey);
@@ -132,12 +141,16 @@ class RealtimeSyncManager {
       // Sequence break/gap detected!
       final gapStart = _expectedSequenceNumber;
       final gapEnd = event.sequenceNumber - 1;
-      debugPrint('[SYNC] GAP DETECTED: expected $_expectedSequenceNumber, got ${event.sequenceNumber}. Fetching deltas from $gapStart to $gapEnd');
+      debugPrint(
+        '[SYNC] GAP DETECTED: expected $_expectedSequenceNumber, got ${event.sequenceNumber}. Fetching deltas from $gapStart to $gapEnd',
+      );
       await _fetchDeltaSync(gapStart, gapEnd);
       _expectedSequenceNumber = event.sequenceNumber + 1;
     } else if (event.sequenceNumber < _expectedSequenceNumber) {
       // Out of order old payload, ignore
-      debugPrint('[SYNC] Out of order message. Sequence ${event.sequenceNumber} < $_expectedSequenceNumber. Ignoring.');
+      debugPrint(
+        '[SYNC] Out of order message. Sequence ${event.sequenceNumber} < $_expectedSequenceNumber. Ignoring.',
+      );
       return;
     } else {
       // Sequence matches expected sequence
@@ -150,10 +163,12 @@ class RealtimeSyncManager {
 
   Future<void> _fetchDeltaSync(int startSeq, int endSeq) async {
     _isReconnecting = true;
-    debugPrint('[SYNC] Recovering delta states for sequence range [$startSeq..$endSeq]...');
+    debugPrint(
+      '[SYNC] Recovering delta states for sequence range [$startSeq..$endSeq]...',
+    );
     // Simulate latency for the REST api fallback fetch
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     // In a real implementation, we would query Supabase/REST for the missed updates.
     // For local simulation, we log this and complete the recovery.
     debugPrint('[SYNC] Delta state recovery complete.');
@@ -164,7 +179,8 @@ class RealtimeSyncManager {
     debugPrint('[SYNC] Dispatched event type: $type, payload: $payload');
     try {
       if (type == 'order_update') {
-        final ordersRepo = ref.read(ordersRepositoryProvider) as OrdersRepositoryImpl;
+        final ordersRepo =
+            ref.read(ordersRepositoryProvider) as OrdersRepositoryImpl;
         final staffOrderJson = _mapAdminOrderToStaffOrder(payload);
         final orderDto = OrderDto.fromJson(staffOrderJson);
         ordersRepo.local.cacheOrder(orderDto);
@@ -176,8 +192,11 @@ class RealtimeSyncManager {
   }
 
   // ── Admin-to-Staff DTO Mapping Helpers ─────────────────────────────────────
-  Map<String, dynamic> _mapAdminItemToStaffItem(Map<String, dynamic> adminItem) {
-    final priceInCents = ((adminItem['unit_price'] as num? ?? 0.0) * 100).round();
+  Map<String, dynamic> _mapAdminItemToStaffItem(
+    Map<String, dynamic> adminItem,
+  ) {
+    final priceInCents = ((adminItem['unit_price'] as num? ?? 0.0) * 100)
+        .round();
     return {
       'id': adminItem['id'],
       'product': {
@@ -194,7 +213,9 @@ class RealtimeSyncManager {
     };
   }
 
-  Map<String, dynamic> _mapAdminOrderToStaffOrder(Map<String, dynamic> adminOrder) {
+  Map<String, dynamic> _mapAdminOrderToStaffOrder(
+    Map<String, dynamic> adminOrder,
+  ) {
     final items = (adminOrder['items'] as List? ?? [])
         .map((item) => _mapAdminItemToStaffItem(item as Map<String, dynamic>))
         .toList();

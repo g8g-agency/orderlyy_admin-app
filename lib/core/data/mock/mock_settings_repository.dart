@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import '../dtos/settings_dto.dart';
 import '../repositories/settings_repository.dart';
+import '../../network/api_exception.dart';
 
 class MockSettingsRepository implements SettingsRepository {
   List<TenantSettingsDto>? _settingsList;
@@ -23,18 +24,22 @@ class MockSettingsRepository implements SettingsRepository {
   }
 
   @override
-  Future<TenantSettingsDto?> getSettings(String tenantId) async {
+  Future<Result<TenantSettingsDto>> getSettings({String? branchId}) async {
     await Future.delayed(const Duration(milliseconds: 300));
     await _ensureLoaded();
     try {
-      return _settingsList!.firstWhere((s) => s.tenantId == tenantId);
+      final tenantId = branchId ?? 'tenant1'; // Use a default tenantId for mock
+      final result = _settingsList!.firstWhere((s) => s.tenantId == tenantId);
+      return Success(result);
     } catch (_) {
-      return null;
+      return Failure(ApiFailure('Settings not found', ApiErrorCode.notFound));
     }
   }
 
   @override
-  Future<TenantSettingsDto> updateSettings(TenantSettingsDto settings) async {
+  Future<Result<TenantSettingsDto>> updateSettings(
+    TenantSettingsDto settings,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 400));
     await _ensureLoaded();
 
@@ -49,6 +54,6 @@ class MockSettingsRepository implements SettingsRepository {
       _settingsList![idx] = updated;
     }
 
-    return updated;
+    return Success(updated);
   }
 }

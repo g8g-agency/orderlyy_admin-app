@@ -89,7 +89,9 @@ class _OperationalStatusBadgeState extends State<OperationalStatusBadge>
               color: config.backgroundColor,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: config.accentColor.withValues(alpha: _borderOpacity.value),
+                color: config.accentColor.withValues(
+                  alpha: _borderOpacity.value,
+                ),
                 width: 1.5,
               ),
             ),

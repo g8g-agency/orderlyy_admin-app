@@ -30,11 +30,15 @@ class ApiModifierRepository implements ModifierRepository {
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final groups = data
-            .map((json) => ModifierGroupDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => ModifierGroupDto.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
         return Success(groups);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch modifier groups';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch modifier groups';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -45,7 +49,8 @@ class ApiModifierRepository implements ModifierRepository {
   }
 
   @override
-  Future<Result<List<ModifierItemDto>>> getModifierItems(String groupId, {
+  Future<Result<List<ModifierItemDto>>> getModifierItems(
+    String groupId, {
     int page = 1,
     int limit = 100,
     bool includeDeleted = false,
@@ -66,11 +71,15 @@ class ApiModifierRepository implements ModifierRepository {
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final items = data
-            .map((json) => ModifierItemDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => ModifierItemDto.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
         return Success(items);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch modifier items';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch modifier items';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -82,7 +91,9 @@ class ApiModifierRepository implements ModifierRepository {
 
   // GROUP CRUD
   @override
-  Future<Result<ModifierGroupDto>> createModifierGroup(ModifierGroupDto group) async {
+  Future<Result<ModifierGroupDto>> createModifierGroup(
+    ModifierGroupDto group,
+  ) async {
     try {
       final response = await _dioClient.post(
         ApiConstants.modifiers,
@@ -92,7 +103,9 @@ class ApiModifierRepository implements ModifierRepository {
       if (response.data['success'] == true) {
         return Success(ModifierGroupDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to create modifier group';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to create modifier group';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -103,7 +116,9 @@ class ApiModifierRepository implements ModifierRepository {
   }
 
   @override
-  Future<Result<ModifierGroupDto>> updateModifierGroup(ModifierGroupDto group) async {
+  Future<Result<ModifierGroupDto>> updateModifierGroup(
+    ModifierGroupDto group,
+  ) async {
     try {
       final response = await _dioClient.patch(
         '${ApiConstants.modifiers}/${group.id}',
@@ -113,7 +128,9 @@ class ApiModifierRepository implements ModifierRepository {
       if (response.data['success'] == true) {
         return Success(ModifierGroupDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update modifier group';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to update modifier group';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -124,19 +141,25 @@ class ApiModifierRepository implements ModifierRepository {
   }
 
   @override
-  Future<Result<void>> deleteModifierGroup(String groupId, int currentVersion) async {
+  Future<Result<void>> deleteModifierGroup(
+    String groupId,
+    int currentVersion,
+  ) async {
     try {
       final response = await _dioClient.delete(
         '${ApiConstants.modifiers}/$groupId',
         data: {
-          'version_num': currentVersion, // Explicit OCC boundary for safe deletion
+          'version_num':
+              currentVersion, // Explicit OCC boundary for safe deletion
         },
       );
 
       if (response.data['success'] == true) {
         return const Success(null);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to delete modifier group';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to delete modifier group';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -148,7 +171,9 @@ class ApiModifierRepository implements ModifierRepository {
 
   // ITEM CRUD
   @override
-  Future<Result<ModifierItemDto>> createModifierItem(ModifierItemDto item) async {
+  Future<Result<ModifierItemDto>> createModifierItem(
+    ModifierItemDto item,
+  ) async {
     try {
       final response = await _dioClient.post(
         '${ApiConstants.modifiers}/items',
@@ -158,7 +183,9 @@ class ApiModifierRepository implements ModifierRepository {
       if (response.data['success'] == true) {
         return Success(ModifierItemDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to create modifier item';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to create modifier item';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -169,7 +196,9 @@ class ApiModifierRepository implements ModifierRepository {
   }
 
   @override
-  Future<Result<ModifierItemDto>> updateModifierItem(ModifierItemDto item) async {
+  Future<Result<ModifierItemDto>> updateModifierItem(
+    ModifierItemDto item,
+  ) async {
     try {
       final response = await _dioClient.patch(
         '${ApiConstants.modifiers}/items/${item.id}',
@@ -179,7 +208,9 @@ class ApiModifierRepository implements ModifierRepository {
       if (response.data['success'] == true) {
         return Success(ModifierItemDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update modifier item';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to update modifier item';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -190,19 +221,25 @@ class ApiModifierRepository implements ModifierRepository {
   }
 
   @override
-  Future<Result<void>> deleteModifierItem(String itemId, int currentVersion) async {
+  Future<Result<void>> deleteModifierItem(
+    String itemId,
+    int currentVersion,
+  ) async {
     try {
       final response = await _dioClient.delete(
         '${ApiConstants.modifiers}/items/$itemId',
         data: {
-          'version_num': currentVersion, // Explicit OCC boundary for safe deletion
+          'version_num':
+              currentVersion, // Explicit OCC boundary for safe deletion
         },
       );
 
       if (response.data['success'] == true) {
         return const Success(null);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to delete modifier item';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to delete modifier item';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

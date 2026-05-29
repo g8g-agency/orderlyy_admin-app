@@ -20,24 +20,40 @@ class TombstoneGCService {
       return now.difference(deletedAt) > gcWindow;
     }
 
-    final cleanCategories = snapshot.categories.where((c) => !isExpired(c.deletedAt)).toList();
-    final cleanItems = snapshot.items.where((i) => !isExpired(i.deletedAt)).toList();
-    final cleanGroups = snapshot.modifierGroups.where((g) => !isExpired(g.deletedAt)).toList();
+    final cleanCategories = snapshot.categories
+        .where((c) => !isExpired(c.deletedAt))
+        .toList();
+    final cleanItems = snapshot.items
+        .where((i) => !isExpired(i.deletedAt))
+        .toList();
+    final cleanGroups = snapshot.modifierGroups
+        .where((g) => !isExpired(g.deletedAt))
+        .toList();
 
     // Modifier options are nested
     final cleanGroupsWithOptions = cleanGroups.map((g) {
-      final cleanOptions = g.options.where((o) => !isExpired(o.deletedAt)).toList();
+      final cleanOptions = g.options
+          .where((o) => !isExpired(o.deletedAt))
+          .toList();
       return g.options.length == cleanOptions.length
           ? g
-          : ModifierGroup(id: g.id, name: g.name, options: cleanOptions, deletedAt: g.deletedAt);
+          : ModifierGroup(
+              id: g.id,
+              name: g.name,
+              options: cleanOptions,
+              deletedAt: g.deletedAt,
+            );
     }).toList();
 
-    final removedCount = (snapshot.categories.length - cleanCategories.length) +
+    final removedCount =
+        (snapshot.categories.length - cleanCategories.length) +
         (snapshot.items.length - cleanItems.length) +
         (snapshot.modifierGroups.length - cleanGroups.length);
 
     if (removedCount > 0) {
-      _talker.info('[TombstoneGC] Garbage collected $removedCount expired tombstones.');
+      _talker.info(
+        '[TombstoneGC] Garbage collected $removedCount expired tombstones.',
+      );
     }
 
     return snapshot.copyWith(

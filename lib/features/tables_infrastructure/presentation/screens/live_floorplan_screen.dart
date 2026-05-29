@@ -45,69 +45,70 @@ class LiveTableNode {
 // Active room/section provider (Main Dining vs Patio)
 final activeSectionProvider = StateProvider<int>((ref) => 0);
 
-final liveTablesProvider = StateNotifierProvider<LiveTablesNotifier, List<LiveTableNode>>((ref) {
-  return LiveTablesNotifier();
-});
+final liveTablesProvider =
+    StateNotifierProvider<LiveTablesNotifier, List<LiveTableNode>>((ref) {
+      return LiveTablesNotifier();
+    });
 
 class LiveTablesNotifier extends StateNotifier<List<LiveTableNode>> {
   LiveTablesNotifier()
-      : super([
-          LiveTableNode(
-            label: 'T-1',
-            phase: TableDiningPhase.vacant,
-            activeGuests: 0,
-            capacity: 4,
-            x: 0.1,
-            y: 0.12,
-            isRound: false,
-          ),
-          LiveTableNode(
-            label: 'T-2',
-            phase: TableDiningPhase.seated,
-            activeGuests: 2,
-            capacity: 2,
-            x: 0.45,
-            y: 0.12,
-            isRound: true,
-            elapsedText: '10m seated',
-            currentStatusText: 'Browsing Menu',
-          ),
-          LiveTableNode(
-            label: 'B-1',
-            phase: TableDiningPhase.cooking,
-            activeGuests: 4,
-            capacity: 6,
-            x: 0.18,
-            y: 0.45,
-            width: 120,
-            height: 80,
-            isRound: false,
-            elapsedText: '22m elapsed',
-            currentStatusText: 'Mains Fired',
-          ),
-          LiveTableNode(
-            label: 'T-4',
-            phase: TableDiningPhase.dining,
-            activeGuests: 4,
-            capacity: 4,
-            x: 0.62,
-            y: 0.42,
-            isRound: false,
-            elapsedText: '35m dining',
-            currentStatusText: 'Served & Enjoying',
-          ),
-          LiveTableNode(
-            label: 'P-1',
-            phase: TableDiningPhase.waitingForBill,
-            activeGuests: 2,
-            capacity: 2,
-            x: 0.52,
-            y: 0.72,
-            isRound: true,
-            elapsedText: '48m elapsed',
-            currentStatusText: 'Bill Requested',
-          ),
-        ]);
+    : super([
+        LiveTableNode(
+          label: 'T-1',
+          phase: TableDiningPhase.vacant,
+          activeGuests: 0,
+          capacity: 4,
+          x: 0.1,
+          y: 0.12,
+          isRound: false,
+        ),
+        LiveTableNode(
+          label: 'T-2',
+          phase: TableDiningPhase.seated,
+          activeGuests: 2,
+          capacity: 2,
+          x: 0.45,
+          y: 0.12,
+          isRound: true,
+          elapsedText: '10m seated',
+          currentStatusText: 'Browsing Menu',
+        ),
+        LiveTableNode(
+          label: 'B-1',
+          phase: TableDiningPhase.cooking,
+          activeGuests: 4,
+          capacity: 6,
+          x: 0.18,
+          y: 0.45,
+          width: 120,
+          height: 80,
+          isRound: false,
+          elapsedText: '22m elapsed',
+          currentStatusText: 'Mains Fired',
+        ),
+        LiveTableNode(
+          label: 'T-4',
+          phase: TableDiningPhase.dining,
+          activeGuests: 4,
+          capacity: 4,
+          x: 0.62,
+          y: 0.42,
+          isRound: false,
+          elapsedText: '35m dining',
+          currentStatusText: 'Served & Enjoying',
+        ),
+        LiveTableNode(
+          label: 'P-1',
+          phase: TableDiningPhase.waitingForBill,
+          activeGuests: 2,
+          capacity: 2,
+          x: 0.52,
+          y: 0.72,
+          isRound: true,
+          elapsedText: '48m elapsed',
+          currentStatusText: 'Bill Requested',
+        ),
+      ]);
 
   void seatGuests(String label, int guests) {
     state = state.map((t) {
@@ -209,8 +210,18 @@ class LiveFloorplanScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        _buildSectionToggle(ref, 0, 'Dining Room', activeSection == 0),
-                        _buildSectionToggle(ref, 1, 'Patio Deck', activeSection == 1),
+                        _buildSectionToggle(
+                          ref,
+                          0,
+                          'Dining Room',
+                          activeSection == 0,
+                        ),
+                        _buildSectionToggle(
+                          ref,
+                          1,
+                          'Patio Deck',
+                          activeSection == 1,
+                        ),
                       ],
                     ),
                   ),
@@ -261,9 +272,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
                       children: [
                         // Blueprint grid paper background
                         Positioned.fill(
-                          child: CustomPaint(
-                            painter: _FloorGridPainter(),
-                          ),
+                          child: CustomPaint(painter: _FloorGridPainter()),
                         ),
 
                         // Draw tables relative positioning
@@ -281,7 +290,11 @@ class LiveFloorplanScreen extends ConsumerWidget {
                                   return Positioned(
                                     left: leftPos,
                                     top: topPos,
-                                    child: _buildTableWidget(context, ref, table),
+                                    child: _buildTableWidget(
+                                      context,
+                                      ref,
+                                      table,
+                                    ),
                                   );
                                 }).toList(),
                               );
@@ -322,7 +335,11 @@ class LiveFloorplanScreen extends ConsumerWidget {
   }
 
   Widget _buildSectionToggle(
-      WidgetRef ref, int index, String label, bool active) {
+    WidgetRef ref,
+    int index,
+    String label,
+    bool active,
+  ) {
     return GestureDetector(
       onTap: () {
         ref.read(activeSectionProvider.notifier).state = index;
@@ -361,10 +378,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
         Container(
           width: 8.r,
           height: 8.r,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         SizedBox(width: 6.w),
         Text(
@@ -381,7 +395,10 @@ class LiveFloorplanScreen extends ConsumerWidget {
 
   // ── Table Element Builder ───────────────────────────────────────────────────
   Widget _buildTableWidget(
-      BuildContext context, WidgetRef ref, LiveTableNode table) {
+    BuildContext context,
+    WidgetRef ref,
+    LiveTableNode table,
+  ) {
     final Color borderCol = switch (table.phase) {
       TableDiningPhase.vacant => Colors.green,
       TableDiningPhase.seated => Colors.amber.shade600,
@@ -467,7 +484,10 @@ class LiveFloorplanScreen extends ConsumerWidget {
 
   // ── Seating Trigger Drawer ──────────────────────────────────────────────────
   void _showTableDetailDrawer(
-      BuildContext context, WidgetRef ref, LiveTableNode table) {
+    BuildContext context,
+    WidgetRef ref,
+    LiveTableNode table,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -518,7 +538,10 @@ class LiveFloorplanScreen extends ConsumerWidget {
                     ],
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryContainer.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12.r),
@@ -535,7 +558,11 @@ class LiveFloorplanScreen extends ConsumerWidget {
                 ],
               ),
               SizedBox(height: 20.h),
-              Divider(height: 1.h, thickness: 1.h, color: AppTheme.surfaceContainerHigh),
+              Divider(
+                height: 1.h,
+                thickness: 1.h,
+                color: AppTheme.surfaceContainerHigh,
+              ),
               SizedBox(height: 16.h),
 
               if (table.phase == TableDiningPhase.vacant) ...[
@@ -560,9 +587,21 @@ class LiveFloorplanScreen extends ConsumerWidget {
                   ],
                 ),
               ] else ...[
-                _buildDetailRow(Icons.timer_rounded, 'Session Duration', table.elapsedText),
-                _buildDetailRow(Icons.room_service_rounded, 'Dining Status', table.currentStatusText),
-                _buildDetailRow(Icons.people_rounded, 'Assigned Waiter', 'Maria (Server)'),
+                _buildDetailRow(
+                  Icons.timer_rounded,
+                  'Session Duration',
+                  table.elapsedText,
+                ),
+                _buildDetailRow(
+                  Icons.room_service_rounded,
+                  'Dining Status',
+                  table.currentStatusText,
+                ),
+                _buildDetailRow(
+                  Icons.people_rounded,
+                  'Assigned Waiter',
+                  'Maria (Server)',
+                ),
                 SizedBox(height: 12.h),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
@@ -577,7 +616,11 @@ class LiveFloorplanScreen extends ConsumerWidget {
   }
 
   Widget _buildSeatButton(
-      BuildContext context, WidgetRef ref, String label, int count) {
+    BuildContext context,
+    WidgetRef ref,
+    String label,
+    int count,
+  ) {
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
@@ -632,14 +675,21 @@ class LiveFloorplanScreen extends ConsumerWidget {
   }
 
   void _showQuickSeatDialog(
-      BuildContext context, WidgetRef ref, List<LiveTableNode> tables) {
-    final vacant = tables.where((t) => t.phase == TableDiningPhase.vacant).toList();
+    BuildContext context,
+    WidgetRef ref,
+    List<LiveTableNode> tables,
+  ) {
+    final vacant = tables
+        .where((t) => t.phase == TableDiningPhase.vacant)
+        .toList();
 
     showDialog(
       context: context,
       builder: (_) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
           title: Text(
             'Quick Manual Seating',
             style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
@@ -650,12 +700,17 @@ class LiveFloorplanScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: vacant.map((t) {
                     return ListTile(
-                      leading: Icon(Icons.table_restaurant_rounded, color: Colors.green),
+                      leading: Icon(
+                        Icons.table_restaurant_rounded,
+                        color: Colors.green,
+                      ),
                       title: Text(t.label),
                       subtitle: Text('Capacity: ${t.capacity}'),
                       onTap: () {
                         Navigator.pop(context);
-                        ref.read(liveTablesProvider.notifier).seatGuests(t.label, t.capacity);
+                        ref
+                            .read(liveTablesProvider.notifier)
+                            .seatGuests(t.label, t.capacity);
                       },
                     );
                   }).toList(),

@@ -3,10 +3,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import '../domain/entities/menu_snapshot.dart';
 import 'merge_policy_registry.dart';
 
-enum OccConflictState {
-  resolvedAuto,
-  requiresManualReview,
-}
+enum OccConflictState { resolvedAuto, requiresManualReview }
 
 class OccConflictResult<T> {
   final bool hasConflict;
@@ -42,7 +39,9 @@ class OccConflictResolver {
 
     // Case 1: No conflict. Server is at the expected base version.
     if (serverRevision == expectedBaseRevision) {
-      _talker.info('[OCC] Version match ($expectedBaseRevision). Applying local changes.');
+      _talker.info(
+        '[OCC] Version match ($expectedBaseRevision). Applying local changes.',
+      );
       return OccConflictResult(
         hasConflict: false,
         reconciledState: localOptimistic.copyWith(
@@ -52,10 +51,14 @@ class OccConflictResolver {
     }
 
     // Case 2: Conflict detected. Server has progressed to a newer version in the interim.
-    _talker.warning('[OCC] Concurrency conflict! Base: $expectedBaseRevision, Server: $serverRevision.');
-    
+    _talker.warning(
+      '[OCC] Concurrency conflict! Base: $expectedBaseRevision, Server: $serverRevision.',
+    );
+
     if (baseSnapshot == null) {
-      _talker.warning('[OCC] No base snapshot provided. Falling back to server state.');
+      _talker.warning(
+        '[OCC] No base snapshot provided. Falling back to server state.',
+      );
       return OccConflictResult(
         hasConflict: true,
         state: OccConflictState.requiresManualReview,
@@ -78,8 +81,12 @@ class OccConflictResolver {
       bool requiresReview = false;
       final conflictFields = <String>[];
 
-      final baseItemMap = {for (final item in baseSnapshot.items) item.id: item};
-      final localItemMap = {for (final item in localOptimistic.items) item.id: item};
+      final baseItemMap = {
+        for (final item in baseSnapshot.items) item.id: item,
+      };
+      final localItemMap = {
+        for (final item in localOptimistic.items) item.id: item,
+      };
 
       for (final serverItem in serverAuthoritative.items) {
         final baseItem = baseItemMap[serverItem.id];
@@ -95,7 +102,8 @@ class OccConflictResolver {
           // Item deleted locally (either physically or logically)
           // Ensure we respect Tombstone rules. If server changed it, we might have a conflict.
           // But Tombstone policy dictates tombstone wins unless explicit restore.
-          if (MergePolicyRegistry.getPolicyForField('deletedAt') == MergePolicy.tombstoneWins) {
+          if (MergePolicyRegistry.getPolicyForField('deletedAt') ==
+              MergePolicy.tombstoneWins) {
             continue; // Tombstone wins. Do not add.
           }
         }
@@ -105,16 +113,18 @@ class OccConflictResolver {
 
         if (localChanged && serverChanged) {
           // Both changed. Check field-level overlap.
-          
+
           bool mergeField<T>(String field, T baseVal, T localVal, T serverVal) {
-            if (localVal != baseVal && serverVal != baseVal && localVal != serverVal) {
+            if (localVal != baseVal &&
+                serverVal != baseVal &&
+                localVal != serverVal) {
               final policy = MergePolicyRegistry.getPolicyForField(field);
               if (policy == MergePolicy.manualReviewRequired) {
                 requiresReview = true;
                 conflictFields.add(field);
                 return false; // Server wins by default in conflict until reviewed
               } else if (policy == MergePolicy.lastWriteWins) {
-                // In this optimistic system, local is technically the "last" write conceptually, 
+                // In this optimistic system, local is technically the "last" write conceptually,
                 // but server is authoritative. We defer to server for strict LWW unless timestamps exist.
                 return false;
               }
@@ -123,29 +133,65 @@ class OccConflictResolver {
             return (localVal != baseVal) ? true : false;
           }
 
-          final useLocalCategory = mergeField('categoryId', baseItem.categoryId, localItem!.categoryId, serverItem.categoryId);
-          final useLocalName = mergeField('name', baseItem.name, localItem.name, serverItem.name);
-          final useLocalDesc = mergeField('description', baseItem.description, localItem.description, serverItem.description);
-          final useLocalPrice = mergeField('price', baseItem.price, localItem.price, serverItem.price);
-          final useLocalAvail = mergeField('isAvailable', baseItem.isAvailable, localItem.isAvailable, serverItem.isAvailable);
+          final useLocalCategory = mergeField(
+            'categoryId',
+            baseItem.categoryId,
+            localItem!.categoryId,
+            serverItem.categoryId,
+          );
+          final useLocalName = mergeField(
+            'name',
+            baseItem.name,
+            localItem.name,
+            serverItem.name,
+          );
+          final useLocalDesc = mergeField(
+            'description',
+            baseItem.description,
+            localItem.description,
+            serverItem.description,
+          );
+          final useLocalPrice = mergeField(
+            'price',
+            baseItem.price,
+            localItem.price,
+            serverItem.price,
+          );
+          final useLocalAvail = mergeField(
+            'isAvailable',
+            baseItem.isAvailable,
+            localItem.isAvailable,
+            serverItem.isAvailable,
+          );
 
           // Modifiers (List comparison)
-          final useLocalMods = mergeField('modifierGroupIds', 
-            baseItem.modifierGroupIds.join(','), 
-            localItem.modifierGroupIds.join(','), 
-            serverItem.modifierGroupIds.join(','));
+          final useLocalMods = mergeField(
+            'modifierGroupIds',
+            baseItem.modifierGroupIds.join(','),
+            localItem.modifierGroupIds.join(','),
+            serverItem.modifierGroupIds.join(','),
+          );
 
-          mergedItems.add(MenuItem(
-            id: serverItem.id,
-            categoryId: useLocalCategory ? localItem.categoryId : serverItem.categoryId,
-            name: useLocalName ? localItem.name : serverItem.name,
-            description: useLocalDesc ? localItem.description : serverItem.description,
-            price: useLocalPrice ? localItem.price : serverItem.price,
-            isAvailable: useLocalAvail ? localItem.isAvailable : serverItem.isAvailable,
-            modifierGroupIds: useLocalMods ? localItem.modifierGroupIds : serverItem.modifierGroupIds,
-            deletedAt: serverItem.deletedAt ?? localItem.deletedAt,
-          ));
-
+          mergedItems.add(
+            MenuItem(
+              id: serverItem.id,
+              categoryId: useLocalCategory
+                  ? localItem.categoryId
+                  : serverItem.categoryId,
+              name: useLocalName ? localItem.name : serverItem.name,
+              description: useLocalDesc
+                  ? localItem.description
+                  : serverItem.description,
+              price: useLocalPrice ? localItem.price : serverItem.price,
+              isAvailable: useLocalAvail
+                  ? localItem.isAvailable
+                  : serverItem.isAvailable,
+              modifierGroupIds: useLocalMods
+                  ? localItem.modifierGroupIds
+                  : serverItem.modifierGroupIds,
+              deletedAt: serverItem.deletedAt ?? localItem.deletedAt,
+            ),
+          );
         } else if (localChanged) {
           mergedItems.add(localItem!);
         } else {

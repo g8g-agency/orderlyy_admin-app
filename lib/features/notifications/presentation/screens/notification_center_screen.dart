@@ -21,7 +21,10 @@ class NotificationCenterScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('Notifications', style: TextStyle(fontWeight: FontWeight.w900)),
+            const Text(
+              'Notifications',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
             if (unreadCount > 0) ...[
               const SizedBox(width: 8),
               Badge(
@@ -69,13 +72,24 @@ class NotificationCenterScreen extends ConsumerWidget {
                       color: AppColors.error,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(Icons.delete_rounded, color: Colors.white),
+                    child: const Icon(
+                      Icons.delete_rounded,
+                      color: Colors.white,
+                    ),
                   ),
                   onDismissed: (_) {
                     HapticFeedback.lightImpact();
-                    ref.read(notificationsProvider.notifier).clearNotification(notif.id);
+                    ref
+                        .read(notificationsProvider.notifier)
+                        .clearNotification(notif.id);
                   },
-                  child: _buildNotificationCard(context, ref, notif, theme, isDark),
+                  child: _buildNotificationCard(
+                    context,
+                    ref,
+                    notif,
+                    theme,
+                    isDark,
+                  ),
                 );
               },
             ),
@@ -114,7 +128,9 @@ class NotificationCenterScreen extends ConsumerWidget {
 
     return Card(
       color: notif.isRead
-          ? (isDark ? AppColors.darkSurface.withValues(alpha: 0.6) : Colors.grey[100])
+          ? (isDark
+                ? AppColors.darkSurface.withValues(alpha: 0.6)
+                : Colors.grey[100])
           : (isDark ? AppColors.darkSurface : Colors.white),
       elevation: notif.isRead ? 0 : 2,
       shape: RoundedRectangleBorder(
@@ -170,7 +186,9 @@ class NotificationCenterScreen extends ConsumerWidget {
                           child: Text(
                             notif.title,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold,
+                              fontWeight: notif.isRead
+                                  ? FontWeight.normal
+                                  : FontWeight.bold,
                               color: notif.isRead ? Colors.grey : null,
                             ),
                             maxLines: 1,
@@ -179,7 +197,9 @@ class NotificationCenterScreen extends ConsumerWidget {
                         ),
                         Text(
                           _formatTime(notif.timestamp),
-                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -189,7 +209,9 @@ class NotificationCenterScreen extends ConsumerWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: notif.isRead
                             ? Colors.grey
-                            : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                            : (isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                       ),
                     ),
                   ],
@@ -215,13 +237,17 @@ class NotificationCenterScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             'Notifications Empty',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Important warnings and calls will show here.',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
         ],

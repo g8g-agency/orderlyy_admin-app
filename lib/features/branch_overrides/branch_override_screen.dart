@@ -17,20 +17,75 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
   late TabController _tabController;
 
   final List<Map<String, dynamic>> _hours = [
-    {'day': 'Monday', 'baseHours': '09:00–22:00', 'override': '10:00–23:00', 'isOverridden': true},
-    {'day': 'Tuesday', 'baseHours': '09:00–22:00', 'override': null, 'isOverridden': false},
-    {'day': 'Wednesday', 'baseHours': '09:00–22:00', 'override': null, 'isOverridden': false},
-    {'day': 'Thursday', 'baseHours': '09:00–22:00', 'override': '09:00–23:30', 'isOverridden': true},
-    {'day': 'Friday', 'baseHours': '09:00–23:00', 'override': null, 'isOverridden': false},
-    {'day': 'Saturday', 'baseHours': '09:00–23:00', 'override': '10:00–01:00', 'isOverridden': true},
-    {'day': 'Sunday', 'baseHours': '10:00–21:00', 'override': null, 'isOverridden': false},
+    {
+      'day': 'Monday',
+      'baseHours': '09:00–22:00',
+      'override': '10:00–23:00',
+      'isOverridden': true,
+    },
+    {
+      'day': 'Tuesday',
+      'baseHours': '09:00–22:00',
+      'override': null,
+      'isOverridden': false,
+    },
+    {
+      'day': 'Wednesday',
+      'baseHours': '09:00–22:00',
+      'override': null,
+      'isOverridden': false,
+    },
+    {
+      'day': 'Thursday',
+      'baseHours': '09:00–22:00',
+      'override': '09:00–23:30',
+      'isOverridden': true,
+    },
+    {
+      'day': 'Friday',
+      'baseHours': '09:00–23:00',
+      'override': null,
+      'isOverridden': false,
+    },
+    {
+      'day': 'Saturday',
+      'baseHours': '09:00–23:00',
+      'override': '10:00–01:00',
+      'isOverridden': true,
+    },
+    {
+      'day': 'Sunday',
+      'baseHours': '10:00–21:00',
+      'override': null,
+      'isOverridden': false,
+    },
   ];
 
   final List<Map<String, dynamic>> _availability = [
-    {'name': 'Vegan Burger Option', 'baseStatus': 'Available', 'override': 'Unavailable', 'isOverridden': true},
-    {'name': 'Double Bacon Extra Cheddar', 'baseStatus': 'Available', 'override': null, 'isOverridden': false},
-    {'name': 'Draft Lager', 'baseStatus': 'Available', 'override': null, 'isOverridden': false},
-    {'name': 'Decaf Coffee', 'baseStatus': 'Available', 'override': 'Unavailable', 'isOverridden': true},
+    {
+      'name': 'Vegan Burger Option',
+      'baseStatus': 'Available',
+      'override': 'Unavailable',
+      'isOverridden': true,
+    },
+    {
+      'name': 'Double Bacon Extra Cheddar',
+      'baseStatus': 'Available',
+      'override': null,
+      'isOverridden': false,
+    },
+    {
+      'name': 'Draft Lager',
+      'baseStatus': 'Available',
+      'override': null,
+      'isOverridden': false,
+    },
+    {
+      'name': 'Decaf Coffee',
+      'baseStatus': 'Available',
+      'override': 'Unavailable',
+      'isOverridden': true,
+    },
   ];
 
   @override
@@ -67,7 +122,10 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
         backgroundColor: AppTheme.surfaceContainerLowest,
         title: Text(
           'Branch Override Engine',
-          style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          style: GoogleFonts.inter(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         elevation: 0,
         actions: [
@@ -85,11 +143,18 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
                 child: DropdownButton<String>(
                   value: _selectedBranch,
                   items: ['London Soho', 'Manchester']
-                      .map((b) => DropdownMenuItem(
-                            value: b,
-                            child: Text(b,
-                                style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 12.sp)),
-                          ))
+                      .map(
+                        (b) => DropdownMenuItem(
+                          value: b,
+                          child: Text(
+                            b,
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ),
+                      )
                       .toList(),
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedBranch = val);
@@ -104,7 +169,10 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
           indicatorColor: AppTheme.primaryContainer,
           labelColor: AppTheme.primaryContainer,
           unselectedLabelColor: AppTheme.secondary,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12.sp),
+          labelStyle: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            fontSize: 12.sp,
+          ),
           tabs: const [
             Tab(text: 'Hours'),
             Tab(text: 'Availability'),
@@ -132,7 +200,10 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
                 ),
                 Text(
                   'Branch: $_selectedBranch · Locked params inherit from global settings.',
-                  style: GoogleFonts.inter(fontSize: 11.sp, color: AppTheme.secondary),
+                  style: GoogleFonts.inter(
+                    fontSize: 11.sp,
+                    color: AppTheme.secondary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -159,120 +230,148 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
     final list = isHours ? _hours : _availability;
     if (list.isEmpty) {
       return Center(
-        child: Text('No overrides configured',
-            style: GoogleFonts.inter(color: AppTheme.secondary)),
+        child: Text(
+          'No overrides configured',
+          style: GoogleFonts.inter(color: AppTheme.secondary),
+        ),
       );
     }
 
     return ListView.separated(
       padding: EdgeInsets.all(16.r),
       itemCount: list.length,
-      separatorBuilder: (_, __) => SizedBox(height: 10.h),
+      separatorBuilder: (_, _) => SizedBox(height: 10.h),
       itemBuilder: (ctx, index) {
         final item = list[index];
         final isOverridden = item['isOverridden'] as bool;
         final label = isHours ? item['day'] as String : item['name'] as String;
-        final baseVal = isHours ? item['baseHours'] as String : item['baseStatus'] as String;
+        final baseVal = isHours
+            ? item['baseHours'] as String
+            : item['baseStatus'] as String;
         final overrideVal = item['override'] as String?;
 
         return Container(
-          padding: EdgeInsets.all(14.r),
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(
-              color: isOverridden
-                  ? const Color(0xFFC0272D).withValues(alpha: 0.3)
-                  : AppTheme.surfaceContainerHigh,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Label + override badge
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: GoogleFonts.inter(fontSize: 15.sp, fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                    decoration: BoxDecoration(
-                      color: isOverridden
-                          ? const Color(0xFFFEF2F2)
-                          : AppTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isOverridden ? Icons.lock_open_rounded : Icons.lock_rounded,
-                          size: 12.r,
-                          color: isOverridden ? const Color(0xFFC0272D) : AppTheme.secondary,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          isOverridden ? 'Override' : 'Inherited',
-                          style: GoogleFonts.inter(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isOverridden ? const Color(0xFFC0272D) : AppTheme.secondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.h),
-
-              // Base vs override value row
-              Row(
-                children: [
-                  Expanded(
-                    child: _valueBox('Base', baseVal, AppTheme.secondary),
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: _valueBox(
-                      'Override',
-                      overrideVal ?? '—',
-                      isOverridden ? const Color(0xFFC0272D) : AppTheme.secondary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-
-              // Action button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => _toggleOverride(index, isHours),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: isOverridden ? const Color(0xFFC0272D) : AppTheme.secondary,
-                    side: BorderSide(
-                      color: isOverridden
-                          ? const Color(0xFFC0272D)
-                          : AppTheme.surfaceContainerHigh,
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 10.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                  child: Text(
-                    isOverridden ? 'REVERT TO INHERITED' : 'SET OVERRIDE',
-                    style: GoogleFonts.inter(fontSize: 12.sp, fontWeight: FontWeight.bold),
-                  ),
+              padding: EdgeInsets.all(14.r),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: isOverridden
+                      ? const Color(0xFFC0272D).withValues(alpha: 0.3)
+                      : AppTheme.surfaceContainerHigh,
                 ),
               ),
-            ],
-          ),
-        ).animate(delay: Duration(milliseconds: 50 * index)).fadeIn(duration: 250.ms).slideY(begin: 0.04);
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Label + override badge
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 3.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isOverridden
+                              ? const Color(0xFFFEF2F2)
+                              : AppTheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isOverridden
+                                  ? Icons.lock_open_rounded
+                                  : Icons.lock_rounded,
+                              size: 12.r,
+                              color: isOverridden
+                                  ? const Color(0xFFC0272D)
+                                  : AppTheme.secondary,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              isOverridden ? 'Override' : 'Inherited',
+                              style: GoogleFonts.inter(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: isOverridden
+                                    ? const Color(0xFFC0272D)
+                                    : AppTheme.secondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10.h),
+
+                  // Base vs override value row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _valueBox('Base', baseVal, AppTheme.secondary),
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: _valueBox(
+                          'Override',
+                          overrideVal ?? '—',
+                          isOverridden
+                              ? const Color(0xFFC0272D)
+                              : AppTheme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Action button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => _toggleOverride(index, isHours),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isOverridden
+                            ? const Color(0xFFC0272D)
+                            : AppTheme.secondary,
+                        side: BorderSide(
+                          color: isOverridden
+                              ? const Color(0xFFC0272D)
+                              : AppTheme.surfaceContainerHigh,
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: Text(
+                        isOverridden ? 'REVERT TO INHERITED' : 'SET OVERRIDE',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+            .animate(delay: Duration(milliseconds: 50 * index))
+            .fadeIn(duration: 250.ms)
+            .slideY(begin: 0.04);
       },
     );
   }
@@ -287,11 +386,21 @@ class _BranchOverrideScreenState extends State<BranchOverrideScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 10.sp, color: AppTheme.secondary)),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10.sp,
+              color: AppTheme.secondary,
+            ),
+          ),
           SizedBox(height: 2.h),
           Text(
             value,
-            style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600, fontSize: 12.sp, color: valueColor),
+            style: GoogleFonts.jetBrainsMono(
+              fontWeight: FontWeight.w600,
+              fontSize: 12.sp,
+              color: valueColor,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ],

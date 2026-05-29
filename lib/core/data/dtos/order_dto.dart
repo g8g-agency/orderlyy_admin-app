@@ -26,13 +26,13 @@ class OrderItemDto {
   final String menuItemId;
   final String menuItemName;
   final int quantity;
-  
+
   // MINOR UNITS ONLY. Frontend never multiplies this.
-  final int unitPriceAmount; 
-  
+  final int unitPriceAmount;
+
   // Backend provides the resolved total. Frontend never computes it.
-  final int lineTotalAmount; 
-  
+  final int lineTotalAmount;
+
   final String? notes;
 
   const OrderItemDto({
@@ -75,12 +75,12 @@ class OrderDto {
   final String tableLabel;
   final OrderStatus status;
   final List<OrderItemDto> items;
-  
+
   // MINOR UNITS ONLY. Provided by backend engine.
   final int totalAmount;
-  final int totalTaxAmount; 
+  final int totalTaxAmount;
   final int totalDiscountAmount;
-  
+
   final String? staffId;
   final String? staffName;
   final String? notes;
@@ -144,16 +144,24 @@ class OrderDto {
     'version_num': versionNum,
   };
 
-  OrderDto copyWith({OrderStatus? status, DateTime? updatedAt, int? versionNum}) => OrderDto(
+  OrderDto copyWith({
+    OrderStatus? status,
+    DateTime? updatedAt,
+    int? versionNum,
+    List<OrderItemDto>? items,
+    int? totalAmount,
+    int? totalTaxAmount,
+    int? totalDiscountAmount,
+  }) => OrderDto(
     id: id,
     tenantId: tenantId,
     tableId: tableId,
     tableLabel: tableLabel,
     status: status ?? this.status,
-    items: items,
-    totalAmount: totalAmount,
-    totalTaxAmount: totalTaxAmount,
-    totalDiscountAmount: totalDiscountAmount,
+    items: items ?? this.items,
+    totalAmount: totalAmount ?? this.totalAmount,
+    totalTaxAmount: totalTaxAmount ?? this.totalTaxAmount,
+    totalDiscountAmount: totalDiscountAmount ?? this.totalDiscountAmount,
     staffId: staffId,
     staffName: staffName,
     notes: notes,

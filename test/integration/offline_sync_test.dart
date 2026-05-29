@@ -57,9 +57,10 @@ void main() {
         tableLabel: 'T01',
         status: OrderStatus.preparing,
         items: [],
-        totalAmount: 100.0,
+        totalAmount: 10000,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        versionNum: 1,
       );
 
       await offlineRepo.createOrder(newOrder);

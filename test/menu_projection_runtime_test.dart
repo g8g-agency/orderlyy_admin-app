@@ -53,7 +53,7 @@ void main() {
         ],
       ),
     ],
-    taxConfig: const TaxConfig(vatRate: 0.10, serviceChargeRate: 0.05),
+    taxConfig: const TaxConfig(vatRateBps: 1000, serviceChargeRateBps: 500),
     branchId: 'br_1',
     snapshotVersion: 'v2.0.0',
   );
@@ -289,7 +289,8 @@ void main() {
           baseSnapshot: baseSnapshot,
         );
 
-        expect(result.hasConflict, isFalse);
+        expect(result.hasConflict, isTrue);
+        expect(result.state, OccConflictState.resolvedAuto);
         // Both burger (local change) and cola (server change) should be unavailable in the merged state
         expect(
           result.reconciledState.items

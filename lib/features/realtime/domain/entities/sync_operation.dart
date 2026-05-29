@@ -68,7 +68,9 @@ class SyncOperation {
       retryCount: retryCount ?? this.retryCount,
       maxRetries: maxRetries ?? this.maxRetries,
       nextRetryAt: clearNextRetryAt ? null : nextRetryAt ?? this.nextRetryAt,
-      errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
     );
   }
 
@@ -118,17 +120,17 @@ class SyncOperation {
 
   @override
   int get hashCode => Object.hash(
-        operationId,
-        type,
-        status,
-        entityId,
-        entityLabel,
-        queuedAt,
-        retryCount,
-        maxRetries,
-        nextRetryAt,
-        errorMessage,
-      );
+    operationId,
+    type,
+    status,
+    entityId,
+    entityLabel,
+    queuedAt,
+    retryCount,
+    maxRetries,
+    nextRetryAt,
+    errorMessage,
+  );
 
   @override
   String toString() =>

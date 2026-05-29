@@ -44,8 +44,10 @@ class CategoriesState {
   // Derived Tree Builder
   List<CategoryNode> buildTree() {
     // 1. Filter out soft-deleted categories
-    final activeCategories = byId.values.where((c) => c.deletedAt == null).toList();
-    
+    final activeCategories = byId.values
+        .where((c) => c.deletedAt == null)
+        .toList();
+
     // 2. Sort by sort_order
     activeCategories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
@@ -93,7 +95,7 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
 
     if (result is Success<List<MenuCategoryDto>>) {
       final newById = <String, MenuCategoryDto>{};
-      for (final cat in result.data) {
+      for (final cat in result.value) {
         newById[cat.id] = cat;
       }
       state = state.copyWith(
@@ -102,38 +104,42 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
         isInitialized: true,
       );
     } else if (result is Failure<List<MenuCategoryDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
-  Future<Result<MenuCategoryDto>> createCategory(MenuCategoryDto category) async {
+  Future<Result<MenuCategoryDto>> createCategory(
+    MenuCategoryDto category,
+  ) async {
     final result = await _repository.createCategory(category);
-    
+
     if (result is Success<MenuCategoryDto>) {
-      final newCat = result.data;
+      final newCat = result.value;
       final newById = Map<String, MenuCategoryDto>.from(state.byId);
       newById[newCat.id] = newCat;
       state = state.copyWith(byId: newById);
     }
-    
+
     return result;
   }
 
-  Future<Result<MenuCategoryDto>> updateCategory(MenuCategoryDto category) async {
+  Future<Result<MenuCategoryDto>> updateCategory(
+    MenuCategoryDto category,
+  ) async {
     final result = await _repository.updateCategory(category);
-    
+
     if (result is Success<MenuCategoryDto>) {
-      final updatedCat = result.data;
+      final updatedCat = result.value;
       final newById = Map<String, MenuCategoryDto>.from(state.byId);
       newById[updatedCat.id] = updatedCat;
       state = state.copyWith(byId: newById);
     } else if (result is Failure<MenuCategoryDto>) {
       // Deterministic reload on OCC Conflict
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadCategories(forceRefresh: true);
       }
     }
-    
+
     return result;
   }
 
@@ -149,12 +155,12 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
       final newById = Map<String, MenuCategoryDto>.from(state.byId);
       newById.remove(categoryId);
       state = state.copyWith(byId: newById);
-      
+
       // Optionally we can trigger a loadCategories to ensure descendant tree cleanup
       // if backend cascading soft-deletes children.
       loadCategories(forceRefresh: true);
     } else if (result is Failure<void>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadCategories(forceRefresh: true);
       }
     }
@@ -175,10 +181,11 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final categoriesProvider = StateNotifierProvider<CategoriesNotifier, CategoriesState>((ref) {
-  final repo = ref.watch(categoriesRepositoryProvider);
-  return CategoriesNotifier(repo);
-});
+final categoriesProvider =
+    StateNotifierProvider<CategoriesNotifier, CategoriesState>((ref) {
+      final repo = ref.watch(categoriesRepositoryProvider);
+      return CategoriesNotifier(repo);
+    });
 
 // Derived Provider for Tree
 final categoryTreeProvider = Provider<List<CategoryNode>>((ref) {

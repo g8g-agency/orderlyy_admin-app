@@ -34,7 +34,8 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
       AppNotification(
         id: 'notif_3',
         title: 'SLA Breach Warning',
-        message: 'Table 3 Main items in Grill station exceed 15 mins cooking SLA.',
+        message:
+            'Table 3 Main items in Grill station exceed 15 mins cooking SLA.',
         severity: NotificationSeverity.critical,
         category: NotificationCategory.slaBreach,
         timestamp: now.subtract(const Duration(minutes: 10)),
@@ -131,9 +132,10 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
   }
 }
 
-final notificationsProvider = StateNotifierProvider<NotificationsNotifier, List<AppNotification>>((ref) {
-  return NotificationsNotifier();
-});
+final notificationsProvider =
+    StateNotifierProvider<NotificationsNotifier, List<AppNotification>>((ref) {
+      return NotificationsNotifier();
+    });
 
 // Derived provider for unread notifications count
 final unreadNotificationsCountProvider = Provider<int>((ref) {

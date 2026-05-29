@@ -54,34 +54,34 @@ class TableDto {
   }
 
   factory TableDto.fromJson(Map<String, dynamic> json) => TableDto(
-        id: json['id'] as String,
-        tenantId: json['tenant_id'] as String,
-        branchId: json['branch_id'] as String,
-        tableNumber: json['table_number'] as String,
-        displayName: json['display_name'] as String?,
-        capacity: json['capacity'] as int,
-        qrCodeToken: json['qr_code_token'] as String?,
-        sectionId: json['section_id'] as String?,
-        isActive: json['is_active'] as bool? ?? true,
-        createdAt: json['created_at'] != null
-            ? DateTime.tryParse(json['created_at'] as String)
-            : null,
-        updatedAt: json['updated_at'] != null
-            ? DateTime.tryParse(json['updated_at'] as String)
-            : null,
-      );
+    id: json['id'] as String,
+    tenantId: json['tenant_id'] as String,
+    branchId: json['branch_id'] as String,
+    tableNumber: json['table_number'] as String,
+    displayName: json['display_name'] as String?,
+    capacity: json['capacity'] as int,
+    qrCodeToken: json['qr_code_token'] as String?,
+    sectionId: json['section_id'] as String?,
+    isActive: json['is_active'] as bool? ?? true,
+    createdAt: json['created_at'] != null
+        ? DateTime.tryParse(json['created_at'] as String)
+        : null,
+    updatedAt: json['updated_at'] != null
+        ? DateTime.tryParse(json['updated_at'] as String)
+        : null,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'tenant_id': tenantId,
-        'branch_id': branchId,
-        'table_number': tableNumber,
-        'display_name': displayName,
-        'capacity': capacity,
-        'qr_code_token': qrCodeToken,
-        'section_id': sectionId,
-        'is_active': isActive,
-        'created_at': createdAt?.toIso8601String(),
-        'updated_at': updatedAt?.toIso8601String(),
-      };
+    'id': id,
+    'tenant_id': tenantId,
+    'branch_id': branchId,
+    'table_number': tableNumber,
+    'display_name': displayName,
+    'capacity': capacity,
+    'qr_code_token': qrCodeToken,
+    'section_id': sectionId,
+    'is_active': isActive,
+    'created_at': createdAt?.toIso8601String(),
+    'updated_at': updatedAt?.toIso8601String(),
+  };
 }

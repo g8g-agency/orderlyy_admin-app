@@ -23,7 +23,9 @@ class ModifierResolver {
     required List<String> selectedOptionIds,
   }) {
     final groups = resolveGroupsForItem(item: item, allGroups: allGroups);
-    final allowedOptionIds = groups.expand((g) => g.options.map((o) => o.id)).toSet();
+    final allowedOptionIds = groups
+        .expand((g) => g.options.map((o) => o.id))
+        .toSet();
 
     for (final optionId in selectedOptionIds) {
       if (!allowedOptionIds.contains(optionId)) {

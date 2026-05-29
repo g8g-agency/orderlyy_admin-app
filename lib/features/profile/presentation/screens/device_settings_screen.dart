@@ -59,7 +59,8 @@ class DeviceSettings {
       soundVolume: soundVolume ?? this.soundVolume,
       vibrationPattern: vibrationPattern ?? this.vibrationPattern,
       reconnectStrategy: reconnectStrategy ?? this.reconnectStrategy,
-      degradedModeAutoEnable: degradedModeAutoEnable ?? this.degradedModeAutoEnable,
+      degradedModeAutoEnable:
+          degradedModeAutoEnable ?? this.degradedModeAutoEnable,
       themeMode: themeMode ?? this.themeMode,
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       reduceMotion: reduceMotion ?? this.reduceMotion,
@@ -71,20 +72,22 @@ class DeviceSettings {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-final deviceSettingsProvider = StateProvider<DeviceSettings>((ref) => const DeviceSettings(
-      waiterCallAlert: true,
-      slaBreachAlert: true,
-      orderReadyAlert: false,
-      soundVolume: 0.7,
-      vibrationPattern: 'short',
-      reconnectStrategy: 'balanced',
-      degradedModeAutoEnable: true,
-      themeMode: 'system',
-      keepScreenOn: true,
-      reduceMotion: false,
-      lowPowerMode: false,
-      backgroundSync: true,
-    ));
+final deviceSettingsProvider = StateProvider<DeviceSettings>(
+  (ref) => const DeviceSettings(
+    waiterCallAlert: true,
+    slaBreachAlert: true,
+    orderReadyAlert: false,
+    soundVolume: 0.7,
+    vibrationPattern: 'short',
+    reconnectStrategy: 'balanced',
+    degradedModeAutoEnable: true,
+    themeMode: 'system',
+    keepScreenOn: true,
+    reduceMotion: false,
+    lowPowerMode: false,
+    backgroundSync: true,
+  ),
+);
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -112,15 +115,24 @@ class DeviceSettingsScreen extends ConsumerWidget {
 
     final surfaceColor = isDark ? AppColors.darkSurface : Colors.white;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: Text(
           'Device Settings',
-          style: AppTextStyles.h3.copyWith(color: textPrimary, fontWeight: FontWeight.bold),
+          style: AppTextStyles.h3.copyWith(
+            color: textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
         elevation: 0,
@@ -146,8 +158,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.waiterCallAlert,
                 activeThumbColor: AppColors.primary,
-                title: Text('Waiter Call Alerts', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Vibration + sound when a table calls', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Waiter Call Alerts',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Vibration + sound when a table calls',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   notifier.update((s) => s.copyWith(waiterCallAlert: val));
@@ -157,8 +178,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.slaBreachAlert,
                 activeThumbColor: AppColors.primary,
-                title: Text('SLA Breach Alerts', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Alert when table SLA target is breached', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'SLA Breach Alerts',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Alert when table SLA target is breached',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   notifier.update((s) => s.copyWith(slaBreachAlert: val));
@@ -168,8 +198,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.orderReadyAlert,
                 activeThumbColor: AppColors.primary,
-                title: Text('Order Ready Alerts', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Notify when kitchen marks items as ready', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Order Ready Alerts',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Notify when kitchen marks items as ready',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   notifier.update((s) => s.copyWith(orderReadyAlert: val));
@@ -177,35 +216,63 @@ class DeviceSettingsScreen extends ConsumerWidget {
               ),
               _divider(borderColor),
               ListTile(
-                title: Text('Alert Volume', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
+                title: Text(
+                  'Alert Volume',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
                 subtitle: Column(
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.volume_down_rounded, size: 16, color: textSecondary),
+                        Icon(
+                          Icons.volume_down_rounded,
+                          size: 16,
+                          color: textSecondary,
+                        ),
                         Expanded(
                           child: Slider(
                             value: settings.soundVolume,
                             activeColor: AppColors.primary,
                             inactiveColor: borderColor,
                             onChanged: (val) {
-                              notifier.update((s) => s.copyWith(soundVolume: val));
+                              notifier.update(
+                                (s) => s.copyWith(soundVolume: val),
+                              );
                             },
-                            onChangeEnd: (val) => HapticFeedback.selectionClick(),
+                            onChangeEnd: (val) =>
+                                HapticFeedback.selectionClick(),
                           ),
                         ),
-                        Icon(Icons.volume_up_rounded, size: 16, color: textSecondary),
+                        Icon(
+                          Icons.volume_up_rounded,
+                          size: 16,
+                          color: textSecondary,
+                        ),
                       ],
                     ),
                   ],
                 ),
-                trailing: Text('${(settings.soundVolume * 100).toInt()}%', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold)),
+                trailing: Text(
+                  '${(settings.soundVolume * 100).toInt()}%',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               _divider(borderColor),
               ListTile(
                 title: Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text('Vibration Pattern', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
+                  child: Text(
+                    'Vibration Pattern',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                  ),
                 ),
                 subtitle: SegmentedButton<String>(
                   segments: const [
@@ -220,7 +287,9 @@ class DeviceSettingsScreen extends ConsumerWidget {
                   ),
                   onSelectionChanged: (val) {
                     HapticFeedback.mediumImpact();
-                    notifier.update((s) => s.copyWith(vibrationPattern: val.first));
+                    notifier.update(
+                      (s) => s.copyWith(vibrationPattern: val.first),
+                    );
                   },
                 ),
               ),
@@ -236,16 +305,31 @@ class DeviceSettingsScreen extends ConsumerWidget {
               ListTile(
                 title: Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text('Reconnect Strategy', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
+                  child: Text(
+                    'Reconnect Strategy',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                  ),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SegmentedButton<String>(
                       segments: const [
-                        ButtonSegment(value: 'aggressive', label: Text('Aggressive')),
-                        ButtonSegment(value: 'balanced', label: Text('Balanced')),
-                        ButtonSegment(value: 'conservative', label: Text('Conservative')),
+                        ButtonSegment(
+                          value: 'aggressive',
+                          label: Text('Aggressive'),
+                        ),
+                        ButtonSegment(
+                          value: 'balanced',
+                          label: Text('Balanced'),
+                        ),
+                        ButtonSegment(
+                          value: 'conservative',
+                          label: Text('Conservative'),
+                        ),
                       ],
                       selected: {settings.reconnectStrategy},
                       style: SegmentedButton.styleFrom(
@@ -254,13 +338,18 @@ class DeviceSettingsScreen extends ConsumerWidget {
                       ),
                       onSelectionChanged: (val) {
                         HapticFeedback.mediumImpact();
-                        notifier.update((s) => s.copyWith(reconnectStrategy: val.first));
+                        notifier.update(
+                          (s) => s.copyWith(reconnectStrategy: val.first),
+                        );
                       },
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _getReconnectDescription(settings.reconnectStrategy),
-                      style: AppTextStyles.caption.copyWith(color: AppColors.warning, fontWeight: FontWeight.bold),
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -269,11 +358,22 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.degradedModeAutoEnable,
                 activeThumbColor: AppColors.primary,
-                title: Text('Auto-enter Offline Mode', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Instantly switch to offline storage on disconnect', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Auto-enter Offline Mode',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Instantly switch to offline storage on disconnect',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
-                  notifier.update((s) => s.copyWith(degradedModeAutoEnable: val));
+                  notifier.update(
+                    (s) => s.copyWith(degradedModeAutoEnable: val),
+                  );
                 },
               ),
             ],
@@ -288,7 +388,13 @@ class DeviceSettingsScreen extends ConsumerWidget {
               ListTile(
                 title: Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text('Theme Mode', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
+                  child: Text(
+                    'Theme Mode',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                  ),
                 ),
                 subtitle: SegmentedButton<String>(
                   segments: const [
@@ -311,8 +417,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.keepScreenOn,
                 activeThumbColor: AppColors.primary,
-                title: Text('Keep Screen On', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Prevent the device from sleeping during operations', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Keep Screen On',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Prevent the device from sleeping during operations',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   notifier.update((s) => s.copyWith(keepScreenOn: val));
@@ -322,8 +437,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.reduceMotion,
                 activeThumbColor: AppColors.primary,
-                title: Text('Reduce Motion', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Simplify UI transitions and pulsing animations', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Reduce Motion',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Simplify UI transitions and pulsing animations',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   notifier.update((s) => s.copyWith(reduceMotion: val));
@@ -341,8 +465,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.lowPowerMode,
                 activeThumbColor: AppColors.primary,
-                title: Text('Low Power Sync Mode', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Throttles polling rates to 60s to conserve battery', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Low Power Sync Mode',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Throttles polling rates to 60s to conserve battery',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.mediumImpact();
                   notifier.update((s) => s.copyWith(lowPowerMode: val));
@@ -352,8 +485,17 @@ class DeviceSettingsScreen extends ConsumerWidget {
               SwitchListTile(
                 value: settings.backgroundSync,
                 activeThumbColor: AppColors.primary,
-                title: Text('Background Sync', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Continue syncing offline database when app is closed', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
+                title: Text(
+                  'Background Sync',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Continue syncing offline database when app is closed',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   notifier.update((s) => s.copyWith(backgroundSync: val));
@@ -369,10 +511,26 @@ class DeviceSettingsScreen extends ConsumerWidget {
             borderColor: borderColor,
             children: [
               ListTile(
-                leading: const Icon(Icons.analytics_rounded, color: AppColors.primary),
-                title: Text('Runtime Diagnostics', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary)),
-                subtitle: Text('Live diagnostics panel and websocket metrics', style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
-                trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: textSecondary),
+                leading: const Icon(
+                  Icons.analytics_rounded,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  'Runtime Diagnostics',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Live diagnostics panel and websocket metrics',
+                  style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: textSecondary,
+                ),
                 onTap: () {
                   HapticFeedback.selectionClick();
                   context.push('/diagnostics');
@@ -380,7 +538,7 @@ class DeviceSettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
         ],
       ),
@@ -414,9 +572,7 @@ class DeviceSettingsScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 

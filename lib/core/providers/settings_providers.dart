@@ -7,8 +7,8 @@ import 'repository_providers.dart';
 class SettingsState {
   final bool isLoading;
   final String? error;
-  
-  // Normalized cache for configuration. 
+
+  // Normalized cache for configuration.
   // Keyed by 'tenant' or 'branch_$id'
   final Map<String, TenantSettingsDto> settingsCache;
 
@@ -36,11 +36,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   SettingsNotifier(this._repository) : super(const SettingsState());
 
-  /// Fetches settings configuration. 
+  /// Fetches settings configuration.
   /// The backend resolves whether to return tenant-wide defaults or branch overrides.
-  Future<void> fetchSettings({String? branchId, bool forceRefresh = false}) async {
+  Future<void> fetchSettings({
+    String? branchId,
+    bool forceRefresh = false,
+  }) async {
     final cacheKey = branchId == null ? 'tenant' : 'branch_$branchId';
-    
+
     if (state.isLoading) return;
     if (state.settingsCache.containsKey(cacheKey) && !forceRefresh) return;
 
@@ -50,25 +53,29 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
     if (result is Success<TenantSettingsDto>) {
       final newCache = Map<String, TenantSettingsDto>.from(state.settingsCache);
-      newCache[cacheKey] = result.data;
+      newCache[cacheKey] = result.value;
       state = state.copyWith(isLoading: false, settingsCache: newCache);
     } else if (result is Failure<TenantSettingsDto>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
-  /// Updates settings. 
+  /// Updates settings.
   /// Strictly protected by OCC to prevent concurrent admin overwrites.
-  Future<Result<TenantSettingsDto>> updateSettings(TenantSettingsDto settings) async {
+  Future<Result<TenantSettingsDto>> updateSettings(
+    TenantSettingsDto settings,
+  ) async {
     final result = await _repository.updateSettings(settings);
 
     if (result is Success<TenantSettingsDto>) {
-      final cacheKey = settings.branchId == null ? 'tenant' : 'branch_${settings.branchId}';
+      final cacheKey = settings.branchId == null
+          ? 'tenant'
+          : 'branch_${settings.branchId}';
       final newCache = Map<String, TenantSettingsDto>.from(state.settingsCache);
-      newCache[cacheKey] = result.data;
+      newCache[cacheKey] = result.value;
       state = state.copyWith(settingsCache: newCache);
     } else if (result is Failure<TenantSettingsDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         // Deterministic reload on 409 OCC Conflict
         await fetchSettings(branchId: settings.branchId, forceRefresh: true);
       }
@@ -79,12 +86,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>((ref) {
-  final repo = ref.watch(settingsRepositoryProvider);
-  return SettingsNotifier(repo);
-});
+final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>(
+  (ref) {
+    final repo = ref.watch(settingsRepositoryProvider);
+    return SettingsNotifier(repo);
+  },
+);
 
-final activeSettingsProvider = Provider.family<TenantSettingsDto?, String?>((ref, branchId) {
+final activeSettingsProvider = Provider.family<TenantSettingsDto?, String?>((
+  ref,
+  branchId,
+) {
   final state = ref.watch(settingsProvider);
   final cacheKey = branchId == null ? 'tenant' : 'branch_$branchId';
   return state.settingsCache[cacheKey];

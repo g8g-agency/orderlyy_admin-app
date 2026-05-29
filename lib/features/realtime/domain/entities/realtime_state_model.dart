@@ -47,13 +47,19 @@ class RealtimeStateModel {
       connectionState: connectionState ?? this.connectionState,
       reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
       maxReconnectAttempts: maxReconnectAttempts ?? this.maxReconnectAttempts,
-      replayProgress: clearReplayProgress ? null : replayProgress ?? this.replayProgress,
+      replayProgress: clearReplayProgress
+          ? null
+          : replayProgress ?? this.replayProgress,
       replayEventsRemaining: clearReplayEventsRemaining
           ? null
           : replayEventsRemaining ?? this.replayEventsRemaining,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
-      degradedSince: clearDegradedSince ? null : degradedSince ?? this.degradedSince,
-      errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
+      degradedSince: clearDegradedSince
+          ? null
+          : degradedSince ?? this.degradedSince,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
     );
   }
 
@@ -61,7 +67,8 @@ class RealtimeStateModel {
   bool get isCritical => connectionState == RealtimeConnectionState.critical;
   bool get isReplaying => connectionState == RealtimeConnectionState.replaying;
   bool get isDegraded => connectionState == RealtimeConnectionState.degraded;
-  bool get isReconnecting => connectionState == RealtimeConnectionState.reconnecting;
+  bool get isReconnecting =>
+      connectionState == RealtimeConnectionState.reconnecting;
 
   @override
   bool operator ==(Object other) {
@@ -79,15 +86,15 @@ class RealtimeStateModel {
 
   @override
   int get hashCode => Object.hash(
-        connectionState,
-        reconnectAttempts,
-        maxReconnectAttempts,
-        replayProgress,
-        replayEventsRemaining,
-        lastConnectedAt,
-        degradedSince,
-        errorMessage,
-      );
+    connectionState,
+    reconnectAttempts,
+    maxReconnectAttempts,
+    replayProgress,
+    replayEventsRemaining,
+    lastConnectedAt,
+    degradedSince,
+    errorMessage,
+  );
 
   @override
   String toString() =>

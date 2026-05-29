@@ -19,6 +19,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/repository_providers.dart';
 import '../data/dtos/auth_dto.dart';
+import '../network/api_exception.dart';
+import 'bootstrap_provider.dart';
+import 'bootstrap_state.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 0. Auth Status & State Definitions
@@ -70,18 +73,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     final restoredUserId = repo.currentUserId;
     if (restoredUserId != null) {
-      try {
-        debugPrint(
-          '[TRACE] [AuthNotifier _init] Resolving context for admin: $restoredUserId',
-        );
-        await _ref.read(appContextProvider.notifier).resolveContext();
-        state = AuthState.authenticated(restoredUserId);
-      } catch (e) {
-        debugPrint(
-          '[MockAuth] ⚠️ Context resolution failed during initialization: $e',
-        );
-        state = AuthState.unauthenticated();
-      }
+      debugPrint(
+        '[TRACE] [AuthNotifier _init] Session restored for userId=$restoredUserId — triggering bootstrap',
+      );
+      // Set auth state FIRST, then trigger bootstrap (strictly separated)
+      state = AuthState.authenticated(restoredUserId);
+      // Bootstrap runs independently — does not block auth state
+      unawaited(
+        _ref.read(bootstrapProvider.notifier).resolve(restoredUserId),
+      );
     } else {
       state = AuthState.unauthenticated();
     }
@@ -96,18 +96,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         '[TRACE] [AuthNotifier Stream Listen] Received newUserId=$newUserId',
       );
       if (newUserId != null) {
-        try {
-          await _ref.read(appContextProvider.notifier).resolveContext();
-          state = AuthState.authenticated(newUserId);
-        } catch (e) {
-          debugPrint(
-            '[MockAuth] ⚠️ Context resolution failed on stream change: $e',
-          );
-          state = AuthState.unauthenticated();
-        }
+        // Authenticated — set auth state, then trigger bootstrap separately
+        state = AuthState.authenticated(newUserId);
+        unawaited(
+          _ref.read(bootstrapProvider.notifier).resolve(newUserId),
+        );
       } else {
-        // Clear contexts upon logout
-        _ref.read(appContextProvider.notifier).clearContext();
+        // Logout — reset bootstrap and context BEFORE clearing auth state
+        _ref.read(bootstrapProvider.notifier).reset();
         state = AuthState.unauthenticated();
       }
       debugPrint(
@@ -144,10 +140,17 @@ final currentUserIdProvider = Provider<String?>((ref) {
 
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
-    // Watch authNotifierProvider — rebuild (and notify) on every change
+    // Watch authNotifierProvider — rebuild (and notify) on every auth change
     _ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       debugPrint(
-        '[RouterNotifier] 🔔 Notifying router: ${previous?.status} → ${next.status}',
+        '[RouterNotifier] 🔔 Auth changed: ${previous?.status} → ${next.status}',
+      );
+      notifyListeners();
+    });
+    // Also watch bootstrapProvider — router must re-evaluate on every bootstrap transition
+    _ref.listen<BootstrapState>(bootstrapProvider, (previous, next) {
+      debugPrint(
+        '[RouterNotifier] 🔔 Bootstrap changed: ${previous?.status} → ${next.status}',
       );
       notifyListeners();
     });
@@ -171,11 +174,28 @@ class MockAppContextNotifier extends StateNotifier<AppContextDto?> {
 
   String? get currentUserEmail => null;
 
+  /// Directly set the resolved context (called by BootstrapNotifier).
+  void setContext(AppContextDto ctx) {
+    debugPrint('[AppContext] ✅ Context set from bootstrap: ${ctx.tenant.name}');
+    state = ctx;
+  }
+
   /// Call this after a successful sign-in to populate tenant context.
+  /// Kept for backward compatibility — prefer using BootstrapNotifier.resolve().
   Future<AppContextDto?> resolveContext() async {
     debugPrint('[AppContext] 🔍 Resolving context...');
     final repo = _ref.read(authRepositoryProvider);
-    final ctx = await repo.resolveContext();
+    final result = await repo.resolveContext();
+
+    AppContextDto? ctx;
+    if (result is Success) {
+      ctx = (result as Success<AppContextDto?>).value;
+    } else if (result is Failure) {
+      debugPrint(
+        '[AppContext] ⚠️ Context resolution failed: ${(result as Failure).error.message}',
+      );
+    }
+
     state = ctx;
     debugPrint('[AppContext] ✅ Context set: ${ctx?.tenant.name}');
     return ctx;
@@ -282,19 +302,24 @@ class MockAuthService {
 
   Future<Map<String, dynamic>?> getUserProfile() async {
     final repo = _ref.read(authRepositoryProvider);
-    return await repo.resolveContext().then(
-      (ctx) => ctx != null
-          ? {
-              'name': 'Admin User',
-              'email': 'admin@orderlli.com',
-              'tenants': {
-                'name': ctx.tenant.name,
-                'slug': ctx.tenant.slug,
-                'address': 'Mock Address',
-              },
-            }
-          : null,
-    );
+    final result = await repo.resolveContext();
+
+    AppContextDto? ctx;
+    if (result is Success) {
+      ctx = (result as Success<AppContextDto?>).value;
+    }
+
+    return ctx != null
+        ? {
+            'name': 'Admin User',
+            'email': 'admin@orderlli.com',
+            'tenants': {
+              'name': ctx.tenant.name,
+              'slug': ctx.tenant.slug,
+              'address': 'Mock Address',
+            },
+          }
+        : null;
   }
 }
 

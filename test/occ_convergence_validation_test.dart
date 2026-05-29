@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/foundation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:orderlli_admin/features/menu/runtime/occ_conflict_resolver.dart';
 import 'package:orderlli_admin/features/menu/domain/entities/menu_snapshot.dart';
@@ -38,7 +39,7 @@ void main() {
           ),
         ],
         modifierGroups: [],
-        taxConfig: TaxConfig(vatRate: 0.10, serviceChargeRate: 0.05),
+        taxConfig: TaxConfig(vatRateBps: 1000, serviceChargeRateBps: 500),
         snapshotVersion: '10',
       );
     });
@@ -84,7 +85,7 @@ void main() {
         }
 
         expect(checksums.length, 1);
-        print('Deterministic Merge Checksum: \${checksums.first}');
+        debugPrint('Deterministic Merge Checksum: \${checksums.first}');
       },
     );
 
@@ -123,7 +124,7 @@ void main() {
           result.reconciledState.items.any((i) => i.id == 'item_burger'),
           isFalse,
         );
-        print('Tombstone precedence enforced safely.');
+        debugPrint('Tombstone precedence enforced safely.');
       },
     );
 
@@ -152,7 +153,7 @@ void main() {
       expect(result.state, OccConflictState.requiresManualReview);
       expect(result.envelope!.conflictFields.contains('ALL'), isTrue);
       expect(result.reconciledState.snapshotVersion, '15');
-      print('Stale write rejected gracefully.');
+      debugPrint('Stale write rejected gracefully.');
     });
 
     test(
@@ -193,7 +194,7 @@ void main() {
         expect(result.envelope!.conflictFields.contains('price'), isTrue);
         expect(result.envelope!.baseRevision, 10);
         expect(result.envelope!.remoteRevision, 11);
-        print('Conflict envelope: \${result.envelope!.conflictFields}');
+        debugPrint('Conflict envelope: \${result.envelope!.conflictFields}');
       },
     );
 
@@ -245,7 +246,7 @@ void main() {
           result2.reconciledState.items[0].price.amountInCents,
         );
 
-        print('Rebuild convergence is deterministic.');
+        debugPrint('Rebuild convergence is deterministic.');
       },
     );
   });

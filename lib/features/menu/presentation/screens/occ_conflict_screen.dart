@@ -29,9 +29,7 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
 
   void _resetSimState() {
     _baseSnapshot = const MenuSnapshot(
-      categories: [
-        MenuCategory(id: 'cat_1', name: 'Burgers', sortOrder: 1),
-      ],
+      categories: [MenuCategory(id: 'cat_1', name: 'Burgers', sortOrder: 1)],
       items: [
         MenuItem(
           id: 'item_burger',
@@ -59,11 +57,7 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
 
     // Server has concurrent changes (e.g. Availability toggled off by another manager)
     _serverAuthoritative = _baseSnapshot.copyWith(
-      items: [
-        _baseSnapshot.items[0].copyWith(
-          isAvailable: false,
-        ),
-      ],
+      items: [_baseSnapshot.items[0].copyWith(isAvailable: false)],
       snapshotVersion: 'v3',
     );
     _mergeResult = null;
@@ -86,7 +80,6 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final burgerBase = _baseSnapshot.items[0];
     final burgerLocal = _localOptimistic.items[0];
     final burgerServer = _serverAuthoritative.items[0];
 
@@ -96,7 +89,10 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
         backgroundColor: AppTheme.surfaceContainerLowest,
         title: Text(
           'OCC Conflict Resolution Workspace',
-          style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          style: GoogleFonts.inter(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         elevation: 0,
       ),
@@ -115,7 +111,11 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_rounded, color: Color(0xFFC0272D), size: 28),
+                  const Icon(
+                    Icons.warning_rounded,
+                    color: Color(0xFFC0272D),
+                    size: 28,
+                  ),
                   SizedBox(width: 16.w),
                   Expanded(
                     child: Column(
@@ -143,42 +143,54 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
               ),
             ),
             SizedBox(height: 24.h),
-            
+
             // Diff Side-by-Side Cards
             Row(
               children: [
                 _diffCard(
                   title: 'Your Workspace Edits (Optimistic)',
                   version: 'v2 (Modified locally)',
-                  price: '₹${(burgerLocal.price.amountInCents / 100).toStringAsFixed(2)}',
-                  availability: burgerLocal.isAvailable ? 'Available' : 'Unavailable',
+                  price:
+                      '₹${(burgerLocal.price.amountInCents / 100).toStringAsFixed(2)}',
+                  availability: burgerLocal.isAvailable
+                      ? 'Available'
+                      : 'Unavailable',
                   borderColor: const Color(0xFFCBD5E1),
                 ),
                 SizedBox(width: 16.w),
                 _diffCard(
                   title: 'Current Server State (Authoritative)',
                   version: 'v3 (Modified in other session)',
-                  price: '₹${(burgerServer.price.amountInCents / 100).toStringAsFixed(2)}',
-                  availability: burgerServer.isAvailable ? 'Available' : 'Unavailable',
+                  price:
+                      '₹${(burgerServer.price.amountInCents / 100).toStringAsFixed(2)}',
+                  availability: burgerServer.isAvailable
+                      ? 'Available'
+                      : 'Unavailable',
                   borderColor: const Color(0xFFFCA5A5),
                   isConflict: true,
                 ),
               ],
             ),
             SizedBox(height: 24.h),
-            
+
             // Controls
             Row(
               children: [
                 ElevatedButton.icon(
                   onPressed: _runConflictResolution,
-                  icon: const Icon(Icons.merge_type_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.merge_type_rounded,
+                    color: Colors.white,
+                  ),
                   label: const Text('AUTO-MERGE CHANGES (3-WAY MERGE)'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFC0272D),
                     foregroundColor: Colors.white,
                     minimumSize: Size(0, 48.h),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 14.h,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -193,7 +205,10 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
                   },
                   style: OutlinedButton.styleFrom(
                     minimumSize: Size(0, 48.h),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 14.h,
+                    ),
                   ),
                   child: const Text('KEEP SERVER VERSION (ROLLBACK)'),
                 ),
@@ -202,19 +217,25 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
                   onPressed: _resetSimState,
                   style: OutlinedButton.styleFrom(
                     minimumSize: Size(0, 48.h),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 14.h,
+                    ),
                   ),
                   child: const Text('RESET SIMULATOR'),
                 ),
               ],
             ),
             SizedBox(height: 32.h),
-            
+
             // Merge Result Section
             if (_mergeResult != null) ...[
               Text(
                 'Reconciliation Result',
-                style: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ).animate().fadeIn(),
               SizedBox(height: 12.h),
               Container(
@@ -229,7 +250,11 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 24),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFF16A34A),
+                          size: 24,
+                        ),
                         SizedBox(width: 12.w),
                         Text(
                           'Merged Configuration Committed Safely',
@@ -244,19 +269,32 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
                     SizedBox(height: 12.h),
                     Text(
                       'Reconciliation details:',
-                      style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF15803D), fontWeight: FontWeight.w600),
+                      style: GoogleFonts.inter(
+                        fontSize: 12.sp,
+                        color: const Color(0xFF15803D),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Text(
                       '• Item Price merged from Local: ₹${(_mergeResult!.reconciledState.items[0].price.amountInCents / 100).toStringAsFixed(2)}',
-                      style: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF166534)),
+                      style: GoogleFonts.inter(
+                        fontSize: 13.sp,
+                        color: const Color(0xFF166534),
+                      ),
                     ),
                     Text(
                       '• Item Availability merged from Server: ${_mergeResult!.reconciledState.items[0].isAvailable ? 'Available' : 'Unavailable'}',
-                      style: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF166534)),
+                      style: GoogleFonts.inter(
+                        fontSize: 13.sp,
+                        color: const Color(0xFF166534),
+                      ),
                     ),
                     Text(
                       '• Committed Version token set to: ${_mergeResult!.reconciledState.snapshotVersion}',
-                      style: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF166534)),
+                      style: GoogleFonts.inter(
+                        fontSize: 13.sp,
+                        color: const Color(0xFF166534),
+                      ),
                     ),
                   ],
                 ),
@@ -289,12 +327,21 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
           children: [
             Text(
               title,
-              style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15.sp, color: isConflict ? const Color(0xFFC0272D) : AppTheme.onSurface),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 15.sp,
+                color: isConflict
+                    ? const Color(0xFFC0272D)
+                    : AppTheme.onSurface,
+              ),
             ),
             SizedBox(height: 4.h),
             Text(
               'Version: $version',
-              style: GoogleFonts.jetBrainsMono(fontSize: 11.sp, color: AppTheme.secondary),
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 11.sp,
+                color: AppTheme.secondary,
+              ),
             ),
             SizedBox(height: 16.h),
             _paramRow('Product Price', price),
@@ -313,10 +360,12 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: GoogleFonts.inter(color: AppTheme.secondary)),
-          Text(val, style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w700)),
+          Text(
+            val,
+            style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
   }
 }
-

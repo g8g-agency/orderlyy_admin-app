@@ -34,7 +34,9 @@ class ApiTaxRepository implements TaxRepository {
             .toList();
         return Success(profiles);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch tax profiles';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch tax profiles';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -45,16 +47,22 @@ class ApiTaxRepository implements TaxRepository {
   }
 
   @override
-  Future<Result<ResolvedTaxProjectionDto>> getResolvedTax(String entityId) async {
+  Future<Result<ResolvedTaxProjectionDto>> getResolvedTax(
+    String entityId,
+  ) async {
     try {
       final response = await _dioClient.get(
         '${ApiConstants.taxes}/resolved/$entityId',
       );
 
       if (response.data['success'] == true) {
-        return Success(ResolvedTaxProjectionDto.fromJson(response.data['data']));
+        return Success(
+          ResolvedTaxProjectionDto.fromJson(response.data['data']),
+        );
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch resolved tax';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch resolved tax';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -75,7 +83,9 @@ class ApiTaxRepository implements TaxRepository {
       if (response.data['success'] == true) {
         return Success(TaxProfileDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to create tax profile';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to create tax profile';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -96,7 +106,9 @@ class ApiTaxRepository implements TaxRepository {
       if (response.data['success'] == true) {
         return Success(TaxProfileDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update tax profile';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to update tax profile';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -107,19 +119,25 @@ class ApiTaxRepository implements TaxRepository {
   }
 
   @override
-  Future<Result<void>> deleteTaxProfile(String profileId, int currentVersion) async {
+  Future<Result<void>> deleteTaxProfile(
+    String profileId,
+    int currentVersion,
+  ) async {
     try {
       final response = await _dioClient.delete(
         '${ApiConstants.taxes}/$profileId',
         data: {
-          'version_num': currentVersion, // Explicit OCC boundary for safe deletion
+          'version_num':
+              currentVersion, // Explicit OCC boundary for safe deletion
         },
       );
 
       if (response.data['success'] == true) {
         return const Success(null);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to delete tax profile';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to delete tax profile';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

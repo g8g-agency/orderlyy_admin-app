@@ -11,7 +11,8 @@ class TaxManagementScreen extends ConsumerStatefulWidget {
   const TaxManagementScreen({super.key});
 
   @override
-  ConsumerState<TaxManagementScreen> createState() => _TaxManagementScreenState();
+  ConsumerState<TaxManagementScreen> createState() =>
+      _TaxManagementScreenState();
 }
 
 class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
@@ -35,8 +36,10 @@ class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceContainerLowest,
-        title: Text('Taxes',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Taxes',
+          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -52,16 +55,23 @@ class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(
-          child: Text('Error loading taxes: $err',
-              style: GoogleFonts.inter(color: Colors.red)),
+          child: Text(
+            'Error loading taxes: $err',
+            style: GoogleFonts.inter(color: Colors.red),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTaxForm(),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('New Tax',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+        label: Text(
+          'New Tax',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
@@ -71,13 +81,21 @@ class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 64, color: AppTheme.secondary.withOpacity(0.5)),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 64,
+            color: AppTheme.secondary.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          Text('No Tax Profiles',
-              style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(
+            'No Tax Profiles',
+            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          Text('Create a tax profile to apply taxes to your menu items.',
-              style: GoogleFonts.inter(color: AppTheme.secondary)),
+          Text(
+            'Create a tax profile to apply taxes to your menu items.',
+            style: GoogleFonts.inter(color: AppTheme.secondary),
+          ),
         ],
       ),
     );
@@ -110,32 +128,47 @@ class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
                     children: [
                       Row(
                         children: [
-                          Text(profile.name,
-                              style: GoogleFonts.inter(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text(
+                            profile.name,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           if (!profile.isActive)
                             Padding(
                               padding: const EdgeInsets.only(left: 8.0),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.grey.shade200,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: Text('Inactive',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 10, color: Colors.grey.shade700)),
+                                child: Text(
+                                  'Inactive',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
                               ),
                             ),
                         ],
                       ),
-                      if (profile.description != null && profile.description!.isNotEmpty)
+                      if (profile.description != null &&
+                          profile.description!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(profile.description!,
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, color: AppTheme.secondary)),
+                          child: Text(
+                            profile.description!,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppTheme.secondary,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -143,24 +176,32 @@ class _TaxManagementScreenState extends ConsumerState<TaxManagementScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${ratePercent.toStringAsFixed(2)}%',
-                        style: GoogleFonts.jetBrainsMono(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryContainer)),
+                    Text(
+                      '${ratePercent.toStringAsFixed(2)}%',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryContainer,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(profile.calculationMode.toUpperCase(),
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.secondary)),
+                    Text(
+                      profile.calculationMode.toUpperCase(),
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.secondary,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(width: 8),
                 Switch(
                   value: profile.isActive,
                   onChanged: (val) async {
-                    await ref.read(taxRepositoryProvider).toggleTaxProfile(profile.id, val);
+                    await ref
+                        .read(taxRepositoryProvider)
+                        .toggleTaxProfile(profile.id, val);
                     ref.invalidate(taxProfilesProvider);
                   },
                 ),
@@ -194,11 +235,15 @@ class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.existingProfile?.name ?? '');
-    _descCtrl = TextEditingController(text: widget.existingProfile?.description ?? '');
-    
+    _descCtrl = TextEditingController(
+      text: widget.existingProfile?.description ?? '',
+    );
+
     final currentBp = widget.existingProfile?.effectiveBasisPoints ?? 0;
-    _rateCtrl = TextEditingController(text: currentBp > 0 ? (currentBp / 100.0).toStringAsFixed(2) : '');
-    
+    _rateCtrl = TextEditingController(
+      text: currentBp > 0 ? (currentBp / 100.0).toStringAsFixed(2) : '',
+    );
+
     if (widget.existingProfile != null) {
       _calcMode = widget.existingProfile!.calculationMode;
     }
@@ -214,12 +259,12 @@ class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final repo = ref.read(taxRepositoryProvider);
-      
+
       final rateDouble = double.tryParse(_rateCtrl.text) ?? 0.0;
       final rateBasisPoints = (rateDouble * 100).round();
 
@@ -240,13 +285,13 @@ class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
           currentRateBasisPoints: widget.existingProfile!.effectiveBasisPoints,
         );
       }
-      
+
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving tax: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving tax: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -256,10 +301,13 @@ class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    
+
     return Container(
       padding: EdgeInsets.only(
-        left: 20, right: 20, top: 24, bottom: bottomInset > 0 ? bottomInset + 20 : 32
+        left: 20,
+        right: 20,
+        top: 24,
+        bottom: bottomInset > 0 ? bottomInset + 20 : 32,
       ),
       decoration: const BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
@@ -271,28 +319,41 @@ class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.existingProfile == null ? 'Create Tax Profile' : 'Edit Tax Profile',
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              widget.existingProfile == null
+                  ? 'Create Tax Profile'
+                  : 'Edit Tax Profile',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 24),
-            
+
             TextFormField(
               controller: _nameCtrl,
               decoration: InputDecoration(
                 labelText: 'Tax Name',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _rateCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: InputDecoration(
                 labelText: 'Rate Percentage',
                 suffixText: '%',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               validator: (v) {
@@ -302,45 +363,70 @@ class _TaxFormSheetState extends ConsumerState<_TaxFormSheet> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             DropdownButtonFormField<String>(
-              value: _calcMode,
+              initialValue: _calcMode,
               decoration: InputDecoration(
                 labelText: 'Calculation Mode',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               items: const [
-                DropdownMenuItem(value: 'exclusive', child: Text('Exclusive (Added to price)')),
-                DropdownMenuItem(value: 'inclusive', child: Text('Inclusive (Included in price)')),
+                DropdownMenuItem(
+                  value: 'exclusive',
+                  child: Text('Exclusive (Added to price)'),
+                ),
+                DropdownMenuItem(
+                  value: 'inclusive',
+                  child: Text('Inclusive (Included in price)'),
+                ),
               ],
               onChanged: (val) {
                 if (val != null) setState(() => _calcMode = val);
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descCtrl,
               decoration: InputDecoration(
                 labelText: 'Description (Optional)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               maxLines: 2,
             ),
             const SizedBox(height: 24),
-            
+
             FilledButton(
               onPressed: _isLoading ? null : _submit,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: _isLoading 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text('Save Tax', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Save Tax',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ],
         ),

@@ -10,9 +10,7 @@ abstract class MenuRepository {
   });
 
   /// Fetches the lightweight item availability mapping from the server.
-  Future<Map<String, bool>> getItemAvailability({
-    required String branchId,
-  });
+  Future<Map<String, bool>> getItemAvailability({required String branchId});
 
   /// Saves a menu snapshot locally.
   Future<void> saveMenuSnapshot(MenuSnapshot snapshot);

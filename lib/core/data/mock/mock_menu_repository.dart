@@ -129,12 +129,13 @@ class MockMenuRepository implements MenuRepository {
         categoryId: old.categoryId,
         name: old.name,
         description: old.description,
-        price: old.price,
+        basePriceAmount: old.basePriceAmount,
         imageUrl: old.imageUrl,
         isAvailable: isAvailable,
         isVegetarian: old.isVegetarian,
         prepTimeMinutes: old.prepTimeMinutes,
         tags: old.tags,
+        versionNum: old.versionNum + 1,
       );
       _itemsController.add(List.from(_items!));
     }

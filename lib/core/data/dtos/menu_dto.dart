@@ -47,7 +47,9 @@ class MenuCategoryDto {
         path: json['path'] as String?,
         depth: json['depth'] as int? ?? 0,
         versionNum: json['version_num'] as int? ?? 1,
-        deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+        deletedAt: json['deleted_at'] != null
+            ? DateTime.parse(json['deleted_at'] as String)
+            : null,
       );
 
   /// Converts a category name to a URL-safe slug.
@@ -93,7 +95,8 @@ class MenuItemDto {
   final String name;
   final String? slug;
   final String? description;
-  final int basePriceAmount; // Operational base price minor units. NOT effective price.
+  final int
+  basePriceAmount; // Operational base price minor units. NOT effective price.
   final String? imageUrl;
   final bool isAvailable;
   final bool isVegetarian;
@@ -121,7 +124,9 @@ class MenuItemDto {
 
   factory MenuItemDto.fromJson(Map<String, dynamic> json) {
     final dietaryTags = List<String>.from(json['dietary_tags'] as List? ?? []);
-    final isVeg = dietaryTags.contains('vegetarian') || (json['is_vegetarian'] as bool? ?? false);
+    final isVeg =
+        dietaryTags.contains('vegetarian') ||
+        (json['is_vegetarian'] as bool? ?? false);
 
     return MenuItemDto(
       id: json['id'] as String,
@@ -137,7 +142,9 @@ class MenuItemDto {
       prepTimeMinutes: json['prep_time_minutes'] as int? ?? 15,
       tags: dietaryTags,
       versionNum: json['version_num'] as int? ?? 1,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String)
+          : null,
     );
   }
 

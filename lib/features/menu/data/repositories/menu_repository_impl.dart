@@ -21,10 +21,10 @@ class MenuRepositoryImpl implements MenuRepository {
     required Box<String> apiCacheBox,
     required NetworkInfo networkInfo,
     required Talker talker,
-  })  : _dioClient = dioClient,
-        _apiCacheBox = apiCacheBox,
-        _networkInfo = networkInfo,
-        _talker = talker;
+  }) : _dioClient = dioClient,
+       _apiCacheBox = apiCacheBox,
+       _networkInfo = networkInfo,
+       _talker = talker;
 
   @override
   Future<MenuSnapshot> getMenuSnapshot({
@@ -35,17 +35,23 @@ class MenuRepositoryImpl implements MenuRepository {
     final etagKey = 'menu_etag_$branchId';
 
     final isConnected = await _networkInfo.isConnected;
-    _talker.info('[MenuRepo] Fetching menu snapshot for branch: $branchId. isConnected=$isConnected, forceRefresh=$forceRefresh');
+    _talker.info(
+      '[MenuRepo] Fetching menu snapshot for branch: $branchId. isConnected=$isConnected, forceRefresh=$forceRefresh',
+    );
 
     if (!isConnected) {
       _talker.warning('[MenuRepo] Offline. Attempting cache fallback...');
       final cachedJson = _apiCacheBox.get(cacheKey);
       if (cachedJson != null) {
         _talker.info('[MenuRepo] Serving menu snapshot from local cache.');
-        final snapshotDto = MenuSnapshotDto.fromJson(jsonDecode(cachedJson) as Map<String, dynamic>);
+        final snapshotDto = MenuSnapshotDto.fromJson(
+          jsonDecode(cachedJson) as Map<String, dynamic>,
+        );
         return snapshotDto.toDomain();
       }
-      _talker.warning('[MenuRepo] No cached snapshot available. Falling back to default mock data...');
+      _talker.warning(
+        '[MenuRepo] No cached snapshot available. Falling back to default mock data...',
+      );
       return _getDefaultMockSnapshot();
     }
 
@@ -66,19 +72,28 @@ class MenuRepositoryImpl implements MenuRepository {
       );
 
       if (response.statusCode == 304) {
-        _talker.info('[MenuRepo] Received 304 Not Modified. Serving from local cache.');
+        _talker.info(
+          '[MenuRepo] Received 304 Not Modified. Serving from local cache.',
+        );
         final cachedJson = _apiCacheBox.get(cacheKey);
         if (cachedJson != null) {
-          final snapshotDto = MenuSnapshotDto.fromJson(jsonDecode(cachedJson) as Map<String, dynamic>);
+          final snapshotDto = MenuSnapshotDto.fromJson(
+            jsonDecode(cachedJson) as Map<String, dynamic>,
+          );
           return snapshotDto.toDomain();
         }
-        _talker.error('[MenuRepo] Server returned 304 but cache was empty! Fetching fresh...');
+        _talker.error(
+          '[MenuRepo] Server returned 304 but cache was empty! Fetching fresh...',
+        );
         return getMenuSnapshot(branchId: branchId, forceRefresh: true);
       }
 
       // StatusCode == 200
-      final Map<String, dynamic> body = Map<String, dynamic>.from(response.data as Map);
-      final newEtag = response.headers.value('etag') ?? response.headers.value('ETag');
+      final Map<String, dynamic> body = Map<String, dynamic>.from(
+        response.data as Map,
+      );
+      final newEtag =
+          response.headers.value('etag') ?? response.headers.value('ETag');
       if (newEtag != null) {
         body['etag'] = newEtag;
       }
@@ -95,10 +110,14 @@ class MenuRepositoryImpl implements MenuRepository {
       final snapshotDto = MenuSnapshotDto.fromJson(body);
       return snapshotDto.toDomain();
     } catch (e) {
-      _talker.error('[MenuRepo] Failed to fetch menu from server: $e. Checking cache fallback...');
+      _talker.error(
+        '[MenuRepo] Failed to fetch menu from server: $e. Checking cache fallback...',
+      );
       final cachedJson = _apiCacheBox.get(cacheKey);
       if (cachedJson != null) {
-        final snapshotDto = MenuSnapshotDto.fromJson(jsonDecode(cachedJson) as Map<String, dynamic>);
+        final snapshotDto = MenuSnapshotDto.fromJson(
+          jsonDecode(cachedJson) as Map<String, dynamic>,
+        );
         return snapshotDto.toDomain();
       }
       _talker.warning('[MenuRepo] Cache is empty. Serving mock menu snapshot.');
@@ -124,7 +143,9 @@ class MenuRepositoryImpl implements MenuRepository {
 
       if (response.statusCode == 200 && response.data is Map) {
         final rawMap = response.data as Map<String, dynamic>;
-        final overlay = rawMap.map((key, value) => MapEntry(key, value as bool));
+        final overlay = rawMap.map(
+          (key, value) => MapEntry(key, value as bool),
+        );
         // Cache overlay whenever we successfully fetch it
         await saveAvailabilityOverlay(branchId, overlay);
         return overlay;
@@ -141,22 +162,46 @@ class MenuRepositoryImpl implements MenuRepository {
     final cacheKey = 'menu_snapshot_${snapshot.branchId}';
     final etagKey = 'menu_etag_${snapshot.branchId}';
     final dto = MenuSnapshotDto(
-      categories: snapshot.categories.map((c) => MenuCategoryDto(id: c.id, name: c.name, sortOrder: c.sortOrder)).toList(),
-      items: snapshot.items.map((i) => MenuItemDto(
-        id: i.id,
-        categoryId: i.categoryId,
-        name: i.name,
-        description: i.description,
-        priceInCents: i.price.amountInCents,
-        isAvailable: i.isAvailable,
-        modifierGroupIds: i.modifierGroupIds,
-      )).toList(),
-      modifierGroups: snapshot.modifierGroups.map((g) => ModifierGroupDto(
-        id: g.id,
-        name: g.name,
-        options: g.options.map((o) => ModifierOptionDto(id: o.id, name: o.name, priceInCents: o.price.amountInCents)).toList(),
-      )).toList(),
-      taxConfig: TaxConfigDto(vatRateBps: snapshot.taxConfig.vatRateBps, serviceChargeRateBps: snapshot.taxConfig.serviceChargeRateBps),
+      categories: snapshot.categories
+          .map(
+            (c) =>
+                MenuCategoryDto(id: c.id, name: c.name, sortOrder: c.sortOrder),
+          )
+          .toList(),
+      items: snapshot.items
+          .map(
+            (i) => MenuItemDto(
+              id: i.id,
+              categoryId: i.categoryId,
+              name: i.name,
+              description: i.description,
+              priceInCents: i.price.amountInCents,
+              isAvailable: i.isAvailable,
+              modifierGroupIds: i.modifierGroupIds,
+            ),
+          )
+          .toList(),
+      modifierGroups: snapshot.modifierGroups
+          .map(
+            (g) => ModifierGroupDto(
+              id: g.id,
+              name: g.name,
+              options: g.options
+                  .map(
+                    (o) => ModifierOptionDto(
+                      id: o.id,
+                      name: o.name,
+                      priceInCents: o.price.amountInCents,
+                    ),
+                  )
+                  .toList(),
+            ),
+          )
+          .toList(),
+      taxConfig: TaxConfigDto(
+        vatRateBps: snapshot.taxConfig.vatRateBps,
+        serviceChargeRateBps: snapshot.taxConfig.serviceChargeRateBps,
+      ),
       metadata: snapshot.metadata,
       availabilityOverlay: snapshot.availabilityOverlay,
       etag: snapshot.etag,
@@ -176,11 +221,14 @@ class MenuRepositoryImpl implements MenuRepository {
     final cachedJson = _apiCacheBox.get(cacheKey);
     if (cachedJson != null) {
       try {
-        final Map<String, dynamic> decoded = jsonDecode(cachedJson) as Map<String, dynamic>;
+        final Map<String, dynamic> decoded =
+            jsonDecode(cachedJson) as Map<String, dynamic>;
         final dto = MenuSnapshotDto.fromJson(decoded);
         return dto.toDomain();
       } catch (e) {
-        _talker.error('[MenuRepo] Failed to parse cached snapshot for $branchId: $e');
+        _talker.error(
+          '[MenuRepo] Failed to parse cached snapshot for $branchId: $e',
+        );
         return null;
       }
     }
@@ -188,13 +236,18 @@ class MenuRepositoryImpl implements MenuRepository {
   }
 
   @override
-  Future<void> saveAvailabilityOverlay(String branchId, Map<String, bool> overlay) async {
+  Future<void> saveAvailabilityOverlay(
+    String branchId,
+    Map<String, bool> overlay,
+  ) async {
     final cacheKey = 'menu_availability_$branchId';
     await _apiCacheBox.put(cacheKey, jsonEncode(overlay));
   }
 
   @override
-  Future<Map<String, bool>> getCachedAvailabilityOverlay(String branchId) async {
+  Future<Map<String, bool>> getCachedAvailabilityOverlay(
+    String branchId,
+  ) async {
     final cacheKey = 'menu_availability_$branchId';
     final cachedJson = _apiCacheBox.get(cacheKey);
     if (cachedJson != null) {
@@ -202,7 +255,9 @@ class MenuRepositoryImpl implements MenuRepository {
         final Map<dynamic, dynamic> decoded = jsonDecode(cachedJson) as Map;
         return decoded.map((k, v) => MapEntry(k.toString(), v as bool));
       } catch (e) {
-        _talker.error('[MenuRepo] Failed to parse cached availability overlay for $branchId: $e');
+        _talker.error(
+          '[MenuRepo] Failed to parse cached availability overlay for $branchId: $e',
+        );
         return {};
       }
     }
@@ -230,7 +285,8 @@ class MenuRepositoryImpl implements MenuRepository {
           id: 'prod_burger',
           categoryId: 'cat_mains',
           name: 'Classic Cheeseburger',
-          description: 'A flame-grilled beef patty with cheddar cheese, lettuce, and pickles.',
+          description:
+              'A flame-grilled beef patty with cheddar cheese, lettuce, and pickles.',
           priceInCents: 1250,
           isAvailable: true,
           modifierGroupIds: ['grp_burger_mods'],
@@ -239,7 +295,8 @@ class MenuRepositoryImpl implements MenuRepository {
           id: 'prod_chicken',
           categoryId: 'cat_mains',
           name: 'Spicy Chicken Sandwich',
-          description: 'Crispy spicy chicken breast with swiss cheese and spicy mayo.',
+          description:
+              'Crispy spicy chicken breast with swiss cheese and spicy mayo.',
           priceInCents: 1300,
           isAvailable: true,
           modifierGroupIds: ['grp_chicken_mods'],
@@ -248,7 +305,8 @@ class MenuRepositoryImpl implements MenuRepository {
           id: 'prod_salad',
           categoryId: 'cat_greens',
           name: 'Caesar Salad',
-          description: 'Romaine lettuce tossed with Caesar dressing, croutons, and parmesan.',
+          description:
+              'Romaine lettuce tossed with Caesar dressing, croutons, and parmesan.',
           priceInCents: 950,
           isAvailable: true,
           modifierGroupIds: ['grp_salad_mods'],
@@ -286,50 +344,106 @@ class MenuRepositoryImpl implements MenuRepository {
           id: 'grp_burger_mods',
           name: 'Burger Add-ons',
           options: [
-            ModifierOptionDto(id: 'mod_bacon', name: 'Extra Bacon', priceInCents: 150),
-            ModifierOptionDto(id: 'mod_cheddar', name: 'Cheddar Cheese', priceInCents: 100),
-            ModifierOptionDto(id: 'mod_avocado', name: 'Add Avocado', priceInCents: 200),
-            ModifierOptionDto(id: 'mod_gf_bun', name: 'Gluten-free Bun', priceInCents: 150),
+            ModifierOptionDto(
+              id: 'mod_bacon',
+              name: 'Extra Bacon',
+              priceInCents: 150,
+            ),
+            ModifierOptionDto(
+              id: 'mod_cheddar',
+              name: 'Cheddar Cheese',
+              priceInCents: 100,
+            ),
+            ModifierOptionDto(
+              id: 'mod_avocado',
+              name: 'Add Avocado',
+              priceInCents: 200,
+            ),
+            ModifierOptionDto(
+              id: 'mod_gf_bun',
+              name: 'Gluten-free Bun',
+              priceInCents: 150,
+            ),
           ],
         ),
         ModifierGroupDto(
           id: 'grp_chicken_mods',
           name: 'Chicken Sandwich Add-ons',
           options: [
-            ModifierOptionDto(id: 'mod_jalapenos', name: 'Extra Jalapenos', priceInCents: 75),
-            ModifierOptionDto(id: 'mod_swiss', name: 'Swiss Cheese', priceInCents: 100),
-            ModifierOptionDto(id: 'mod_spicy_mayo', name: 'Spicy Mayo', priceInCents: 50),
+            ModifierOptionDto(
+              id: 'mod_jalapenos',
+              name: 'Extra Jalapenos',
+              priceInCents: 75,
+            ),
+            ModifierOptionDto(
+              id: 'mod_swiss',
+              name: 'Swiss Cheese',
+              priceInCents: 100,
+            ),
+            ModifierOptionDto(
+              id: 'mod_spicy_mayo',
+              name: 'Spicy Mayo',
+              priceInCents: 50,
+            ),
           ],
         ),
         ModifierGroupDto(
           id: 'grp_salad_mods',
           name: 'Salad Add-ons',
           options: [
-            ModifierOptionDto(id: 'mod_chicken_breast', name: 'Add Grilled Chicken', priceInCents: 300),
-            ModifierOptionDto(id: 'mod_dressing', name: 'Extra Dressing', priceInCents: 50),
+            ModifierOptionDto(
+              id: 'mod_chicken_breast',
+              name: 'Add Grilled Chicken',
+              priceInCents: 300,
+            ),
+            ModifierOptionDto(
+              id: 'mod_dressing',
+              name: 'Extra Dressing',
+              priceInCents: 50,
+            ),
           ],
         ),
         ModifierGroupDto(
           id: 'grp_fries_mods',
           name: 'Fries Flavorings',
           options: [
-            ModifierOptionDto(id: 'mod_parmesan', name: 'Garlic Parmesan', priceInCents: 100),
-            ModifierOptionDto(id: 'mod_truffle', name: 'Truffle Oil', priceInCents: 150),
+            ModifierOptionDto(
+              id: 'mod_parmesan',
+              name: 'Garlic Parmesan',
+              priceInCents: 100,
+            ),
+            ModifierOptionDto(
+              id: 'mod_truffle',
+              name: 'Truffle Oil',
+              priceInCents: 150,
+            ),
           ],
         ),
         ModifierGroupDto(
           id: 'grp_beer_mods',
           name: 'Beer Accompaniments',
           options: [
-            ModifierOptionDto(id: 'mod_lime', name: 'Add Lime Slice', priceInCents: 0),
+            ModifierOptionDto(
+              id: 'mod_lime',
+              name: 'Add Lime Slice',
+              priceInCents: 0,
+            ),
           ],
         ),
         ModifierGroupDto(
           id: 'grp_soda_mods',
           name: 'Soda Adjustments',
           options: [
-            ModifierOptionDto(id: 'mod_less_sugar', name: 'Less Sugar', priceInCents: 0),
-            ModifierOptionDto(id: 'mod_ice', name: 'Extra Ice', priceInCents: 0),
+            ModifierOptionDto(
+              id: 'mod_less_sugar',
+              name: 'Less Sugar',
+              priceInCents: 0,
+            ),
+            ModifierOptionDto(
+              id: 'mod_ice',
+              name: 'Extra Ice',
+              priceInCents: 0,
+            ),
           ],
         ),
       ],

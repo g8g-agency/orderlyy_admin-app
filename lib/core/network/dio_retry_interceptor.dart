@@ -16,11 +16,15 @@ class DioRetryInterceptor extends Interceptor {
   });
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final requestOptions = err.requestOptions;
-    
+
     // Check if the request is marked to skip retry
-    final disableRetry = requestOptions.extra['disable_retry'] as bool? ?? false;
+    final disableRetry =
+        requestOptions.extra['disable_retry'] as bool? ?? false;
     if (disableRetry) {
       return handler.next(err);
     }

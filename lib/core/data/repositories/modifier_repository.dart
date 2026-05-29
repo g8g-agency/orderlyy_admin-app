@@ -10,7 +10,8 @@ abstract class ModifierRepository {
   });
 
   /// Fetches a paginated/filtered list of modifier items for a specific group.
-  Future<Result<List<ModifierItemDto>>> getModifierItems(String groupId, {
+  Future<Result<List<ModifierItemDto>>> getModifierItems(
+    String groupId, {
     int page = 1,
     int limit = 100,
     bool includeDeleted = false,

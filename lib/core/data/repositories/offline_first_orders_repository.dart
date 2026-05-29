@@ -4,10 +4,10 @@ import '../../data/dtos/order_dto.dart';
 import '../../data/dtos/sync_action.dart';
 import '../../data/local/offline_sync_queue.dart';
 import 'orders_repository.dart';
+import '../../network/api_exception.dart';
 import 'package:uuid/uuid.dart';
 
 final uuid = Uuid();
-
 
 class OfflineFirstOrdersRepository implements OrdersRepository {
   final OrdersRepository _delegate;
@@ -44,6 +44,130 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
         );
       });
     }
+  }
+
+  // ── Phase 10 implementations ────────────────────────────────────────────────
+  @override
+  Future<Result<List<OrderDto>>> getOrdersPaginated({
+    OrderStatus? status,
+    String? tableId,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    // Pass through, since online sync is complex, but delegate handles it.
+    // For proper offline first with projections, queue needs projection sync logic.
+    // For now, pass directly to delegate.
+    return _delegate.getOrdersPaginated(
+      status: status,
+      tableId: tableId,
+      page: page,
+      limit: limit,
+    );
+  }
+
+  @override
+  Future<Result<OrderDto>> createOrderEntity(
+    OrderDto order, {
+    required String idempotencyKey,
+  }) async {
+    final action = SyncAction(
+      id: 'act-create-${uuid.v4()}',
+      type: 'createOrder',
+      payload: order.toJson(),
+      timestamp: DateTime.now(),
+      idempotencyKey: idempotencyKey,
+    );
+
+    await _queue.enqueue(action);
+    _updateController.add(null);
+
+    if (_queue.isOnline()) {
+      syncPendingQueue().catchError((e) {
+        debugPrint('[OfflineFirstOrdersRepository] Immediate sync error: $e');
+      });
+    }
+
+    // Return optimistic success (assuming validation passes offline)
+    final newOrder = order.copyWith(versionNum: 1);
+    return Success(newOrder);
+  }
+
+  @override
+  Future<Result<OrderDto>> transitionOrderStatus(
+    String orderId,
+    OrderStatus newStatus,
+    int currentVersion, {
+    required String idempotencyKey,
+  }) async {
+    final cachedList = await _queue.getCachedOrders();
+    final idx = cachedList.indexWhere((o) => o.id == orderId);
+    if (idx != -1 && cachedList[idx].versionNum != currentVersion) {
+      return Failure(ApiFailure('Conflict', ApiErrorCode.conflict));
+    }
+    
+    final order = idx != -1
+        ? cachedList[idx].copyWith(status: newStatus, updatedAt: DateTime.now(), versionNum: currentVersion + 1)
+        : (throw StateError(
+            'Cannot update status for unknown order $orderId without resolved tenant/table context.',
+          ));
+
+    final action = SyncAction(
+      id: 'act-status-${uuid.v4()}',
+      type: 'updateOrderStatus',
+      payload: {'orderId': orderId, 'status': newStatus.name},
+      timestamp: DateTime.now(),
+      idempotencyKey: idempotencyKey,
+    );
+
+    await _queue.enqueue(action);
+    _updateController.add(null);
+
+    if (_queue.isOnline()) {
+      syncPendingQueue().catchError((e) {
+        debugPrint('[OfflineFirstOrdersRepository] Immediate sync error: $e');
+      });
+    }
+
+    return Success(order);
+  }
+
+  @override
+  Future<Result<OrderDto>> updateOrderLineItems(
+    String orderId,
+    List<OrderItemDto> items,
+    int currentVersion, {
+    required String idempotencyKey,
+  }) async {
+    final cachedList = await _queue.getCachedOrders();
+    final idx = cachedList.indexWhere((o) => o.id == orderId);
+    if (idx != -1 && cachedList[idx].versionNum != currentVersion) {
+      return Failure(ApiFailure('Conflict', ApiErrorCode.conflict));
+    }
+
+    final order = idx != -1
+        ? cachedList[idx].copyWith(items: items, updatedAt: DateTime.now(), versionNum: currentVersion + 1)
+        : (throw StateError(
+            'Cannot update items for unknown order $orderId',
+          ));
+
+    final action = SyncAction(
+      id: 'act-update-${uuid.v4()}',
+      type: 'updateOrder',
+      payload: order.toJson(),
+      timestamp: DateTime.now(),
+      idempotencyKey: idempotencyKey,
+    );
+
+    await _queue.enqueue(action);
+    _updateController.add(null);
+
+    if (_queue.isOnline()) {
+      syncPendingQueue().catchError((e) {
+        debugPrint('[OfflineFirstOrdersRepository] Immediate sync error: $e');
+      });
+    }
+
+    return Success(order);
   }
 
   // ── Fetch orders ──────────────────────────────────────────────────────────

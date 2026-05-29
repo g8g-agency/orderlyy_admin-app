@@ -49,7 +49,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         }
         return Result.success(domainList);
       }
-      return Result.failure(const AppFailure.unknown(message: 'No data source configured'));
+      return Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -62,14 +64,18 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         final o = await mockDataSource!.getMockById(orderId);
         if (o != null) return Result.success(o.toDomain());
       }
-      return Result.failure(const AppFailure.notFound(message: 'Order not found'));
+      return Result.failure(
+        const AppFailure.notFound(message: 'Order not found'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
   }
 
   @override
-  Future<Result<List<Order>, AppFailure>> getOrdersByTable(String tableId) async {
+  Future<Result<List<Order>, AppFailure>> getOrdersByTable(
+    String tableId,
+  ) async {
     try {
       if (mockDataSource != null) {
         final list = await mockDataSource!.getMockData();
@@ -79,7 +85,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
             .toList();
         return Result.success(domainList);
       }
-      return Result.failure(const AppFailure.unknown(message: 'No data source configured'));
+      return Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -94,7 +102,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
   }
 
   @override
-  Future<Result<List<Order>, AppFailure>> getActiveOrders(String tenantId) async {
+  Future<Result<List<Order>, AppFailure>> getActiveOrders(
+    String tenantId,
+  ) async {
     try {
       if (mockDataSource != null) {
         final list = await mockDataSource!.getMockByTenant(tenantId);
@@ -104,7 +114,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
             .toList();
         return Result.success(domainList);
       }
-      return Result.failure(const AppFailure.unknown(message: 'No data source configured'));
+      return Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -118,7 +130,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         final res = await mockDataSource!.mockCreate(orderDto);
         return Result.success(res.toDomain());
       }
-      return Result.failure(const AppFailure.unknown(message: 'No data source configured'));
+      return Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -135,13 +149,17 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         if (orderDto != null) {
           final res = await mockDataSource!.mockUpdate(
             orderDto.copyWith(
-              status: dto.OrderStatus.values.firstWhere((e) => e.name == newStatus.name),
+              status: dto.OrderStatus.values.firstWhere(
+                (e) => e.name == newStatus.name,
+              ),
             ),
           );
           return Result.success(res.toDomain());
         }
       }
-      return Result.failure(const AppFailure.notFound(message: 'Order not found'));
+      return Result.failure(
+        const AppFailure.notFound(message: 'Order not found'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -155,7 +173,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         final res = await mockDataSource!.mockUpdate(orderDto);
         return Result.success(res.toDomain());
       }
-      return Result.failure(const AppFailure.unknown(message: 'No data source configured'));
+      return Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -174,7 +194,9 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         await mockDataSource!.mockDelete(orderId);
         return const Result.success(null);
       }
-      return Result.failure(const AppFailure.unknown(message: 'No data source configured'));
+      return Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      );
     } catch (e) {
       return Result.failure(AppFailure.unknown(message: e.toString()));
     }
@@ -192,7 +214,11 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         );
       });
     }
-    return Stream.value(Result.failure(const AppFailure.unknown(message: 'No data source configured')));
+    return Stream.value(
+      Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      ),
+    );
   }
 
   @override
@@ -203,10 +229,16 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
         if (idx != -1) {
           return Result.success(list[idx].toDomain());
         }
-        return Result.failure(const AppFailure.notFound(message: 'Order not found'));
+        return Result.failure(
+          const AppFailure.notFound(message: 'Order not found'),
+        );
       });
     }
-    return Stream.value(Result.failure(const AppFailure.unknown(message: 'No data source configured')));
+    return Stream.value(
+      Result.failure(
+        const AppFailure.unknown(message: 'No data source configured'),
+      ),
+    );
   }
 
   @override
@@ -214,14 +246,16 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
     String tenantId,
     DateTime date,
   ) async {
-    return Result.success(OrderSummary(
-      totalOrders: 0,
-      completedOrders: 0,
-      cancelledOrders: 0,
-      activeOrders: 0,
-      totalRevenue: 0.0,
-      date: date,
-    ));
+    return Result.success(
+      OrderSummary(
+        totalOrders: 0,
+        completedOrders: 0,
+        cancelledOrders: 0,
+        activeOrders: 0,
+        totalRevenue: 0.0,
+        date: date,
+      ),
+    );
   }
 
   @override
@@ -230,14 +264,16 @@ class IOrdersRepositoryImpl implements IOrdersRepository {
     DateTime? from,
     DateTime? to,
   }) async {
-    return Result.success(OrderStatistics(
-      totalOrders: 0,
-      averageOrderValue: 0.0,
-      totalRevenue: 0.0,
-      ordersByStatus: const {},
-      from: from ?? DateTime.now(),
-      to: to ?? DateTime.now(),
-    ));
+    return Result.success(
+      OrderStatistics(
+        totalOrders: 0,
+        averageOrderValue: 0.0,
+        totalRevenue: 0.0,
+        ordersByStatus: const {},
+        from: from ?? DateTime.now(),
+        to: to ?? DateTime.now(),
+      ),
+    );
   }
 
   @override

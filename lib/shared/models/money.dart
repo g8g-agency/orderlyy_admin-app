@@ -5,10 +5,7 @@ class Money extends Equatable {
   final int amountInCents;
   final String currency;
 
-  const Money({
-    required this.amountInCents,
-    this.currency = 'USD',
-  });
+  const Money({required this.amountInCents, this.currency = 'USD'});
 
   double get asDouble => amountInCents / 100.0;
 

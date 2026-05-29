@@ -34,7 +34,8 @@ class ApiMediaRepository implements MediaRepository {
       if (response.data['success'] == true) {
         return Success(response.data['data']['url'] as String);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to upload image';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to upload image';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

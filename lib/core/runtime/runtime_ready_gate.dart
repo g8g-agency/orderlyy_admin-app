@@ -11,7 +11,7 @@ class RuntimeReadyGate extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isReady = ref.watch(runtimeReadyProvider);
-    
+
     // Graceful wait if context is still hydrating
     if (!isReady) {
       return const Scaffold(
@@ -21,7 +21,7 @@ class RuntimeReadyGate extends ConsumerWidget {
         ),
       );
     }
-    
+
     return child;
   }
 }

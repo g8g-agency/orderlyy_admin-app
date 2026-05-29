@@ -64,7 +64,16 @@ class MenuItem extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, categoryId, name, description, price, isAvailable, modifierGroupIds, deletedAt];
+  List<Object?> get props => [
+    id,
+    categoryId,
+    name,
+    description,
+    price,
+    isAvailable,
+    modifierGroupIds,
+    deletedAt,
+  ];
 }
 
 class ModifierGroup extends Equatable {
@@ -167,17 +176,17 @@ class MenuSnapshot extends Equatable {
 
   @override
   List<Object?> get props => [
-        metadata,
-        categories,
-        items,
-        modifierGroups,
-        taxConfig,
-        availabilityOverlay,
-        etag,
-        snapshotVersion,
-        generatedAt,
-        branchId,
-      ];
+    metadata,
+    categories,
+    items,
+    modifierGroups,
+    taxConfig,
+    availabilityOverlay,
+    etag,
+    snapshotVersion,
+    generatedAt,
+    branchId,
+  ];
 
   /// Helper to convert snapshot items to legacy domain models for UI compatibility
   List<orders_entities.MenuProduct> toMenuProducts() {

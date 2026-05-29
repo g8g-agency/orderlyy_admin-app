@@ -40,28 +40,41 @@ class AvailabilityNotifier extends StateNotifier<AvailabilityState> {
 
   /// Fetches the backend-resolved availability for an entity.
   /// No frontend timezone logic, merging, or fallback handling.
-  Future<void> fetchResolvedAvailability(String entityId, String entityType) async {
+  Future<void> fetchResolvedAvailability(
+    String entityId,
+    String entityType,
+  ) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.getResolvedAvailability(entityId, entityType);
+    final result = await _repository.getResolvedAvailability(
+      entityId,
+      entityType,
+    );
 
     if (result is Success<ResolvedAvailabilityProjectionDto>) {
-      final newResolved = Map<String, ResolvedAvailabilityProjectionDto>.from(state.resolvedAvailability);
-      newResolved[entityId] = result.data;
-      state = state.copyWith(isLoading: false, resolvedAvailability: newResolved);
+      final newResolved = Map<String, ResolvedAvailabilityProjectionDto>.from(
+        state.resolvedAvailability,
+      );
+      newResolved[entityId] = result.value;
+      state = state.copyWith(
+        isLoading: false,
+        resolvedAvailability: newResolved,
+      );
     } else if (result is Failure<ResolvedAvailabilityProjectionDto>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
   /// Appends a new availability rule. Triggers immediate deterministic reload of projection.
-  Future<Result<AvailabilityRuleDto>> addAvailabilityRule(AvailabilityRuleDto rule) async {
+  Future<Result<AvailabilityRuleDto>> addAvailabilityRule(
+    AvailabilityRuleDto rule,
+  ) async {
     final result = await _repository.addAvailabilityRule(rule);
 
     if (result is Success<AvailabilityRuleDto>) {
       await fetchResolvedAvailability(rule.entityId, rule.entityType);
     } else if (result is Failure<AvailabilityRuleDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         // Deterministic reload on OCC Conflict
         await fetchResolvedAvailability(rule.entityId, rule.entityType);
       }
@@ -70,13 +83,15 @@ class AvailabilityNotifier extends StateNotifier<AvailabilityState> {
     return result;
   }
 
-  Future<Result<AvailabilityRuleDto>> updateAvailabilityRule(AvailabilityRuleDto rule) async {
+  Future<Result<AvailabilityRuleDto>> updateAvailabilityRule(
+    AvailabilityRuleDto rule,
+  ) async {
     final result = await _repository.updateAvailabilityRule(rule);
 
     if (result is Success<AvailabilityRuleDto>) {
       await fetchResolvedAvailability(rule.entityId, rule.entityType);
     } else if (result is Failure<AvailabilityRuleDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await fetchResolvedAvailability(rule.entityId, rule.entityType);
       }
     }
@@ -84,10 +99,20 @@ class AvailabilityNotifier extends StateNotifier<AvailabilityState> {
     return result;
   }
 
-  Future<Result<void>> deleteAvailabilityRule(String ruleId, int currentVersion, String entityId, String entityType) async {
-    final result = await _repository.deleteAvailabilityRule(ruleId, currentVersion);
+  Future<Result<void>> deleteAvailabilityRule(
+    String ruleId,
+    int currentVersion,
+    String entityId,
+    String entityType,
+  ) async {
+    final result = await _repository.deleteAvailabilityRule(
+      ruleId,
+      currentVersion,
+    );
 
-    if (result is Success<void> || (result is Failure<void> && result.failure.code == ApiErrorCode.conflict)) {
+    if (result is Success<void> ||
+        (result is Failure<void> &&
+            result.error.code == ApiErrorCode.conflict)) {
       // Refresh the projection to get the latest backend evaluation
       await fetchResolvedAvailability(entityId, entityType);
     }
@@ -103,27 +128,36 @@ class AvailabilityNotifier extends StateNotifier<AvailabilityState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final availabilityProvider = StateNotifierProvider<AvailabilityNotifier, AvailabilityState>((ref) {
-  final repo = ref.watch(availabilityRepositoryProvider);
-  return AvailabilityNotifier(repo);
-});
+final availabilityProvider =
+    StateNotifierProvider<AvailabilityNotifier, AvailabilityState>((ref) {
+      final repo = ref.watch(availabilityRepositoryProvider);
+      return AvailabilityNotifier(repo);
+    });
 
 // Selector for a specific entity's resolved availability
-final resolvedAvailabilityProvider = Provider.family<ResolvedAvailabilityProjectionDto?, String>((ref, entityId) {
-  final state = ref.watch(availabilityProvider);
-  return state.resolvedAvailability[entityId];
-});
+final resolvedAvailabilityProvider =
+    Provider.family<ResolvedAvailabilityProjectionDto?, String>((
+      ref,
+      entityId,
+    ) {
+      final state = ref.watch(availabilityProvider);
+      return state.resolvedAvailability[entityId];
+    });
 
 // Fetch raw rules for configuration UI (un-cached here to avoid stale lifecycle bugs)
-final rawAvailabilityRulesProvider = FutureProvider.family<List<AvailabilityRuleDto>, Map<String, String>>((ref, params) async {
-  final repo = ref.watch(availabilityRepositoryProvider);
-  final entityId = params['entityId']!;
-  final entityType = params['entityType']!;
-  
-  final result = await repo.getAvailabilityRules(entityId, entityType);
-  if (result is Success<List<AvailabilityRuleDto>>) {
-    return result.data;
-  } else {
-    throw Exception((result as Failure).failure.message);
-  }
-});
+final rawAvailabilityRulesProvider =
+    FutureProvider.family<List<AvailabilityRuleDto>, Map<String, String>>((
+      ref,
+      params,
+    ) async {
+      final repo = ref.watch(availabilityRepositoryProvider);
+      final entityId = params['entityId']!;
+      final entityType = params['entityType']!;
+
+      final result = await repo.getAvailabilityRules(entityId, entityType);
+      if (result is Success<List<AvailabilityRuleDto>>) {
+        return result.value;
+      } else {
+        throw Exception((result as Failure).error.message);
+      }
+    });

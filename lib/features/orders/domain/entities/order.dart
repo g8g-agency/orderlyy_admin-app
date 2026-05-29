@@ -3,14 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../shared/models/money.dart';
 import 'order_item.dart';
 
-enum OrderStatus {
-  draft,
-  sent,
-  preparing,
-  ready,
-  completed,
-  cancelled,
-}
+enum OrderStatus { draft, sent, preparing, ready, completed, cancelled }
 
 class Order extends Equatable {
   final String id;
@@ -66,5 +59,14 @@ class Order extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, tableId, items, status, createdAt, updatedAt, waiterName, cancelLogs];
+  List<Object?> get props => [
+    id,
+    tableId,
+    items,
+    status,
+    createdAt,
+    updatedAt,
+    waiterName,
+    cancelLogs,
+  ];
 }

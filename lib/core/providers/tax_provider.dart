@@ -8,10 +8,10 @@ import 'repository_providers.dart';
 class TaxState {
   final bool isLoading;
   final String? error;
-  
+
   // Normalized store for tax profiles
   final Map<String, TaxProfileDto> profilesById;
-  
+
   // Normalized store for resolved projections ONLY
   // entityId -> ResolvedTaxProjectionDto
   final Map<String, ResolvedTaxProjectionDto> resolvedTaxes;
@@ -54,13 +54,15 @@ class TaxNotifier extends StateNotifier<TaxState> {
     final result = await _repository.getTaxProfiles();
 
     if (result is Success<List<TaxProfileDto>>) {
-      final newProfiles = forceRefresh ? <String, TaxProfileDto>{} : Map<String, TaxProfileDto>.from(state.profilesById);
-      for (final profile in result.data) {
+      final newProfiles = forceRefresh
+          ? <String, TaxProfileDto>{}
+          : Map<String, TaxProfileDto>.from(state.profilesById);
+      for (final profile in result.value) {
         newProfiles[profile.id] = profile;
       }
       state = state.copyWith(isLoading: false, profilesById: newProfiles);
     } else if (result is Failure<List<TaxProfileDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
@@ -72,11 +74,13 @@ class TaxNotifier extends StateNotifier<TaxState> {
     final result = await _repository.getResolvedTax(entityId);
 
     if (result is Success<ResolvedTaxProjectionDto>) {
-      final newResolved = Map<String, ResolvedTaxProjectionDto>.from(state.resolvedTaxes);
-      newResolved[entityId] = result.data;
+      final newResolved = Map<String, ResolvedTaxProjectionDto>.from(
+        state.resolvedTaxes,
+      );
+      newResolved[entityId] = result.value;
       state = state.copyWith(isLoading: false, resolvedTaxes: newResolved);
     } else if (result is Failure<ResolvedTaxProjectionDto>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
@@ -85,7 +89,7 @@ class TaxNotifier extends StateNotifier<TaxState> {
 
     if (result is Success<TaxProfileDto>) {
       final newProfiles = Map<String, TaxProfileDto>.from(state.profilesById);
-      newProfiles[result.data.id] = result.data;
+      newProfiles[result.value.id] = result.value;
       state = state.copyWith(profilesById: newProfiles);
     }
 
@@ -97,10 +101,10 @@ class TaxNotifier extends StateNotifier<TaxState> {
 
     if (result is Success<TaxProfileDto>) {
       final newProfiles = Map<String, TaxProfileDto>.from(state.profilesById);
-      newProfiles[result.data.id] = result.data;
+      newProfiles[result.value.id] = result.value;
       state = state.copyWith(profilesById: newProfiles);
     } else if (result is Failure<TaxProfileDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         // Deterministic reload on OCC Conflict
         await loadTaxProfiles(forceRefresh: true);
       }
@@ -111,16 +115,21 @@ class TaxNotifier extends StateNotifier<TaxState> {
 
   Future<Result<void>> deleteTaxProfile(String profileId) async {
     final profile = state.profilesById[profileId];
-    if (profile == null) return Failure(ApiFailure('Tax Profile not found locally'));
+    if (profile == null) {
+      return Failure(ApiFailure('Tax Profile not found locally'));
+    }
 
-    final result = await _repository.deleteTaxProfile(profileId, profile.versionNum);
+    final result = await _repository.deleteTaxProfile(
+      profileId,
+      profile.versionNum,
+    );
 
     if (result is Success<void>) {
       final newProfiles = Map<String, TaxProfileDto>.from(state.profilesById);
       newProfiles.remove(profileId);
       state = state.copyWith(profilesById: newProfiles);
     } else if (result is Failure<void>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadTaxProfiles(forceRefresh: true);
       }
     }
@@ -153,7 +162,10 @@ final taxProvider = StateNotifierProvider<TaxNotifier, TaxState>((ref) {
 });
 
 // Selector for resolved tax projection
-final resolvedTaxProvider = Provider.family<ResolvedTaxProjectionDto?, String>((ref, entityId) {
+final resolvedTaxProvider = Provider.family<ResolvedTaxProjectionDto?, String>((
+  ref,
+  entityId,
+) {
   final state = ref.watch(taxProvider);
   return state.resolvedTaxes[entityId];
 });

@@ -10,20 +10,24 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
   ApiAvailabilityRepository(this._dioClient);
 
   @override
-  Future<Result<ResolvedAvailabilityProjectionDto>> getResolvedAvailability(String entityId, String entityType) async {
+  Future<Result<ResolvedAvailabilityProjectionDto>> getResolvedAvailability(
+    String entityId,
+    String entityType,
+  ) async {
     try {
       final response = await _dioClient.get(
         '${ApiConstants.availability}/resolved',
-        queryParameters: {
-          'entity_id': entityId,
-          'entity_type': entityType,
-        },
+        queryParameters: {'entity_id': entityId, 'entity_type': entityType},
       );
 
       if (response.data['success'] == true) {
-        return Success(ResolvedAvailabilityProjectionDto.fromJson(response.data['data']));
+        return Success(
+          ResolvedAvailabilityProjectionDto.fromJson(response.data['data']),
+        );
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch resolved availability';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch resolved availability';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -34,24 +38,29 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
   }
 
   @override
-  Future<Result<List<AvailabilityRuleDto>>> getAvailabilityRules(String entityId, String entityType) async {
+  Future<Result<List<AvailabilityRuleDto>>> getAvailabilityRules(
+    String entityId,
+    String entityType,
+  ) async {
     try {
       final response = await _dioClient.get(
         ApiConstants.availability,
-        queryParameters: {
-          'entity_id': entityId,
-          'entity_type': entityType,
-        },
+        queryParameters: {'entity_id': entityId, 'entity_type': entityType},
       );
 
       if (response.data['success'] == true) {
         final data = response.data['data'] as List<dynamic>? ?? [];
         final rules = data
-            .map((json) => AvailabilityRuleDto.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) =>
+                  AvailabilityRuleDto.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
         return Success(rules);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch availability rules';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to fetch availability rules';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -62,7 +71,9 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
   }
 
   @override
-  Future<Result<AvailabilityRuleDto>> addAvailabilityRule(AvailabilityRuleDto rule) async {
+  Future<Result<AvailabilityRuleDto>> addAvailabilityRule(
+    AvailabilityRuleDto rule,
+  ) async {
     try {
       final response = await _dioClient.post(
         ApiConstants.availability,
@@ -72,7 +83,9 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
       if (response.data['success'] == true) {
         return Success(AvailabilityRuleDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to add availability rule';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to add availability rule';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -83,7 +96,9 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
   }
 
   @override
-  Future<Result<AvailabilityRuleDto>> updateAvailabilityRule(AvailabilityRuleDto rule) async {
+  Future<Result<AvailabilityRuleDto>> updateAvailabilityRule(
+    AvailabilityRuleDto rule,
+  ) async {
     try {
       final response = await _dioClient.patch(
         '${ApiConstants.availability}/${rule.id}',
@@ -93,7 +108,9 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
       if (response.data['success'] == true) {
         return Success(AvailabilityRuleDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update availability rule';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to update availability rule';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -104,7 +121,10 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
   }
 
   @override
-  Future<Result<void>> deleteAvailabilityRule(String ruleId, int currentVersion) async {
+  Future<Result<void>> deleteAvailabilityRule(
+    String ruleId,
+    int currentVersion,
+  ) async {
     try {
       final response = await _dioClient.delete(
         '${ApiConstants.availability}/$ruleId',
@@ -116,7 +136,9 @@ class ApiAvailabilityRepository implements AvailabilityRepository {
       if (response.data['success'] == true) {
         return const Success(null);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to delete availability rule';
+        final errorMessage =
+            response.data['error']?['message'] ??
+            'Failed to delete availability rule';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

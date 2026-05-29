@@ -142,7 +142,9 @@ class MockAuthRepository implements AuthRepository {
 
   // ── Email + password sign-in ──────────────────────────────────────────────
   @override
-  Future<Result<LoginResponseDto>> signInWithPassword(LoginRequestDto request) async {
+  Future<Result<LoginResponseDto>> signInWithPassword(
+    LoginRequestDto request,
+  ) async {
     debugPrint(
       '[MockAuth] 🔐 Login attempt: ${request.email} hashCode=$hashCode',
     );
@@ -153,14 +155,18 @@ class MockAuthRepository implements AuthRepository {
 
     if (request.email.isEmpty || !request.email.contains('@')) {
       debugPrint('[MockAuth] ❌ Invalid email');
-      return Failure(ApiFailure('Invalid email address.', ApiErrorCode.validationError));
+      return Failure(
+        ApiFailure('Invalid email address.', ApiErrorCode.validationError),
+      );
     }
     if (request.password.length < 6) {
       debugPrint('[MockAuth] ❌ Password too short');
-      return Failure(ApiFailure(
-        'Password must be at least 6 characters.',
-        ApiErrorCode.validationError,
-      ));
+      return Failure(
+        ApiFailure(
+          'Password must be at least 6 characters.',
+          ApiErrorCode.validationError,
+        ),
+      );
     }
 
     // Accept any valid-format credentials in mock mode
@@ -173,12 +179,14 @@ class MockAuthRepository implements AuthRepository {
       '[MockAuth] ✅ Login success → userId: $_currentUserId (hashCode=$hashCode)',
     );
 
-    return Success(LoginResponseDto(
-      userId: _currentUserId!,
-      email: request.email,
-      accessToken: 'mock-access-token-dev',
-      isSuccess: true,
-    ));
+    return Success(
+      LoginResponseDto(
+        userId: _currentUserId!,
+        email: request.email,
+        accessToken: 'mock-access-token-dev',
+        isSuccess: true,
+      ),
+    );
   }
 
   // ── Staff PIN sign-in ─────────────────────────────────────────────────────
@@ -210,17 +218,20 @@ class MockAuthRepository implements AuthRepository {
 
     if (match == null) {
       debugPrint('[MockAuth] ❌ Invalid PIN');
-      return Failure(ApiFailure(
-        'Invalid PIN or restaurant code.',
-        ApiErrorCode.unauthorized,
-      ));
+      return Failure(
+        ApiFailure(
+          'Invalid PIN or restaurant code.',
+          ApiErrorCode.unauthorized,
+        ),
+      );
     }
 
     final staffDto = StaffDto(
       id: 'staff-${match['role']}-001',
       name: match['name'] as String,
       role: match['role'] as String,
-      tenantId: (json['context'] as Map<String, dynamic>)['tenant']['id'] as String,
+      tenantId:
+          (json['context'] as Map<String, dynamic>)['tenant']['id'] as String,
       tenantName:
           (json['context'] as Map<String, dynamic>)['tenant']['name'] as String,
       tenantSlug: match['tenant_slug'] as String,

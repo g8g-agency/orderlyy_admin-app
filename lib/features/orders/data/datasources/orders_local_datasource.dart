@@ -16,7 +16,7 @@ abstract class OrdersLocalDatasource {
 class OrdersLocalDatasourceImpl implements OrdersLocalDatasource {
   final SharedPreferences _prefs;
   static const _key = 'cached_restaurant_orders';
-  
+
   final _controller = StreamController<List<OrderDto>>.broadcast();
 
   OrdersLocalDatasourceImpl(this._prefs) {
@@ -28,7 +28,9 @@ class OrdersLocalDatasourceImpl implements OrdersLocalDatasource {
     if (raw == null) return [];
     try {
       final decoded = jsonDecode(raw) as List;
-      return decoded.map((e) => OrderDto.fromJson(e as Map<String, dynamic>)).toList();
+      return decoded
+          .map((e) => OrderDto.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (_) {
       return [];
     }
@@ -49,7 +51,12 @@ class OrdersLocalDatasourceImpl implements OrdersLocalDatasource {
   @override
   Future<OrderDto?> getActiveOrderForTable(String tableId) async {
     final current = _readFromPrefs();
-    final index = current.indexWhere((o) => o.tableId == tableId && o.status != 'completed' && o.status != 'cancelled');
+    final index = current.indexWhere(
+      (o) =>
+          o.tableId == tableId &&
+          o.status != 'completed' &&
+          o.status != 'cancelled',
+    );
     return index != -1 ? current[index] : null;
   }
 

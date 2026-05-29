@@ -9,7 +9,7 @@ class TaxProfileDto {
   final String name; // e.g. "GST 5%", "State Tax"
   final String? description;
   final int basisPoints; // e.g. 500 for 5.00%
-  
+
   final bool isActive;
   final int versionNum;
   final DateTime? deletedAt; // Soft delete tracking
@@ -27,9 +27,11 @@ class TaxProfileDto {
 
   factory TaxProfileDto.fromJson(Map<String, dynamic> json) {
     if (json['basis_points'] is double || json['percentage'] is double) {
-      debugPrint('WARNING: Received float/double for tax percentage. Backend must send basis point INTs.');
+      debugPrint(
+        'WARNING: Received float/double for tax percentage. Backend must send basis point INTs.',
+      );
     }
-    
+
     return TaxProfileDto(
       id: json['id'] as String,
       tenantId: json['tenant_id'] as String,
@@ -38,7 +40,9 @@ class TaxProfileDto {
       basisPoints: (json['basis_points'] as num).toInt(),
       isActive: json['is_active'] as bool? ?? false,
       versionNum: json['version_num'] as int? ?? 1,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String)
+          : null,
     );
   }
 
@@ -68,8 +72,11 @@ class ResolvedTaxProjectionDto {
   factory ResolvedTaxProjectionDto.fromJson(Map<String, dynamic> json) {
     return ResolvedTaxProjectionDto(
       entityId: json['entity_id'] as String,
-      appliedTaxProfileIds: List<String>.from(json['applied_tax_profile_ids'] as List? ?? []),
-      totalTaxBasisPoints: (json['total_tax_basis_points'] as num?)?.toInt() ?? 0,
+      appliedTaxProfileIds: List<String>.from(
+        json['applied_tax_profile_ids'] as List? ?? [],
+      ),
+      totalTaxBasisPoints:
+          (json['total_tax_basis_points'] as num?)?.toInt() ?? 0,
     );
   }
 }

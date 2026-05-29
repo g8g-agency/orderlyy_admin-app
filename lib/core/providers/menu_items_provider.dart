@@ -36,7 +36,9 @@ class MenuItemsState {
   // Derived Selectors
   List<MenuItemDto> getItemsForCategory(String categoryId) {
     return byId.values
-        .where((item) => item.categoryId == categoryId && item.deletedAt == null)
+        .where(
+          (item) => item.categoryId == categoryId && item.deletedAt == null,
+        )
         .toList();
   }
 }
@@ -49,7 +51,10 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
 
   /// Loads menu items. For scale, we rely on the repository's pagination logic.
   /// Here we aggregate pages into our normalized store.
-  Future<void> loadMenuItems({String? categoryId, bool forceRefresh = false}) async {
+  Future<void> loadMenuItems({
+    String? categoryId,
+    bool forceRefresh = false,
+  }) async {
     if (state.isLoading) return;
     if (state.isInitialized && !forceRefresh && categoryId == null) return;
 
@@ -58,8 +63,10 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
     final result = await _repository.getMenuItems(categoryId: categoryId);
 
     if (result is Success<List<MenuItemDto>>) {
-      final newById = forceRefresh ? <String, MenuItemDto>{} : Map<String, MenuItemDto>.from(state.byId);
-      for (final item in result.data) {
+      final newById = forceRefresh
+          ? <String, MenuItemDto>{}
+          : Map<String, MenuItemDto>.from(state.byId);
+      for (final item in result.value) {
         newById[item.id] = item;
       }
       state = state.copyWith(
@@ -68,38 +75,38 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
         isInitialized: true,
       );
     } else if (result is Failure<List<MenuItemDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
   Future<Result<MenuItemDto>> createMenuItem(MenuItemDto item) async {
     final result = await _repository.createMenuItem(item);
-    
+
     if (result is Success<MenuItemDto>) {
-      final newItem = result.data;
+      final newItem = result.value;
       final newById = Map<String, MenuItemDto>.from(state.byId);
       newById[newItem.id] = newItem;
       state = state.copyWith(byId: newById);
     }
-    
+
     return result;
   }
 
   Future<Result<MenuItemDto>> updateMenuItem(MenuItemDto item) async {
     final result = await _repository.updateMenuItem(item);
-    
+
     if (result is Success<MenuItemDto>) {
-      final updatedItem = result.data;
+      final updatedItem = result.value;
       final newById = Map<String, MenuItemDto>.from(state.byId);
       newById[updatedItem.id] = updatedItem;
       state = state.copyWith(byId: newById);
     } else if (result is Failure<MenuItemDto>) {
       // Deterministic reload on OCC Conflict
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadMenuItems(forceRefresh: true);
       }
     }
-    
+
     return result;
   }
 
@@ -114,7 +121,7 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
       newById.remove(itemId);
       state = state.copyWith(byId: newById);
     } else if (result is Failure<void>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadMenuItems(forceRefresh: true);
       }
     }
@@ -137,13 +144,17 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final menuItemsProvider = StateNotifierProvider<MenuItemsNotifier, MenuItemsState>((ref) {
-  final repo = ref.watch(menuItemsRepositoryProvider);
-  return MenuItemsNotifier(repo);
-});
+final menuItemsProvider =
+    StateNotifierProvider<MenuItemsNotifier, MenuItemsState>((ref) {
+      final repo = ref.watch(menuItemsRepositoryProvider);
+      return MenuItemsNotifier(repo);
+    });
 
 // Selector for a specific category's items
-final categoryItemsProvider = Provider.family<List<MenuItemDto>, String>((ref, categoryId) {
+final categoryItemsProvider = Provider.family<List<MenuItemDto>, String>((
+  ref,
+  categoryId,
+) {
   final state = ref.watch(menuItemsProvider);
   return state.getItemsForCategory(categoryId);
 });

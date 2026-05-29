@@ -22,16 +22,13 @@ class MenuCategoryDto {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'sort_order': sortOrder,
-      };
+    'id': id,
+    'name': name,
+    'sort_order': sortOrder,
+  };
 
-  MenuCategory toDomain() => MenuCategory(
-        id: id,
-        name: name,
-        sortOrder: sortOrder,
-      );
+  MenuCategory toDomain() =>
+      MenuCategory(id: id, name: name, sortOrder: sortOrder);
 }
 
 class MenuItemDto {
@@ -59,31 +56,34 @@ class MenuItemDto {
       categoryId: json['category_id'] as String,
       name: json['name'] as String,
       description: json['description'] as String? ?? '',
-      priceInCents: json['price_in_cents'] as int? ?? json['price'] as int? ?? 0,
+      priceInCents:
+          json['price_in_cents'] as int? ?? json['price'] as int? ?? 0,
       isAvailable: json['is_available'] as bool? ?? true,
-      modifierGroupIds: List<String>.from(json['modifier_group_ids'] as List? ?? []),
+      modifierGroupIds: List<String>.from(
+        json['modifier_group_ids'] as List? ?? [],
+      ),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'category_id': categoryId,
-        'name': name,
-        'description': description,
-        'price_in_cents': priceInCents,
-        'is_available': isAvailable,
-        'modifier_group_ids': modifierGroupIds,
-      };
+    'id': id,
+    'category_id': categoryId,
+    'name': name,
+    'description': description,
+    'price_in_cents': priceInCents,
+    'is_available': isAvailable,
+    'modifier_group_ids': modifierGroupIds,
+  };
 
   MenuItem toDomain() => MenuItem(
-        id: id,
-        categoryId: categoryId,
-        name: name,
-        description: description,
-        price: Money(amountInCents: priceInCents),
-        isAvailable: isAvailable,
-        modifierGroupIds: modifierGroupIds,
-      );
+    id: id,
+    categoryId: categoryId,
+    name: name,
+    description: description,
+    price: Money(amountInCents: priceInCents),
+    isAvailable: isAvailable,
+    modifierGroupIds: modifierGroupIds,
+  );
 }
 
 class ModifierOptionDto {
@@ -101,21 +101,22 @@ class ModifierOptionDto {
     return ModifierOptionDto(
       id: json['id'] as String,
       name: json['name'] as String,
-      priceInCents: json['price_in_cents'] as int? ?? json['price'] as int? ?? 0,
+      priceInCents:
+          json['price_in_cents'] as int? ?? json['price'] as int? ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'price_in_cents': priceInCents,
-      };
+    'id': id,
+    'name': name,
+    'price_in_cents': priceInCents,
+  };
 
   ModifierOption toDomain() => ModifierOption(
-        id: id,
-        name: name,
-        price: Money(amountInCents: priceInCents),
-      );
+    id: id,
+    name: name,
+    price: Money(amountInCents: priceInCents),
+  );
 }
 
 class ModifierGroupDto {
@@ -140,16 +141,16 @@ class ModifierGroupDto {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'options': options.map((e) => e.toJson()).toList(),
-      };
+    'id': id,
+    'name': name,
+    'options': options.map((e) => e.toJson()).toList(),
+  };
 
   ModifierGroup toDomain() => ModifierGroup(
-        id: id,
-        name: name,
-        options: options.map((e) => e.toDomain()).toList(),
-      );
+    id: id,
+    name: name,
+    options: options.map((e) => e.toDomain()).toList(),
+  );
 }
 
 class TaxConfigDto {
@@ -164,19 +165,20 @@ class TaxConfigDto {
   factory TaxConfigDto.fromJson(Map<String, dynamic> json) {
     return TaxConfigDto(
       vatRateBps: (json['vat_rate_bps'] as num?)?.toInt() ?? 0,
-      serviceChargeRateBps: (json['service_charge_rate_bps'] as num?)?.toInt() ?? 0,
+      serviceChargeRateBps:
+          (json['service_charge_rate_bps'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'vat_rate_bps': vatRateBps,
-        'service_charge_rate_bps': serviceChargeRateBps,
-      };
+    'vat_rate_bps': vatRateBps,
+    'service_charge_rate_bps': serviceChargeRateBps,
+  };
 
   TaxConfig toDomain() => TaxConfig(
-        vatRateBps: vatRateBps,
-        serviceChargeRateBps: serviceChargeRateBps,
-      );
+    vatRateBps: vatRateBps,
+    serviceChargeRateBps: serviceChargeRateBps,
+  );
 }
 
 class MenuSnapshotDto {
@@ -216,16 +218,19 @@ class MenuSnapshotDto {
           .map((e) => ModifierGroupDto.fromJson(e as Map<String, dynamic>))
           .toList(),
       taxConfig: TaxConfigDto.fromJson(
-          json['tax_configs'] as Map<String, dynamic>? ??
-              json['tax_config'] as Map<String, dynamic>? ??
-              {}),
+        json['tax_configs'] as Map<String, dynamic>? ??
+            json['tax_config'] as Map<String, dynamic>? ??
+            {},
+      ),
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
-      availabilityOverlay: (json['availability_overlay'] as Map? ??
-              json['availabilityOverlay'] as Map? ??
-              const {})
-          .map((k, v) => MapEntry(k.toString(), v as bool)),
+      availabilityOverlay:
+          (json['availability_overlay'] as Map? ??
+                  json['availabilityOverlay'] as Map? ??
+                  const {})
+              .map((k, v) => MapEntry(k.toString(), v as bool)),
       etag: json['etag'] as String?,
-      snapshotVersion: json['snapshot_version'] as String? ?? json['version'] as String?,
+      snapshotVersion:
+          json['snapshot_version'] as String? ?? json['version'] as String?,
       generatedAt: json['generated_at'] != null
           ? DateTime.tryParse(json['generated_at'] as String)
           : null,
@@ -234,28 +239,28 @@ class MenuSnapshotDto {
   }
 
   Map<String, dynamic> toJson() => {
-        'categories': categories.map((e) => e.toJson()).toList(),
-        'items': items.map((e) => e.toJson()).toList(),
-        'modifier_groups': modifierGroups.map((e) => e.toJson()).toList(),
-        'tax_configs': taxConfig.toJson(),
-        'metadata': metadata,
-        'availability_overlay': availabilityOverlay,
-        'etag': etag,
-        'snapshot_version': snapshotVersion,
-        'generated_at': generatedAt?.toIso8601String(),
-        'branch_id': branchId,
-      };
+    'categories': categories.map((e) => e.toJson()).toList(),
+    'items': items.map((e) => e.toJson()).toList(),
+    'modifier_groups': modifierGroups.map((e) => e.toJson()).toList(),
+    'tax_configs': taxConfig.toJson(),
+    'metadata': metadata,
+    'availability_overlay': availabilityOverlay,
+    'etag': etag,
+    'snapshot_version': snapshotVersion,
+    'generated_at': generatedAt?.toIso8601String(),
+    'branch_id': branchId,
+  };
 
   MenuSnapshot toDomain() => MenuSnapshot(
-        categories: categories.map((e) => e.toDomain()).toList(),
-        items: items.map((e) => e.toDomain()).toList(),
-        modifierGroups: modifierGroups.map((e) => e.toDomain()).toList(),
-        taxConfig: taxConfig.toDomain(),
-        metadata: metadata,
-        availabilityOverlay: availabilityOverlay,
-        etag: etag,
-        snapshotVersion: snapshotVersion,
-        generatedAt: generatedAt,
-        branchId: branchId,
-      );
+    categories: categories.map((e) => e.toDomain()).toList(),
+    items: items.map((e) => e.toDomain()).toList(),
+    modifierGroups: modifierGroups.map((e) => e.toDomain()).toList(),
+    taxConfig: taxConfig.toDomain(),
+    metadata: metadata,
+    availabilityOverlay: availabilityOverlay,
+    etag: etag,
+    snapshotVersion: snapshotVersion,
+    generatedAt: generatedAt,
+    branchId: branchId,
+  );
 }

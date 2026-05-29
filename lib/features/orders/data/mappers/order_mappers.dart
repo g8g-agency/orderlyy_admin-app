@@ -19,7 +19,7 @@ extension OrderDtoMapper on dto.OrderDto {
       tableLabel: tableLabel,
       status: domain.OrderStatus.fromString(status.name),
       items: items.map((dtoItem) => dtoItem.toDomain()).toList(),
-      totalAmount: Money(amount: totalAmount),
+      totalAmount: Money(amountInCents: totalAmount),
       createdAt: createdAt,
       updatedAt: updatedAt,
       staffId: staffId,
@@ -36,7 +36,7 @@ extension OrderItemDtoMapper on dto.OrderItemDto {
       menuItemId: menuItemId,
       menuItemName: menuItemName,
       quantity: quantity,
-      unitPrice: Money(amount: unitPrice),
+      unitPrice: Money(amountInCents: unitPriceAmount),
       notes: notes,
     );
   }
@@ -53,12 +53,13 @@ extension OrderMapper on Order {
       tableLabel: tableLabel,
       status: dto.OrderStatus.fromString(status.name),
       items: items.map((item) => item.toDto()).toList(),
-      totalAmount: totalAmount.amount,
+      totalAmount: totalAmount.amountInCents,
       createdAt: createdAt,
       updatedAt: updatedAt,
       staffId: staffId,
       staffName: staffName,
       notes: notes,
+      versionNum: 1,
     );
   }
 }
@@ -70,7 +71,8 @@ extension OrderItemMapper on OrderItem {
       menuItemId: menuItemId,
       menuItemName: menuItemName,
       quantity: quantity,
-      unitPrice: unitPrice.amount,
+      unitPriceAmount: unitPrice.amountInCents,
+      lineTotalAmount: unitPrice.amountInCents * quantity,
       notes: notes,
     );
   }

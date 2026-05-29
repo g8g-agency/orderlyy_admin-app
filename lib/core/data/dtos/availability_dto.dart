@@ -3,11 +3,12 @@ class AvailabilityRuleDto {
   final String tenantId;
   final String entityId;
   final String entityType; // e.g., 'menu_item', 'category'
-  
+
   // Note: UI may configure raw strings/rules, but backend owns parsing & evaluating them.
   final String ruleType; // e.g. 'always', 'schedule', 'custom'
-  final Map<String, dynamic>? scheduleConfig; // Opaque config interpreted by backend
-  
+  final Map<String, dynamic>?
+  scheduleConfig; // Opaque config interpreted by backend
+
   final int versionNum;
   final DateTime createdAt;
 
@@ -50,7 +51,7 @@ class AvailabilityRuleDto {
 class ResolvedAvailabilityProjectionDto {
   final String entityId;
   final bool isCurrentlyAvailable;
-  
+
   // Frontend purely displays this localized, NO evaluation logic locally.
   final DateTime? availableUntil;
   final DateTime? nextAvailableAt;
@@ -62,12 +63,18 @@ class ResolvedAvailabilityProjectionDto {
     this.nextAvailableAt,
   });
 
-  factory ResolvedAvailabilityProjectionDto.fromJson(Map<String, dynamic> json) {
+  factory ResolvedAvailabilityProjectionDto.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return ResolvedAvailabilityProjectionDto(
       entityId: json['entity_id'] as String,
       isCurrentlyAvailable: json['is_currently_available'] as bool? ?? false,
-      availableUntil: json['available_until'] != null ? DateTime.parse(json['available_until'] as String) : null,
-      nextAvailableAt: json['next_available_at'] != null ? DateTime.parse(json['next_available_at'] as String) : null,
+      availableUntil: json['available_until'] != null
+          ? DateTime.parse(json['available_until'] as String)
+          : null,
+      nextAvailableAt: json['next_available_at'] != null
+          ? DateTime.parse(json['next_available_at'] as String)
+          : null,
     );
   }
 }

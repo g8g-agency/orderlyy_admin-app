@@ -21,7 +21,7 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
       final queryParams = <String, dynamic>{
         'page': page,
         'limit': limit,
-        if (categoryId != null) 'category_id': categoryId,
+        'category_id': ?categoryId,
         if (search != null && search.isNotEmpty) 'search': search,
         if (includeDeleted) 'include_deleted': 'true',
       };
@@ -38,7 +38,8 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
             .toList();
         return Success(items);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to fetch menu items';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to fetch menu items';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -59,7 +60,8 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
       if (response.data['success'] == true) {
         return Success(MenuItemDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to create menu item';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to create menu item';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -80,7 +82,8 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
       if (response.data['success'] == true) {
         return Success(MenuItemDto.fromJson(response.data['data']));
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to update menu item';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to update menu item';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {
@@ -96,14 +99,16 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
       final response = await _dioClient.delete(
         '${ApiConstants.menuItems}/$itemId',
         data: {
-          'version_num': currentVersion, // Explicit OCC boundary for safe deletion
+          'version_num':
+              currentVersion, // Explicit OCC boundary for safe deletion
         },
       );
 
       if (response.data['success'] == true) {
         return const Success(null);
       } else {
-        final errorMessage = response.data['error']?['message'] ?? 'Failed to delete menu item';
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to delete menu item';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

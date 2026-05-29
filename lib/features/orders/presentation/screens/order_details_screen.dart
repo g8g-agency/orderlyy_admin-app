@@ -9,10 +9,7 @@ import '../../providers/orders_providers.dart';
 class OrderDetailsScreen extends ConsumerWidget {
   final String orderId;
 
-  const OrderDetailsScreen({
-    super.key,
-    required this.orderId,
-  });
+  const OrderDetailsScreen({super.key, required this.orderId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +22,9 @@ class OrderDetailsScreen extends ConsumerWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           );
         }
 
@@ -47,11 +46,17 @@ class OrderDetailsScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(right: 16),
                 child: Row(
                   children: [
-                    const Icon(Icons.circle, color: AppColors.success, size: 10),
+                    const Icon(
+                      Icons.circle,
+                      color: AppColors.success,
+                      size: 10,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'KDS Synced',
-                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -93,7 +98,9 @@ class OrderDetailsScreen extends ConsumerWidget {
       color: isDark ? AppColors.darkSurface : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -102,7 +109,9 @@ class OrderDetailsScreen extends ConsumerWidget {
           children: [
             Text(
               'Order Flow Stage',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -134,7 +143,9 @@ class OrderDetailsScreen extends ConsumerWidget {
                               height: 2,
                               color: index == 0
                                   ? Colors.transparent
-                                  : (index <= currentStageIndex ? AppColors.primary : Colors.grey[300]),
+                                  : (index <= currentStageIndex
+                                        ? AppColors.primary
+                                        : Colors.grey[300]),
                             ),
                           ),
                           Container(
@@ -144,17 +155,25 @@ class OrderDetailsScreen extends ConsumerWidget {
                               color: circleColor,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isActive ? AppColors.primary : Colors.transparent,
+                                color: isActive
+                                    ? AppColors.primary
+                                    : Colors.transparent,
                                 width: 2,
                               ),
                             ),
                             child: Center(
                               child: isCompleted && !isActive
-                                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                  ? const Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.white,
+                                    )
                                   : Text(
                                       '${index + 1}',
                                       style: TextStyle(
-                                        color: isCompleted ? Colors.white : Colors.grey[600],
+                                        color: isCompleted
+                                            ? Colors.white
+                                            : Colors.grey[600],
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -166,7 +185,9 @@ class OrderDetailsScreen extends ConsumerWidget {
                               height: 2,
                               color: index == stages.length - 1
                                   ? Colors.transparent
-                                  : (index < currentStageIndex ? AppColors.primary : Colors.grey[300]),
+                                  : (index < currentStageIndex
+                                        ? AppColors.primary
+                                        : Colors.grey[300]),
                             ),
                           ),
                         ],
@@ -203,7 +224,9 @@ class OrderDetailsScreen extends ConsumerWidget {
       color: isDark ? AppColors.darkSurface : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -219,12 +242,16 @@ class OrderDetailsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Waiter Ownership',
-                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   order.waiterName,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -252,7 +279,9 @@ class OrderDetailsScreen extends ConsumerWidget {
       color: isDark ? AppColors.darkSurface : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -264,11 +293,16 @@ class OrderDetailsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Order Items',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   order.totalPrice.formatted,
-                  style: theme.textTheme.titleMedium?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -291,26 +325,36 @@ class OrderDetailsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkBorder : Colors.grey[200],
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : Colors.grey[200],
                           borderRadius: BorderRadius.circular(6),
                         ),
                         width: double.infinity,
                         child: Text(
                           'Seat $seat',
-                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       ...seatItems.map((item) {
-                        final isCancelled = item.status == OrderItemStatus.cancelled;
+                        final isCancelled =
+                            item.status == OrderItemStatus.cancelled;
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(
                             item.product.name,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              decoration: isCancelled ? TextDecoration.lineThrough : null,
+                              decoration: isCancelled
+                                  ? TextDecoration.lineThrough
+                                  : null,
                               color: isCancelled ? Colors.grey : null,
                             ),
                           ),
@@ -319,22 +363,35 @@ class OrderDetailsScreen extends ConsumerWidget {
                             children: [
                               if (item.selectedModifiers.isNotEmpty)
                                 Text(
-                                  item.selectedModifiers.map((m) => m.name).join(', '),
+                                  item.selectedModifiers
+                                      .map((m) => m.name)
+                                      .join(', '),
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    decoration: isCancelled ? TextDecoration.lineThrough : null,
+                                    decoration: isCancelled
+                                        ? TextDecoration.lineThrough
+                                        : null,
                                   ),
                                 ),
                               const SizedBox(height: 2),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: (isCancelled ? Colors.grey : AppColors.primary).withValues(alpha: 0.1),
+                                  color:
+                                      (isCancelled
+                                              ? Colors.grey
+                                              : AppColors.primary)
+                                          .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   item.status.name.toUpperCase(),
                                   style: TextStyle(
-                                    color: isCancelled ? Colors.grey : AppColors.primary,
+                                    color: isCancelled
+                                        ? Colors.grey
+                                        : AppColors.primary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 9,
                                   ),
@@ -346,7 +403,9 @@ class OrderDetailsScreen extends ConsumerWidget {
                             '${item.quantity}x ${item.totalPrice.formatted}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              decoration: isCancelled ? TextDecoration.lineThrough : null,
+                              decoration: isCancelled
+                                  ? TextDecoration.lineThrough
+                                  : null,
                               color: isCancelled ? Colors.grey : null,
                             ),
                           ),
@@ -368,7 +427,9 @@ class OrderDetailsScreen extends ConsumerWidget {
       color: isDark ? AppColors.darkSurface : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -377,7 +438,9 @@ class OrderDetailsScreen extends ConsumerWidget {
           children: [
             Text(
               'Cancellation Audit Logs',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Divider(height: 24),
             if (order.cancelLogs.isEmpty)
@@ -392,7 +455,11 @@ class OrderDetailsScreen extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.assignment_late_outlined, color: AppColors.error, size: 18),
+                      const Icon(
+                        Icons.assignment_late_outlined,
+                        color: AppColors.error,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

@@ -13,11 +13,14 @@ class OperationalRecoveryScreen extends ConsumerStatefulWidget {
   const OperationalRecoveryScreen({super.key});
 
   @override
-  ConsumerState<OperationalRecoveryScreen> createState() => _OperationalRecoveryScreenState();
+  ConsumerState<OperationalRecoveryScreen> createState() =>
+      _OperationalRecoveryScreenState();
 }
 
-class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryScreen> {
-  int _currentPhase = 2; // 0: connection, 1: snapshot, 2: replay, 3: validation, 4: resume, 5: completed
+class _OperationalRecoveryScreenState
+    extends ConsumerState<OperationalRecoveryScreen> {
+  int _currentPhase =
+      2; // 0: connection, 1: snapshot, 2: replay, 3: validation, 4: resume, 5: completed
   double _progress = 0.45;
   int _eventsRemaining = 47;
   int _eventsReplayed = 23;
@@ -46,7 +49,7 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
     // Replay phase simulation
     _phaseTimer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
       if (!mounted) return;
-      
+
       setState(() {
         if (_currentPhase == 2) {
           if (_eventsRemaining > 10) {
@@ -90,18 +93,24 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.darkSurface : Colors.white;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             children: [
               const SizedBox(height: 24),
-              
+
               // ── Header Logo & Title ──────────────────────────────────────
               Center(
                 child: Container(
@@ -110,7 +119,10 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.primary.withValues(alpha: 0.12),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.35), width: 2),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                      width: 2,
+                    ),
                   ),
                   child: const Center(
                     child: Text(
@@ -127,7 +139,10 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
               const SizedBox(height: 16),
               Text(
                 'Restoring Operational Data',
-                style: AppTextStyles.h2.copyWith(color: textPrimary, fontWeight: FontWeight.w800),
+                style: AppTextStyles.h2.copyWith(
+                  color: textPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -136,7 +151,7 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                 style: AppTextStyles.bodyMedium.copyWith(color: textSecondary),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 32),
 
               // ── Stepper Phases ───────────────────────────────────────────
@@ -152,7 +167,10 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                         textPrimary: textPrimary,
                         textSecondary: textSecondary,
                       ),
-                      _buildStepConnector(isDone: _currentPhase > 0, borderColor: borderColor),
+                      _buildStepConnector(
+                        isDone: _currentPhase > 0,
+                        borderColor: borderColor,
+                      ),
                       _buildStepperItem(
                         index: 1,
                         title: 'Fetching Snapshot',
@@ -161,17 +179,25 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                         textPrimary: textPrimary,
                         textSecondary: textSecondary,
                       ),
-                      _buildStepConnector(isDone: _currentPhase > 1, borderColor: borderColor),
+                      _buildStepConnector(
+                        isDone: _currentPhase > 1,
+                        borderColor: borderColor,
+                      ),
                       _buildStepperItem(
                         index: 2,
                         title: 'Replaying Events',
-                        subtitle: _currentPhase == 2 ? '$_eventsRemaining events remaining' : null,
+                        subtitle: _currentPhase == 2
+                            ? '$_eventsRemaining events remaining'
+                            : null,
                         isDone: _currentPhase > 2,
                         isActive: _currentPhase == 2,
                         textPrimary: textPrimary,
                         textSecondary: textSecondary,
                       ),
-                      _buildStepConnector(isDone: _currentPhase > 2, borderColor: borderColor),
+                      _buildStepConnector(
+                        isDone: _currentPhase > 2,
+                        borderColor: borderColor,
+                      ),
                       _buildStepperItem(
                         index: 3,
                         title: 'Validating State',
@@ -180,7 +206,10 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                         textPrimary: textPrimary,
                         textSecondary: textSecondary,
                       ),
-                      _buildStepConnector(isDone: _currentPhase > 3, borderColor: borderColor),
+                      _buildStepConnector(
+                        isDone: _currentPhase > 3,
+                        borderColor: borderColor,
+                      ),
                       _buildStepperItem(
                         index: 4,
                         title: 'Resuming Operations',
@@ -189,7 +218,7 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                         textPrimary: textPrimary,
                         textSecondary: textSecondary,
                       ),
-                      
+
                       const SizedBox(height: 32),
 
                       // ── Progress Bar ─────────────────────────────────────────
@@ -199,16 +228,22 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                           value: _progress,
                           minHeight: 8,
                           backgroundColor: borderColor,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.blue,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      
+
                       // Safety Note
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.shield_rounded, color: AppColors.success, size: 16),
+                          const Icon(
+                            Icons.shield_rounded,
+                            color: AppColors.success,
+                            size: 16,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Your floor data is protected. No actions were lost.',
@@ -219,11 +254,16 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // ── Expandable Details ────────────────────────────────────
-                      _buildRecoveryDetails(surfaceColor, borderColor, textPrimary, textSecondary),
+                      _buildRecoveryDetails(
+                        surfaceColor,
+                        borderColor,
+                        textPrimary,
+                        textSecondary,
+                      ),
                     ],
                   ),
                 ),
@@ -269,7 +309,9 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           // Simulates continuing with local state
-                          ref.read(realtimeStateProvider.notifier).simulateReconnect();
+                          ref
+                              .read(realtimeStateProvider.notifier)
+                              .simulateReconnect();
                           context.go('/dashboard');
                         },
                       ),
@@ -298,7 +340,11 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
 
     if (isDone) {
       iconColor = AppColors.success;
-      iconWidget = const Icon(Icons.check_rounded, color: Colors.white, size: 16);
+      iconWidget = const Icon(
+        Icons.check_rounded,
+        color: Colors.white,
+        size: 16,
+      );
     } else if (isActive) {
       iconColor = AppColors.warning;
       iconWidget = const SizedBox(
@@ -313,7 +359,11 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
       iconColor = Colors.grey;
       iconWidget = Text(
         '${index + 1}',
-        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
       );
     }
 
@@ -322,10 +372,7 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
         Container(
           width: 28,
           height: 28,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: iconColor,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: iconColor),
           child: Center(child: iconWidget),
         ),
         const SizedBox(width: 12),
@@ -336,7 +383,9 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
               Text(
                 title,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: isDarkened(index) ? FontWeight.normal : FontWeight.bold,
+                  fontWeight: isDarkened(index)
+                      ? FontWeight.normal
+                      : FontWeight.bold,
                   color: isDarkened(index) ? textSecondary : textPrimary,
                 ),
               ),
@@ -344,7 +393,10 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: AppTextStyles.caption.copyWith(color: AppColors.warning, fontWeight: FontWeight.w600),
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ],
@@ -359,7 +411,10 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
     return index > _currentPhase;
   }
 
-  Widget _buildStepConnector({required bool isDone, required Color borderColor}) {
+  Widget _buildStepConnector({
+    required bool isDone,
+    required Color borderColor,
+  }) {
     return Container(
       margin: const EdgeInsets.only(left: 13, top: 4, bottom: 4),
       height: 20,
@@ -368,7 +423,12 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
     );
   }
 
-  Widget _buildRecoveryDetails(Color surfaceColor, Color borderColor, Color textPrimary, Color textSecondary) {
+  Widget _buildRecoveryDetails(
+    Color surfaceColor,
+    Color borderColor,
+    Color textPrimary,
+    Color textSecondary,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
@@ -380,10 +440,15 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
           ListTile(
             title: Text(
               'Recovery Details',
-              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                color: textPrimary,
+              ),
             ),
             trailing: Icon(
-              _detailsExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+              _detailsExpanded
+                  ? Icons.expand_less_rounded
+                  : Icons.expand_more_rounded,
               color: textSecondary,
             ),
             onTap: () {
@@ -398,11 +463,19 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildDetailRow('Events replayed', '$_eventsReplayed / 70', textSecondary),
+                  _buildDetailRow(
+                    'Events replayed',
+                    '$_eventsReplayed / 70',
+                    textSecondary,
+                  ),
                   const SizedBox(height: 8),
                   _buildDetailRow('Snapshot age', '8 min ago', textSecondary),
                   const SizedBox(height: 8),
-                  _buildDetailRow('Last known event', '7 min ago', textSecondary),
+                  _buildDetailRow(
+                    'Last known event',
+                    '7 min ago',
+                    textSecondary,
+                  ),
                 ],
               ),
             ),
@@ -416,8 +489,14 @@ class _OperationalRecoveryScreenState extends ConsumerState<OperationalRecoveryS
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTextStyles.bodySmall.copyWith(color: textSecondary)),
-        Text(value, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }

@@ -208,7 +208,7 @@ void main() {
         ]
       }
     ],
-    'tax_configs': {'vat_rate': 0.10, 'service_charge_rate': 0.05}
+    'tax_configs': {'vat_rate_bps': 1000, 'service_charge_rate_bps': 500}
   };
 
   group('MenuRepositoryImpl Snapshot Integration Tests', () {
@@ -245,7 +245,7 @@ void main() {
       expect(snapshot.categories[0].name, 'Burgers');
       expect(snapshot.items[0].name, 'Classic Burger');
       expect(snapshot.modifierGroups[0].options[0].name, 'Cheese');
-      expect(snapshot.taxConfig.vatRate, 0.10);
+      expect(snapshot.taxConfig.vatRateBps, 1000);
 
       // Verify cached values
       expect(mockBox.get('menu_etag_br_1'), '"etag123"');
@@ -255,7 +255,7 @@ void main() {
     test('getMenuSnapshot sends If-None-Match header and handles 304 Not Modified', () async {
       // Pre-seed cache
       await mockBox.put('menu_etag_br_1', '"etag123"');
-      await mockBox.put('menu_snapshot_br_1', '{"categories":[{"id":"cat_1","name":"Burgers"}],"items":[],"modifier_groups":[],"tax_configs":{"vat_rate":0.1}}');
+      await mockBox.put('menu_snapshot_br_1', '{"categories":[{"id":"cat_1","name":"Burgers"}],"items":[],"modifier_groups":[],"tax_configs":{"vat_rate_bps":1000}}');
 
       mockDio.mockResponse = Response(
         requestOptions: RequestOptions(path: '/snapshot/menu'),
@@ -367,7 +367,7 @@ void main() {
 
     test('menuStalenessProvider returns SyncState.degraded when loaded offline', () async {
       mockNetwork.isConnectedValue = false;
-      await mockBox.put('menu_snapshot_mock_branch', '{"categories":[],"items":[],"modifier_groups":[],"tax_configs":{"vat_rate":0.1}}');
+      await mockBox.put('menu_snapshot_mock_branch', '{"categories":[],"items":[],"modifier_groups":[],"tax_configs":{"vat_rate_bps":1000}}');
 
       final notifier = container.read(menuSnapshotNotifierProvider.notifier);
       await notifier.loadMenu();

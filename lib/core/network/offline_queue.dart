@@ -7,7 +7,8 @@ import 'package:uuid/uuid.dart';
 
 final uuid = Uuid();
 
-typedef OfflineWriteHandler = Future<void> Function(Map<String, dynamic> payload);
+typedef OfflineWriteHandler =
+    Future<void> Function(Map<String, dynamic> payload);
 
 class OfflineQueueManager {
   final Box<String> _queueBox;
@@ -20,7 +21,9 @@ class OfflineQueueManager {
     // Listen for network reconnect to auto-flush queue
     _networkInfo.onConnectionChanged.listen((isConnected) {
       if (isConnected) {
-        _talker.info('Network connection restored. Flushing offline write queue...');
+        _talker.info(
+          'Network connection restored. Flushing offline write queue...',
+        );
         processQueue();
       }
     });
@@ -30,16 +33,17 @@ class OfflineQueueManager {
     _handlers[action] = handler;
   }
 
-  Future<void> queueWrite({required String action, required Map<String, dynamic> payload}) async {
+  Future<void> queueWrite({
+    required String action,
+    required Map<String, dynamic> payload,
+  }) async {
     final id = 'offline-write-${uuid.v4()}';
-    final item = {
-      'id': id,
-      'action': action,
-      'payload': payload,
-    };
+    final item = {'id': id, 'action': action, 'payload': payload};
     await _queueBox.put(id, jsonEncode(item));
-    _talker.warning('Offline/Timeout: Queued write operation [$action] with ID: $id');
-    
+    _talker.warning(
+      'Offline/Timeout: Queued write operation [$action] with ID: $id',
+    );
+
     // Attempt processing in case we are actually online
     if (await _networkInfo.isConnected) {
       await processQueue();
@@ -62,7 +66,9 @@ class OfflineQueueManager {
 
       for (final key in keys) {
         if (!await _networkInfo.isConnected) {
-          _talker.warning('Connection lost while processing offline queue. Suspending.');
+          _talker.warning(
+            'Connection lost while processing offline queue. Suspending.',
+          );
           break;
         }
 
@@ -79,13 +85,19 @@ class OfflineQueueManager {
             _talker.info('Processing queued write [$action] (ID: $key)...');
             await handler(payload);
             await _queueBox.delete(key);
-            _talker.info('Successfully executed and removed queued write [$action] (ID: $key)');
+            _talker.info(
+              'Successfully executed and removed queued write [$action] (ID: $key)',
+            );
           } else {
-            _talker.error('No handler registered for offline write action: $action. Skipping.');
+            _talker.error(
+              'No handler registered for offline write action: $action. Skipping.',
+            );
             await _queueBox.delete(key);
           }
         } catch (e) {
-          _talker.error('Failed to process offline write (ID: $key): $e. Will retry later.');
+          _talker.error(
+            'Failed to process offline write (ID: $key): $e. Will retry later.',
+          );
           break; // Stop execution on error to preserve FIFO ordering
         }
       }

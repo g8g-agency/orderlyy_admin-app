@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../network/api_exception.dart';
+import '../../network/api_exception.dart';
 import '../repositories/auth_repository.dart';
 import '../dtos/auth_dto.dart';
 
@@ -64,9 +64,13 @@ class SupabaseAuthRepository implements AuthRepository {
       final savedUserId = prefs.getString(_kSupabaseStaffUserIdKey);
       final savedStaffJson = prefs.getString(_kSupabaseStaffSessionKey);
 
-      if (savedUserId != null && savedUserId.startsWith('staff-') && savedStaffJson != null) {
+      if (savedUserId != null &&
+          savedUserId.startsWith('staff-') &&
+          savedStaffJson != null) {
         _currentUserId = savedUserId;
-        _currentStaff = StaffDto.fromJson(jsonDecode(savedStaffJson) as Map<String, dynamic>);
+        _currentStaff = StaffDto.fromJson(
+          jsonDecode(savedStaffJson) as Map<String, dynamic>,
+        );
         _authStateController.add(_currentUserId);
         debugPrint('[SupabaseAuth] Restored staff session: $_currentUserId');
         return;
@@ -91,7 +95,9 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Result<LoginResponseDto>> signInWithPassword(LoginRequestDto request) async {
+  Future<Result<LoginResponseDto>> signInWithPassword(
+    LoginRequestDto request,
+  ) async {
     try {
       // Clear staff session first
       await _clearStaffSession();
@@ -103,19 +109,26 @@ class SupabaseAuthRepository implements AuthRepository {
 
       final user = response.user;
       if (user == null) {
-        return Failure(ApiFailure('Authentication failed: user is null', ApiErrorCode.unauthorized));
+        return Failure(
+          ApiFailure(
+            'Authentication failed: user is null',
+            ApiErrorCode.unauthorized,
+          ),
+        );
       }
 
       _currentUserId = user.id;
       _currentStaff = null;
       _authStateController.add(_currentUserId);
 
-      return Success(LoginResponseDto(
-        userId: user.id,
-        email: user.email ?? request.email,
-        accessToken: response.session?.accessToken,
-        isSuccess: true,
-      ));
+      return Success(
+        LoginResponseDto(
+          userId: user.id,
+          email: user.email ?? request.email,
+          accessToken: response.session?.accessToken,
+          isSuccess: true,
+        ),
+      );
     } on AuthException catch (e) {
       return Failure(ApiFailure(e.message, ApiErrorCode.unauthorized));
     } catch (e) {
@@ -144,7 +157,12 @@ class SupabaseAuthRepository implements AuthRepository {
           .maybeSingle();
 
       if (response == null) {
-        return Failure(ApiFailure('Invalid PIN or restaurant code.', ApiErrorCode.unauthorized));
+        return Failure(
+          ApiFailure(
+            'Invalid PIN or restaurant code.',
+            ApiErrorCode.unauthorized,
+          ),
+        );
       }
 
       final staff = StaffDto.fromJson(response);
@@ -155,14 +173,14 @@ class SupabaseAuthRepository implements AuthRepository {
       // Persist staff session
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kSupabaseStaffUserIdKey, staff.id);
-      await prefs.setString(_kSupabaseStaffSessionKey, jsonEncode(staff.toJson()));
+      await prefs.setString(
+        _kSupabaseStaffSessionKey,
+        jsonEncode(staff.toJson()),
+      );
 
       _authStateController.add(_currentUserId);
 
-      return Success(StaffPinLoginResponseDto(
-        isSuccess: true,
-        staff: staff,
-      ));
+      return Success(StaffPinLoginResponseDto(isSuccess: true, staff: staff));
     } catch (e) {
       return Failure(ApiFailure(e.toString()));
     }
@@ -174,32 +192,34 @@ class SupabaseAuthRepository implements AuthRepository {
     if (_currentUserId != null && _currentUserId!.startsWith('staff-')) {
       final staff = _currentStaff;
       if (staff != null) {
-        return Success(AppContextDto(
-          user: UserContextDto(
-            id: staff.id,
-            fullName: staff.name,
-            role: staff.role,
-            mustChangePassword: false,
+        return Success(
+          AppContextDto(
+            user: UserContextDto(
+              id: staff.id,
+              fullName: staff.name,
+              role: staff.role,
+              mustChangePassword: false,
+            ),
+            tenant: TenantContextDto(
+              id: staff.tenantId,
+              name: staff.tenantName,
+              slug: staff.tenantSlug,
+              plan: 'standard',
+              status: 'active',
+              isActive: true,
+            ),
+            onboarding: const OnboardingContextDto(
+              isComplete: true,
+              stepsCompleted: [],
+            ),
+            flags: const ContextFlagsDto(
+              mustChangePassword: false,
+              subscriptionExpired: false,
+              accountSuspended: false,
+              onboardingRequired: false,
+            ),
           ),
-          tenant: TenantContextDto(
-            id: staff.tenantId,
-            name: staff.tenantName,
-            slug: staff.tenantSlug,
-            plan: 'standard',
-            status: 'active',
-            isActive: true,
-          ),
-          onboarding: const OnboardingContextDto(
-            isComplete: true,
-            stepsCompleted: [],
-          ),
-          flags: const ContextFlagsDto(
-            mustChangePassword: false,
-            subscriptionExpired: false,
-            accountSuspended: false,
-            onboardingRequired: false,
-          ),
-        ));
+        );
       }
       return const Success(null);
     }
@@ -214,8 +234,11 @@ class SupabaseAuthRepository implements AuthRepository {
     if (res.status >= 400) {
       final errorData = res.data;
       if (errorData is Map<String, dynamic>) {
-        final message = (errorData['message'] ?? errorData['error'])?.toString();
-        return Failure(ApiFailure(message ?? 'Unable to resolve account context.'));
+        final message = (errorData['message'] ?? errorData['error'])
+            ?.toString();
+        return Failure(
+          ApiFailure(message ?? 'Unable to resolve account context.'),
+        );
       }
       return Failure(ApiFailure('Unable to resolve account context.'));
     }

@@ -23,25 +23,28 @@ class ProjectionIntegrity {
     for (final item in snapshot.items) {
       // 1. Category check
       if (!categoryIds.contains(item.categoryId)) {
-        errors.add('MenuItem "${item.name}" (ID: ${item.id}) references non-existent category ID "${item.categoryId}".');
+        errors.add(
+          'MenuItem "${item.name}" (ID: ${item.id}) references non-existent category ID "${item.categoryId}".',
+        );
       }
 
       // 2. Price check
       if (item.price.amountInCents < 0) {
-        errors.add('MenuItem "${item.name}" (ID: ${item.id}) has a negative price: ${item.price.amountInCents} cents.');
+        errors.add(
+          'MenuItem "${item.name}" (ID: ${item.id}) has a negative price: ${item.price.amountInCents} cents.',
+        );
       }
 
       // 3. Modifier group check
       for (final groupId in item.modifierGroupIds) {
         if (!modifierGroupIds.contains(groupId)) {
-          errors.add('MenuItem "${item.name}" (ID: ${item.id}) references non-existent modifier group ID "$groupId".');
+          errors.add(
+            'MenuItem "${item.name}" (ID: ${item.id}) references non-existent modifier group ID "$groupId".',
+          );
         }
       }
     }
 
-    return ProjectionIntegrityResult(
-      isValid: errors.isEmpty,
-      errors: errors,
-    );
+    return ProjectionIntegrityResult(isValid: errors.isEmpty, errors: errors);
   }
 }

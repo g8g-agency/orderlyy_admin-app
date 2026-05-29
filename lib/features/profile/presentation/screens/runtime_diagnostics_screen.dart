@@ -85,23 +85,25 @@ class DiagnosticsData {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-final diagnosticsProvider = StateProvider<DiagnosticsData>((ref) => DiagnosticsData(
-      isConnected: true,
-      lastPingMs: 87,
-      reconnectCount: 1,
-      messagesSent: 234,
-      messagesReceived: 1247,
-      p50Ms: 94,
-      p95Ms: 187,
-      p99Ms: 312,
-      lastSnapshotAt: DateTime.now().subtract(const Duration(minutes: 8)),
-      eventsReceived: 412,
-      eventsReplayed: 23,
-      duplicatesDiscarded: 2,
-      queueDepth: 0,
-      failedOps: 0,
-      appVersion: '2.1.0+42',
-    ));
+final diagnosticsProvider = StateProvider<DiagnosticsData>(
+  (ref) => DiagnosticsData(
+    isConnected: true,
+    lastPingMs: 87,
+    reconnectCount: 1,
+    messagesSent: 234,
+    messagesReceived: 1247,
+    p50Ms: 94,
+    p95Ms: 187,
+    p99Ms: 312,
+    lastSnapshotAt: DateTime.now().subtract(const Duration(minutes: 8)),
+    eventsReceived: 412,
+    eventsReplayed: 23,
+    duplicatesDiscarded: 2,
+    queueDepth: 0,
+    failedOps: 0,
+    appVersion: '2.1.0+42',
+  ),
+);
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -109,14 +111,27 @@ class RuntimeDiagnosticsScreen extends ConsumerStatefulWidget {
   const RuntimeDiagnosticsScreen({super.key});
 
   @override
-  ConsumerState<RuntimeDiagnosticsScreen> createState() => _RuntimeDiagnosticsScreenState();
+  ConsumerState<RuntimeDiagnosticsScreen> createState() =>
+      _RuntimeDiagnosticsScreenState();
 }
 
-class _RuntimeDiagnosticsScreenState extends ConsumerState<RuntimeDiagnosticsScreen> {
+class _RuntimeDiagnosticsScreenState
+    extends ConsumerState<RuntimeDiagnosticsScreen> {
   Timer? _refreshTimer;
   DateTime _lastRefreshTime = DateTime.now();
   final _random = math.Random();
-  final List<double> _sparklineHeights = [20, 35, 15, 45, 60, 25, 40, 55, 30, 48];
+  final List<double> _sparklineHeights = [
+    20,
+    35,
+    15,
+    45,
+    60,
+    25,
+    40,
+    55,
+    30,
+    48,
+  ];
 
   @override
   void initState() {
@@ -142,7 +157,7 @@ class _RuntimeDiagnosticsScreenState extends ConsumerState<RuntimeDiagnosticsScr
       final newPing = (state.lastPingMs + pingNoise).clamp(35, 450);
       final sentAdd = _random.nextInt(4) + 1;
       final recvAdd = _random.nextInt(12) + 2;
-      
+
       // Randomly adjust sparkline values to simulate traffic
       setState(() {
         _sparklineHeights.removeAt(0);
@@ -153,7 +168,8 @@ class _RuntimeDiagnosticsScreenState extends ConsumerState<RuntimeDiagnosticsScr
         lastPingMs: newPing,
         messagesSent: state.messagesSent + sentAdd,
         messagesReceived: state.messagesReceived + recvAdd,
-        eventsReceived: state.eventsReceived + (_random.nextInt(3) == 0 ? 1 : 0),
+        eventsReceived:
+            state.eventsReceived + (_random.nextInt(3) == 0 ? 1 : 0),
       );
     });
   }
@@ -172,7 +188,8 @@ class _RuntimeDiagnosticsScreenState extends ConsumerState<RuntimeDiagnosticsScr
 
   void _exportDiagnostics(DiagnosticsData data) {
     HapticFeedback.heavyImpact();
-    final report = '''
+    final report =
+        '''
 ORDERLLI DIAGNOSTICS REPORT
 ----------------------------
 App Version: ${data.appVersion}
@@ -229,15 +246,24 @@ Failed Ops: ${data.failedOps}
 
     final surfaceColor = isDark ? AppColors.darkSurface : Colors.white;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: Text(
           'Runtime Diagnostics',
-          style: AppTextStyles.h3.copyWith(color: textPrimary, fontWeight: FontWeight.bold),
+          style: AppTextStyles.h3.copyWith(
+            color: textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
         elevation: 0,
@@ -263,7 +289,13 @@ Failed Ops: ${data.failedOps}
         padding: const EdgeInsets.all(16),
         children: [
           // ── Device / App Header Card ──────────────────────────────────────
-          _buildHeaderCard(data, surfaceColor, borderColor, textPrimary, textSecondary),
+          _buildHeaderCard(
+            data,
+            surfaceColor,
+            borderColor,
+            textPrimary,
+            textSecondary,
+          ),
           const SizedBox(height: 20),
 
           // ── WEBSOCKET HEALTH ──────────────────────────────────────────────
@@ -275,16 +307,29 @@ Failed Ops: ${data.failedOps}
               _buildDiagnosticRow(
                 'Connection Status',
                 trailingWidget: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: (data.isConnected ? AppColors.success : AppColors.error).withValues(alpha: 0.12),
+                    color:
+                        (data.isConnected ? AppColors.success : AppColors.error)
+                            .withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: (data.isConnected ? AppColors.success : AppColors.error).withValues(alpha: 0.35)),
+                    border: Border.all(
+                      color:
+                          (data.isConnected
+                                  ? AppColors.success
+                                  : AppColors.error)
+                              .withValues(alpha: 0.35),
+                    ),
                   ),
                   child: Text(
                     data.isConnected ? 'Connected' : 'Disconnected',
                     style: TextStyle(
-                      color: data.isConnected ? AppColors.success : AppColors.error,
+                      color: data.isConnected
+                          ? AppColors.success
+                          : AppColors.error,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -348,7 +393,7 @@ Failed Ops: ${data.failedOps}
                 textPrimary: textPrimary,
               ),
               _divider(borderColor),
-              
+
               // Sparkline chart
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -357,7 +402,9 @@ Failed Ops: ${data.failedOps}
                   children: [
                     Text(
                       'Live Latency Timeline',
-                      style: AppTextStyles.caption.copyWith(color: textSecondary),
+                      style: AppTextStyles.caption.copyWith(
+                        color: textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -367,11 +414,11 @@ Failed Ops: ${data.failedOps}
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: _sparklineHeights.map((h) {
                           // Color code each bar in sparkline based on height
-                          final barColor = h > 50 
-                              ? AppColors.error 
-                              : h > 30 
-                                  ? AppColors.warning 
-                                  : AppColors.success;
+                          final barColor = h > 50
+                              ? AppColors.error
+                              : h > 30
+                              ? AppColors.warning
+                              : AppColors.success;
                           return Container(
                             width: 22,
                             height: h,
@@ -435,7 +482,7 @@ Failed Ops: ${data.failedOps}
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
 
           // ── Action Buttons ───────────────────────────────────────────────
@@ -450,7 +497,10 @@ Failed Ops: ${data.failedOps}
               elevation: 0,
             ),
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Refresh Now', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              'Refresh Now',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             onPressed: _handleManualRefresh,
           ),
           const SizedBox(height: 8),
@@ -460,7 +510,7 @@ Failed Ops: ${data.failedOps}
               style: AppTextStyles.caption.copyWith(color: textSecondary),
             ),
           ),
-          
+
           const SizedBox(height: 24),
         ],
       ),
@@ -494,15 +544,14 @@ Failed Ops: ${data.failedOps}
               const SizedBox(height: 4),
               Text(
                 data.appVersion,
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: textPrimary,
+                ),
               ),
             ],
           ),
-          Container(
-            height: 32,
-            width: 1,
-            color: borderColor,
-          ),
+          Container(height: 32, width: 1, color: borderColor),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -513,15 +562,14 @@ Failed Ops: ${data.failedOps}
               const SizedBox(height: 4),
               Text(
                 'anon-8f3a2c',
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: textPrimary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: textPrimary,
+                ),
               ),
             ],
           ),
-          Container(
-            height: 32,
-            width: 1,
-            color: borderColor,
-          ),
+          Container(height: 32, width: 1, color: borderColor),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -532,7 +580,10 @@ Failed Ops: ${data.failedOps}
               const SizedBox(height: 4),
               Text(
                 'PROD-STAGE',
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.warning),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.warning,
+                ),
               ),
             ],
           ),
@@ -567,9 +618,7 @@ Failed Ops: ${data.failedOps}
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -587,7 +636,10 @@ Failed Ops: ${data.failedOps}
         children: [
           Text(
             label,
-            style: AppTextStyles.bodyMedium.copyWith(color: textPrimary, fontWeight: FontWeight.w500),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           if (trailingWidget != null)
             trailingWidget

@@ -24,17 +24,10 @@ import '../data/repositories/settings_repository.dart';
 
 import '../data/mock/mock_auth_repository.dart';
 import '../data/mock/mock_menu_repository.dart';
-import '../data/mock/mock_orders_repository.dart';
 import '../data/mock/mock_staff_repository.dart';
-import '../data/mock/mock_tables_repository.dart';
-import '../data/mock/mock_settings_repository.dart';
 
-import '../data/supabase/supabase_auth_repository.dart';
-import '../data/supabase/supabase_menu_repository.dart';
-import '../data/supabase/supabase_orders_repository.dart';
-import '../data/supabase/supabase_staff_repository.dart';
-import '../data/supabase/supabase_tables_repository.dart';
-import '../data/supabase/supabase_settings_repository.dart';
+import '../data/api/api_staff_repository.dart';
+
 
 import '../data/api/api_auth_repository.dart';
 import '../data/api/api_categories_repository.dart';
@@ -43,19 +36,21 @@ import '../data/api/api_menu_items_repository.dart';
 import '../data/repositories/menu_items_repository.dart';
 import '../data/api/api_pricing_repository.dart';
 import '../data/repositories/pricing_repository.dart';
+import '../data/api/api_tax_repository.dart';
+import '../data/repositories/tax_repository.dart';
 import '../data/api/api_modifier_repository.dart';
 import '../data/repositories/modifier_repository.dart';
 import '../data/api/api_tables_repository.dart';
-import '../data/repositories/tables_repository.dart';
 import '../data/api/api_availability_repository.dart';
 import '../data/repositories/availability_repository.dart';
 import '../data/api/api_orders_repository.dart';
 import '../data/api/api_settings_repository.dart';
 import '../data/api/api_analytics_repository.dart';
 import '../data/repositories/analytics_repository.dart';
+import '../../features/runtime_monitoring/data/repositories/runtime_observability_repository.dart';
+import '../../features/runtime_monitoring/data/api/api_runtime_observability_repository.dart';
 
 import '../data/local/offline_sync_queue.dart';
-import '../data/repositories/offline_first_orders_repository.dart';
 import '../network/network_providers.dart';
 
 // ── Feature flag ──────────────────────────────────────────────────────────────
@@ -83,7 +78,7 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
 // ── Auth Repository Provider ──────────────────────────────────────────────────
 // NOTE: In mock mode this is overridden in main.dart with a pre-seeded
 // MockAuthRepository instance (session already restored from SharedPreferences).
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
+final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>((ref) {
   if (kUseMockRepositories) return MockAuthRepository();
   final dioClient = ref.watch(dioClientProvider);
   final supabaseClient = ref.watch(supabaseClientProvider);
@@ -92,9 +87,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 // ── Menu Repository Provider ──────────────────────────────────────────────────
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
-  if (kUseMockRepositories) return MockMenuRepository();
-  final client = ref.watch(supabaseClientProvider);
-  return SupabaseMenuRepository(client);
+  return MockMenuRepository();
 });
 
 // ── Categories Repository Provider ────────────────────────────────────────────
@@ -152,9 +145,22 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
 });
 
 // ── Analytics Repository Provider (Phase 11) ────────────────────────────────
+// ── Analytics Repository Provider (Phase 11) ────────────────────────────────
 final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
   return ApiAnalyticsRepository(dioClient);
 });
 
-// ── Staff Repository Provider ─────────────────────────────────────────────────
+// ── Runtime Observability Repository Provider ───────────────────────────────
+final runtimeObservabilityRepositoryProvider = Provider<RuntimeObservabilityRepository>((ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  final supabaseClient = ref.watch(supabaseClientProvider);
+  return ApiRuntimeObservabilityRepository(dioClient, supabaseClient);
+});
+
+final staffRepositoryProvider = Provider<StaffRepository>((ref) {
+  if (kUseMockRepositories) return MockStaffRepository();
+  final dioClient = ref.watch(dioClientProvider);
+  final supabaseClient = ref.watch(supabaseClientProvider);
+  return ApiStaffRepository(dioClient, supabaseClient);
+});

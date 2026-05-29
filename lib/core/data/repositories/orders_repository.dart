@@ -18,7 +18,10 @@ abstract class OrdersRepository {
 
   /// Creates a new order safely. Requires an idempotency key to survive offline retries.
   /// Backend calculates all totals, taxes, discounts.
-  Future<Result<OrderDto>> createOrderEntity(OrderDto order, {required String idempotencyKey});
+  Future<Result<OrderDto>> createOrderEntity(
+    OrderDto order, {
+    required String idempotencyKey,
+  });
 
   /// Safely transitions an order state. Backend validates the state machine transition.
   Future<Result<OrderDto>> transitionOrderStatus(
@@ -36,9 +39,8 @@ abstract class OrdersRepository {
     required String idempotencyKey,
   });
 
-
   // ── Legacy Methods (Deprecated) ───────────────────────────────────────────
-  
+
   @Deprecated('Use getOrdersPaginated instead')
   Future<List<OrderDto>> getOrders(
     String tenantId, {
@@ -63,7 +65,9 @@ abstract class OrdersRepository {
   @Deprecated('Use transitionOrderStatus to cancelled instead')
   Future<void> cancelOrder(String orderId);
 
-  @Deprecated('Realtime is now managed via OrdersNotifier sequence reconciliation')
+  @Deprecated(
+    'Realtime is now managed via OrdersNotifier sequence reconciliation',
+  )
   Stream<List<OrderDto>> watchOrders(String tenantId);
 
   @Deprecated('Migrate to Phase 11 Analytics API')

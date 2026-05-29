@@ -50,29 +50,36 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
     final result = await _repository.getModifierGroups();
 
     if (result is Success<List<ModifierGroupDto>>) {
-      final newGroups = forceRefresh ? <String, ModifierGroupDto>{} : Map<String, ModifierGroupDto>.from(state.groupsById);
-      for (final group in result.data) {
+      final newGroups = forceRefresh
+          ? <String, ModifierGroupDto>{}
+          : Map<String, ModifierGroupDto>.from(state.groupsById);
+      for (final group in result.value) {
         newGroups[group.id] = group;
       }
       state = state.copyWith(isLoading: false, groupsById: newGroups);
     } else if (result is Failure<List<ModifierGroupDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
-  Future<void> loadItemsForGroup(String groupId, {bool forceRefresh = false}) async {
+  Future<void> loadItemsForGroup(
+    String groupId, {
+    bool forceRefresh = false,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getModifierItems(groupId);
 
     if (result is Success<List<ModifierItemDto>>) {
-      final newItems = forceRefresh ? <String, ModifierItemDto>{} : Map<String, ModifierItemDto>.from(state.itemsById);
-      for (final item in result.data) {
+      final newItems = forceRefresh
+          ? <String, ModifierItemDto>{}
+          : Map<String, ModifierItemDto>.from(state.itemsById);
+      for (final item in result.value) {
         newItems[item.id] = item;
       }
       state = state.copyWith(isLoading: false, itemsById: newItems);
     } else if (result is Failure<List<ModifierItemDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
@@ -82,7 +89,7 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
 
     if (result is Success<ModifierGroupDto>) {
       final newGroups = Map<String, ModifierGroupDto>.from(state.groupsById);
-      newGroups[result.data.id] = result.data;
+      newGroups[result.value.id] = result.value;
       state = state.copyWith(groupsById: newGroups);
     }
 
@@ -94,10 +101,10 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
 
     if (result is Success<ModifierGroupDto>) {
       final newGroups = Map<String, ModifierGroupDto>.from(state.groupsById);
-      newGroups[result.data.id] = result.data;
+      newGroups[result.value.id] = result.value;
       state = state.copyWith(groupsById: newGroups);
     } else if (result is Failure<ModifierGroupDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadGroups(forceRefresh: true);
       }
     }
@@ -109,14 +116,17 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
     final group = state.groupsById[groupId];
     if (group == null) return Failure(ApiFailure('Group not found locally'));
 
-    final result = await _repository.deleteModifierGroup(groupId, group.versionNum);
+    final result = await _repository.deleteModifierGroup(
+      groupId,
+      group.versionNum,
+    );
 
     if (result is Success<void>) {
       final newGroups = Map<String, ModifierGroupDto>.from(state.groupsById);
       newGroups.remove(groupId);
       state = state.copyWith(groupsById: newGroups);
     } else if (result is Failure<void>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadGroups(forceRefresh: true);
       }
     }
@@ -130,7 +140,7 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
 
     if (result is Success<ModifierItemDto>) {
       final newItems = Map<String, ModifierItemDto>.from(state.itemsById);
-      newItems[result.data.id] = result.data;
+      newItems[result.value.id] = result.value;
       state = state.copyWith(itemsById: newItems);
     }
 
@@ -142,10 +152,10 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
 
     if (result is Success<ModifierItemDto>) {
       final newItems = Map<String, ModifierItemDto>.from(state.itemsById);
-      newItems[result.data.id] = result.data;
+      newItems[result.value.id] = result.value;
       state = state.copyWith(itemsById: newItems);
     } else if (result is Failure<ModifierItemDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadItemsForGroup(item.groupId, forceRefresh: true);
       }
     }
@@ -157,14 +167,17 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
     final item = state.itemsById[itemId];
     if (item == null) return Failure(ApiFailure('Item not found locally'));
 
-    final result = await _repository.deleteModifierItem(itemId, item.versionNum);
+    final result = await _repository.deleteModifierItem(
+      itemId,
+      item.versionNum,
+    );
 
     if (result is Success<void>) {
       final newItems = Map<String, ModifierItemDto>.from(state.itemsById);
       newItems.remove(itemId);
       state = state.copyWith(itemsById: newItems);
     } else if (result is Failure<void>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadItemsForGroup(item.groupId, forceRefresh: true);
       }
     }
@@ -195,13 +208,18 @@ class ModifierNotifier extends StateNotifier<ModifierState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final modifierProvider = StateNotifierProvider<ModifierNotifier, ModifierState>((ref) {
-  final repo = ref.watch(modifierRepositoryProvider);
-  return ModifierNotifier(repo);
-});
+final modifierProvider = StateNotifierProvider<ModifierNotifier, ModifierState>(
+  (ref) {
+    final repo = ref.watch(modifierRepositoryProvider);
+    return ModifierNotifier(repo);
+  },
+);
 
 // Selectors
-final modifierItemsByGroupProvider = Provider.family<List<ModifierItemDto>, String>((ref, groupId) {
-  final state = ref.watch(modifierProvider);
-  return state.itemsById.values.where((item) => item.groupId == groupId).toList();
-});
+final modifierItemsByGroupProvider =
+    Provider.family<List<ModifierItemDto>, String>((ref, groupId) {
+      final state = ref.watch(modifierProvider);
+      return state.itemsById.values
+          .where((item) => item.groupId == groupId)
+          .toList();
+    });

@@ -61,7 +61,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
           minSelections: 0,
           maxSelections: 2,
           isRequired: false,
-          options: available.where((o) => o.id == 'mod_bacon' || o.id == 'mod_avocado').toList(),
+          options: available
+              .where((o) => o.id == 'mod_bacon' || o.id == 'mod_avocado')
+              .toList(),
         ),
         ModifierGroup(
           id: 'bg_buns',
@@ -88,7 +90,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
           minSelections: 1,
           maxSelections: 2,
           isRequired: true,
-          options: available.where((o) => o.id == 'mod_spicy_mayo' || o.id == 'mod_jalapenos').toList(),
+          options: available
+              .where((o) => o.id == 'mod_spicy_mayo' || o.id == 'mod_jalapenos')
+              .toList(),
         ),
       ];
     } else if (widget.product.id == 'prod_salad') {
@@ -99,7 +103,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
           minSelections: 0,
           maxSelections: 1,
           isRequired: false,
-          options: available.where((o) => o.id == 'mod_chicken_breast').toList(),
+          options: available
+              .where((o) => o.id == 'mod_chicken_breast')
+              .toList(),
         ),
         ModifierGroup(
           id: 'sd_dressings',
@@ -118,7 +124,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
           minSelections: 1,
           maxSelections: 2,
           isRequired: true,
-          options: available.where((o) => o.id == 'mod_parmesan' || o.id == 'mod_truffle').toList(),
+          options: available
+              .where((o) => o.id == 'mod_parmesan' || o.id == 'mod_truffle')
+              .toList(),
         ),
       ];
     } else {
@@ -164,7 +172,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
               Expanded(
                 child: Text(
                   widget.product.name,
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(
@@ -177,7 +187,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
           Text(
             'Customize item options',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -201,7 +213,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
                   final isGroupValid = group.validate(_selected);
 
                   // Count selected options in this group
-                  final groupSelectedCount = _selected.where((opt) => group.options.contains(opt)).length;
+                  final groupSelectedCount = _selected
+                      .where((opt) => group.options.contains(opt))
+                      .length;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
@@ -213,13 +227,19 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
                           children: [
                             Text(
                               group.name,
-                              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             if (!isGroupValid)
                               const Text(
                                 'Selection required',
-                                style: TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.bold),
-                              )
+                                style: TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -228,11 +248,18 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
                           return CheckboxListTile(
                             activeColor: AppColors.primary,
                             contentPadding: EdgeInsets.zero,
-                            title: Text(modifier.name, style: theme.textTheme.bodyLarge),
+                            title: Text(
+                              modifier.name,
+                              style: theme.textTheme.bodyLarge,
+                            ),
                             subtitle: Text(
-                              modifier.price.amountInCents == 0 ? 'Free' : '+ ${modifier.price.formatted}',
+                              modifier.price.amountInCents == 0
+                                  ? 'Free'
+                                  : '+ ${modifier.price.formatted}',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: modifier.price.amountInCents == 0 ? AppColors.success : AppColors.primary,
+                                color: modifier.price.amountInCents == 0
+                                    ? AppColors.success
+                                    : AppColors.primary,
                               ),
                             ),
                             value: isChecked,
@@ -240,12 +267,15 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
                               setState(() {
                                 if (val == true) {
                                   // Validate max selections before adding
-                                  if (groupSelectedCount < group.maxSelections) {
+                                  if (groupSelectedCount <
+                                      group.maxSelections) {
                                     _selected.add(modifier);
                                   } else {
                                     // If max selections reached and max is 1, toggle selection (single choice behavior)
                                     if (group.maxSelections == 1) {
-                                      _selected.removeWhere((opt) => group.options.contains(opt));
+                                      _selected.removeWhere(
+                                        (opt) => group.options.contains(opt),
+                                      );
                                       _selected.add(modifier);
                                     }
                                   }
@@ -273,7 +303,9 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
                 children: [
                   Text(
                     'Total Price',
-                    style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     totalPrice.formatted,
@@ -286,9 +318,14 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: allGroupsValid ? AppColors.primary : Colors.grey,
+                  backgroundColor: allGroupsValid
+                      ? AppColors.primary
+                      : Colors.grey,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -299,7 +336,10 @@ class _ModifierSelectorSheetState extends State<ModifierSelectorSheet> {
                         Navigator.pop(context);
                       }
                     : null,
-                child: const Text('Add to Order', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Add to Order',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),

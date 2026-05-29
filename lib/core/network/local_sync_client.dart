@@ -26,7 +26,9 @@ class LocalSyncClient {
 
   static bool _isEnabled() {
     try {
-      final flag = AppConfig.instance.featureFlags['enableExperimentalRealtime'] ?? false;
+      final flag =
+          AppConfig.instance.featureFlags['enableExperimentalRealtime'] ??
+          false;
       return !kIsWeb &&
           !Platform.environment.containsKey('FLUTTER_TEST') &&
           flag;
@@ -47,8 +49,8 @@ class LocalSyncClient {
 
     try {
       _channel = WebSocketChannel.connect(Uri.parse('ws://localhost:8085'));
-      
-      // Listen to the channel's stream. In web_socket_channel v3, 
+
+      // Listen to the channel's stream. In web_socket_channel v3,
       // the channel is a WebSocketChannel wrapper that handles connection asynchronously.
       _channel!.stream.listen(
         (message) {
@@ -67,7 +69,9 @@ class LocalSyncClient {
           _isConnected = false;
           _isConnecting = false;
           if (kDebugMode) {
-            print('[LocalSyncClient] WebSocket stream done. Reconnecting in 3s...');
+            print(
+              '[LocalSyncClient] WebSocket stream done. Reconnecting in 3s...',
+            );
           }
           Future.delayed(const Duration(seconds: 3), connect);
         },
@@ -75,7 +79,9 @@ class LocalSyncClient {
           _isConnected = false;
           _isConnecting = false;
           if (kDebugMode) {
-            print('[LocalSyncClient] WebSocket stream error: $error. Reconnecting in 3s...');
+            print(
+              '[LocalSyncClient] WebSocket stream error: $error. Reconnecting in 3s...',
+            );
           }
           Future.delayed(const Duration(seconds: 3), connect);
         },
@@ -89,7 +95,9 @@ class LocalSyncClient {
       _isConnected = false;
       _isConnecting = false;
       if (kDebugMode) {
-        print('[LocalSyncClient] Exception during connection: $e. Reconnecting in 3s...');
+        print(
+          '[LocalSyncClient] Exception during connection: $e. Reconnecting in 3s...',
+        );
       }
       Future.delayed(const Duration(seconds: 3), connect);
     }
@@ -99,7 +107,9 @@ class LocalSyncClient {
     if (!enabled) return;
     if (!_isConnected || _channel == null) {
       if (kDebugMode) {
-        print('[LocalSyncClient] Client not connected. Trying to connect and dropping event: $type');
+        print(
+          '[LocalSyncClient] Client not connected. Trying to connect and dropping event: $type',
+        );
       }
       connect();
       return;
@@ -120,7 +130,9 @@ class LocalSyncClient {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[LocalSyncClient] Error sending event: $e. Attempting reconnection...');
+        print(
+          '[LocalSyncClient] Error sending event: $e. Attempting reconnection...',
+        );
       }
       _isConnected = false;
       connect();

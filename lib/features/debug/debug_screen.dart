@@ -14,6 +14,11 @@ class DebugScreen extends StatelessWidget {
     ('/admin/analytics', 'Admin Analytics', Icons.bar_chart_rounded),
     ('/admin/profile', 'Admin Profile', Icons.person_rounded),
     ('/admin/settings', 'App Settings', Icons.settings_rounded),
+    (
+      '/admin/runtime-observability',
+      'Runtime Observability Panel',
+      Icons.monitor_heart_rounded,
+    ),
   ];
 
   @override

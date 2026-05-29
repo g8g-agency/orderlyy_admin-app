@@ -166,10 +166,18 @@ class AppTheme {
   );
 
   // ── Radius ────────────────────────────────────────────────────────────────
-  static const BorderRadius radiusSm = BorderRadius.all(Radius.circular(4)); // 0.25rem = 4px
-  static const BorderRadius radiusMd = BorderRadius.all(Radius.circular(8)); // DEFAULT = 8px
-  static const BorderRadius radiusLg = BorderRadius.all(Radius.circular(16)); // 1rem = 16px
-  static const BorderRadius radiusXl = BorderRadius.all(Radius.circular(24)); // 1.5rem = 24px
+  static const BorderRadius radiusSm = BorderRadius.all(
+    Radius.circular(4),
+  ); // 0.25rem = 4px
+  static const BorderRadius radiusMd = BorderRadius.all(
+    Radius.circular(8),
+  ); // DEFAULT = 8px
+  static const BorderRadius radiusLg = BorderRadius.all(
+    Radius.circular(16),
+  ); // 1rem = 16px
+  static const BorderRadius radiusXl = BorderRadius.all(
+    Radius.circular(24),
+  ); // 1.5rem = 24px
   static const BorderRadius radiusFull = BorderRadius.all(
     Radius.circular(9999),
   );
@@ -318,9 +326,7 @@ class AppTheme {
           foregroundColor: primaryContainer,
           minimumSize: const Size(double.infinity, 52),
           side: const BorderSide(color: primaryContainer, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: GoogleFonts.plusJakartaSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -339,7 +345,9 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: surfaceContainerLowest,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Level 1 Card is 16px = 1rem radius
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ), // Level 1 Card is 16px = 1rem radius
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceContainerLowest,

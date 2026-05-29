@@ -1,11 +1,6 @@
 // lib/features/notifications/domain/entities/app_notification.dart
 
-enum NotificationSeverity {
-  info,
-  warning,
-  urgent,
-  critical,
-}
+enum NotificationSeverity { info, warning, urgent, critical }
 
 enum NotificationCategory {
   kitchenReady,

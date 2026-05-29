@@ -7,7 +7,7 @@ import 'repository_providers.dart';
 class TablesState {
   final bool isLoading;
   final String? error;
-  
+
   // Normalized map of tables by ID
   final Map<String, RestaurantTableDto> tablesById;
 
@@ -35,46 +35,57 @@ class TablesNotifier extends StateNotifier<TablesState> {
 
   TablesNotifier(this._repository) : super(const TablesState());
 
-  Future<void> loadTables({String? sectionId, bool forceRefresh = false}) async {
+  Future<void> loadTables({
+    String? sectionId,
+    bool forceRefresh = false,
+  }) async {
     if (state.isLoading) return;
-    if (state.tablesById.isNotEmpty && !forceRefresh && sectionId == null) return;
+    if (state.tablesById.isNotEmpty && !forceRefresh && sectionId == null) {
+      return;
+    }
 
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getTablesPaginated(sectionId: sectionId);
 
     if (result is Success<List<RestaurantTableDto>>) {
-      final newTables = forceRefresh ? <String, RestaurantTableDto>{} : Map<String, RestaurantTableDto>.from(state.tablesById);
-      for (final table in result.data) {
+      final newTables = forceRefresh
+          ? <String, RestaurantTableDto>{}
+          : Map<String, RestaurantTableDto>.from(state.tablesById);
+      for (final table in result.value) {
         newTables[table.id] = table;
       }
       state = state.copyWith(isLoading: false, tablesById: newTables);
     } else if (result is Failure<List<RestaurantTableDto>>) {
-      state = state.copyWith(isLoading: false, error: result.failure.message);
+      state = state.copyWith(isLoading: false, error: result.error.message);
     }
   }
 
-  Future<Result<RestaurantTableDto>> createTable(RestaurantTableDto table) async {
+  Future<Result<RestaurantTableDto>> createTable(
+    RestaurantTableDto table,
+  ) async {
     final result = await _repository.createTableEntity(table);
 
     if (result is Success<RestaurantTableDto>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);
-      newTables[result.data.id] = result.data;
+      newTables[result.value.id] = result.value;
       state = state.copyWith(tablesById: newTables);
     }
 
     return result;
   }
 
-  Future<Result<RestaurantTableDto>> updateTable(RestaurantTableDto table) async {
+  Future<Result<RestaurantTableDto>> updateTable(
+    RestaurantTableDto table,
+  ) async {
     final result = await _repository.updateTableEntity(table);
 
     if (result is Success<RestaurantTableDto>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);
-      newTables[result.data.id] = result.data;
+      newTables[result.value.id] = result.value;
       state = state.copyWith(tablesById: newTables);
     } else if (result is Failure<RestaurantTableDto>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadTables(forceRefresh: true);
       }
     }
@@ -86,14 +97,17 @@ class TablesNotifier extends StateNotifier<TablesState> {
     final table = state.tablesById[tableId];
     if (table == null) return Failure(ApiFailure('Table not found locally'));
 
-    final result = await _repository.deleteTableEntity(tableId, table.versionNum);
+    final result = await _repository.deleteTableEntity(
+      tableId,
+      table.versionNum,
+    );
 
     if (result is Success<void>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);
       newTables.remove(tableId);
       state = state.copyWith(tablesById: newTables);
     } else if (result is Failure<void>) {
-      if (result.failure.code == ApiErrorCode.conflict) {
+      if (result.error.code == ApiErrorCode.conflict) {
         await loadTables(forceRefresh: true);
       }
     }
@@ -114,13 +128,19 @@ class TablesNotifier extends StateNotifier<TablesState> {
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-final tablesProvider = StateNotifierProvider<TablesNotifier, TablesState>((ref) {
+final tablesProvider = StateNotifierProvider<TablesNotifier, TablesState>((
+  ref,
+) {
   final repo = ref.watch(tablesRepositoryProvider);
   return TablesNotifier(repo);
 });
 
 // Selector for rendering tables by section abstracting visual layout
-final sectionTablesProvider = Provider.family<List<RestaurantTableDto>, String>((ref, sectionId) {
-  final state = ref.watch(tablesProvider);
-  return state.tablesById.values.where((t) => t.sectionId == sectionId).toList();
-});
+final sectionTablesProvider = Provider.family<List<RestaurantTableDto>, String>(
+  (ref, sectionId) {
+    final state = ref.watch(tablesProvider);
+    return state.tablesById.values
+        .where((t) => t.sectionId == sectionId)
+        .toList();
+  },
+);

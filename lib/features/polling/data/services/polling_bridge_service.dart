@@ -26,7 +26,8 @@ class PollingIntervalController {
     }
 
     // Terminal states should not poll frequently
-    if (order.status == OrderStatus.cancelled || order.status == OrderStatus.served) {
+    if (order.status == OrderStatus.cancelled ||
+        order.status == OrderStatus.served) {
       return const Duration(seconds: 300);
     }
 
@@ -41,11 +42,16 @@ class PollingIntervalController {
   }
 }
 
-final pollingIntervalControllerProvider = Provider<PollingIntervalController>((ref) {
+final pollingIntervalControllerProvider = Provider<PollingIntervalController>((
+  ref,
+) {
   return PollingIntervalController();
 });
 
-final orderPollingProvider = StreamProvider.family<OrderDto, String>((ref, orderId) async* {
+final orderPollingProvider = StreamProvider.family<OrderDto, String>((
+  ref,
+  orderId,
+) async* {
   final repository = ref.watch(ordersRepositoryProvider);
   final controller = ref.watch(pollingIntervalControllerProvider);
 
@@ -70,7 +76,8 @@ final orderPollingProvider = StreamProvider.family<OrderDto, String>((ref, order
         yield order;
 
         // Stop polling once order is served or cancelled
-        if (order.status == OrderStatus.cancelled || order.status == OrderStatus.served) {
+        if (order.status == OrderStatus.cancelled ||
+            order.status == OrderStatus.served) {
           break;
         }
       } else {
