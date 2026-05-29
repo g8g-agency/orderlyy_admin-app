@@ -396,6 +396,26 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
     }
   }
 
+  @override
+  Future<void> deleteAllOrders(String tenantId) async {
+    final action = SyncAction(
+      id: UuidGenerator.generateRuntimeId(prefix: 'act-delete-all'),
+      type: 'deleteAllOrders',
+      payload: {'tenantId': tenantId},
+      timestamp: DateTime.now(),
+      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-delete-all'),
+    );
+
+    await _queue.enqueue(action);
+    _updateController.add(null);
+
+    if (_queue.isOnline()) {
+      syncPendingQueue().catchError((e) {
+        debugPrint('[OfflineFirstOrdersRepository] Immediate sync error: $e');
+      });
+    }
+  }
+
   // ── Sync Queue ─────────────────────────────────────────────────────────────
   // NOTE: Not part of OrdersRepository interface — called internally and by IsOnlineNotifier.
   Future<void> syncPendingQueue() async {
@@ -425,6 +445,9 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
         } else if (action.type == 'cancelOrder') {
           final orderId = action.payload['orderId'] as String;
           await _delegate.cancelOrder(orderId);
+        } else if (action.type == 'deleteAllOrders') {
+          final tenantId = action.payload['tenantId'] as String;
+          await _delegate.deleteAllOrders(tenantId);
         }
 
         // Successfully synchronized, remove from persistent queue
@@ -480,6 +503,9 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
         if (idx != -1) {
           list[idx] = list[idx].copyWith(status: OrderStatus.cancelled);
         }
+      } else if (action.type == 'deleteAllOrders') {
+        final tenantId = action.payload['tenantId'] as String;
+        list.removeWhere((o) => o.tenantId == tenantId);
       }
     }
 

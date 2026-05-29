@@ -8,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../data/dtos/table_dto.dart';
-import '../../data/repositories/table_infrastructure_repository.dart';
 import '../state/table_infrastructure_providers.dart';
 
 // ── Local State & Interaction Providers ───────────────────────────────────────

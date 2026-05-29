@@ -21,7 +21,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
   OrderDto? _selectedOrder;
   bool _filterToday = true;
   String _filterTable = 'All';
-  String _filterStatus = 'All'; // 'All', 'Completed', 'Voided', 'Pending/Preparing'
+  String _filterStatus =
+      'All'; // 'All', 'Completed', 'Voided', 'Pending/Preparing'
 
   // Controller for Search Input
   final TextEditingController _searchController = TextEditingController();
@@ -174,9 +175,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                           thickness: 1.h,
                           color: AppTheme.surfaceContainerHigh,
                         ),
-                        Expanded(
-                          child: _buildOrdersList(filteredOrders, true),
-                        ),
+                        Expanded(child: _buildOrdersList(filteredOrders, true)),
                       ],
                     ),
                   ),
@@ -202,9 +201,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                     thickness: 1.h,
                     color: AppTheme.surfaceContainerHigh,
                   ),
-                  Expanded(
-                    child: _buildOrdersList(filteredOrders, false),
-                  ),
+                  Expanded(child: _buildOrdersList(filteredOrders, false)),
                 ],
               );
             }
@@ -521,8 +518,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
               color: isSelected
                   ? AppTheme.primary
                   : isVoided
-                      ? AppTheme.surfaceContainerHigh
-                      : AppTheme.surfaceContainerHighest,
+                  ? AppTheme.surfaceContainerHigh
+                  : AppTheme.surfaceContainerHighest,
               width: isSelected ? 1.5.w : 1.w,
             ),
             boxShadow: isSelected
@@ -532,7 +529,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
           ),
           child: Column(
@@ -767,17 +764,11 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Items Breakdown List (3/5 Width)
-                Expanded(
-                  flex: 3,
-                  child: _buildItemsBreakdownCard(order),
-                ),
+                Expanded(flex: 3, child: _buildItemsBreakdownCard(order)),
                 SizedBox(width: 20.w),
 
                 // KDS Stepper Audit Logs (2/5 Width)
-                Expanded(
-                  flex: 2,
-                  child: _buildKotLogsCard(order),
-                ),
+                Expanded(flex: 2, child: _buildKotLogsCard(order)),
               ],
             ),
           ),
@@ -801,10 +792,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: AppTheme.surfaceContainerHigh,
-          width: 1.w,
-        ),
+        border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -835,10 +823,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
             itemCount: order.items.length,
             separatorBuilder: (context, index) => Padding(
               padding: EdgeInsets.symmetric(vertical: 12.h),
-              child: Divider(
-                height: 1.h,
-                color: AppTheme.surfaceContainerLow,
-              ),
+              child: Divider(height: 1.h, color: AppTheme.surfaceContainerLow),
             ),
             itemBuilder: (context, index) {
               final item = order.items[index];
@@ -920,10 +905,12 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
     final time1 = '${pad(dt.hour)}:${pad(dt.minute)}:${pad(dt.second)}';
 
     final prepTime = dt.add(const Duration(minutes: 2, seconds: 55));
-    final time2 = '${pad(prepTime.hour)}:${pad(prepTime.minute)}:${pad(prepTime.second)}';
+    final time2 =
+        '${pad(prepTime.hour)}:${pad(prepTime.minute)}:${pad(prepTime.second)}';
 
     final serveTime = order.updatedAt.toLocal();
-    final time3 = '${pad(serveTime.hour)}:${pad(serveTime.minute)}:${pad(serveTime.second)}';
+    final time3 =
+        '${pad(serveTime.hour)}:${pad(serveTime.minute)}:${pad(serveTime.second)}';
 
     final isVoided = order.status == OrderStatus.cancelled;
     final isServed = order.status == OrderStatus.served;
@@ -934,10 +921,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: AppTheme.surfaceContainerHigh,
-          width: 1.w,
-        ),
+        border: Border.all(color: AppTheme.surfaceContainerHigh, width: 1.w),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1013,8 +997,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
       dotColor = isError
           ? AppTheme.error
           : isLatest
-              ? AppTheme.primary
-              : AppTheme.secondary;
+          ? AppTheme.primary
+          : AppTheme.secondary;
     }
 
     return Row(
@@ -1050,7 +1034,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       color: dotColor.withValues(alpha: 0.4),
                       blurRadius: 6,
                       spreadRadius: 2,
-                    )
+                    ),
                   ]
                 : null,
           ),
@@ -1068,8 +1052,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                   fontSize: 12.sp,
                   color: isLatest
                       ? isError
-                          ? AppTheme.error
-                          : AppTheme.primary
+                            ? AppTheme.error
+                            : AppTheme.primary
                       : AppTheme.onSurface,
                 ),
               ),
@@ -1138,11 +1122,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
           // Re-Print KOT Button
           ElevatedButton.icon(
             onPressed: () => _triggerKotRePrint(context, order),
-            icon: Icon(
-              Icons.print_rounded,
-              size: 16.r,
-              color: Colors.white,
-            ),
+            icon: Icon(Icons.print_rounded, size: 16.r, color: Colors.white),
             label: Text(
               'Re-Print KOT',
               style: GoogleFonts.plusJakartaSans(
@@ -1230,9 +1210,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                   Navigator.pop(context);
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.error,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
               child: Text(
                 'Void Order',
                 style: GoogleFonts.plusJakartaSans(
@@ -1262,14 +1240,10 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
             return Container(
               decoration: BoxDecoration(
                 color: AppTheme.background,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(20.r),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(20.r),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
                 child: Column(
                   children: [
                     // Pull Handle Indicator
@@ -1313,10 +1287,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                     ),
 
                     // Action Footer fixed at bottom of sheet
-                    Divider(
-                      height: 1.h,
-                      color: AppTheme.surfaceContainerHigh,
-                    ),
+                    Divider(height: 1.h, color: AppTheme.surfaceContainerHigh),
                     _buildActionFooter(context, order),
                   ],
                 ),
@@ -1348,9 +1319,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
               children: [
                 Text(
                   '#ORD-$orderId Detail',
-                  style: AppTheme.titleLg.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: AppTheme.titleLg.copyWith(fontWeight: FontWeight.w800),
                 ),
                 SizedBox(height: 2.h),
                 Text(
@@ -1373,10 +1342,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
               ),
               SizedBox(height: 2.h),
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 6.w,
-                  vertical: 2.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
                   color: isVoided
                       ? AppTheme.errorContainer
@@ -1445,9 +1411,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
               backgroundColor: AppTheme.surfaceContainerLowest,
               title: Text(
                 'Filter Order History',
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1477,9 +1441,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                   // Status Select
                   Text(
                     'Order Status',
-                    style: AppTheme.labelSm.copyWith(
-                      color: AppTheme.secondary,
-                    ),
+                    style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
                   ),
                   SizedBox(height: 6.h),
                   Container(
@@ -1493,15 +1455,17 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       isExpanded: true,
                       underline: const SizedBox(),
                       items: ['All', 'Completed', 'Voided', 'Pending/Preparing']
-                          .map((s) => DropdownMenuItem(
-                                value: s,
-                                child: Text(
-                                  s,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13.sp,
-                                  ),
+                          .map(
+                            (s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(
+                                s,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.sp,
                                 ),
-                              ))
+                              ),
+                            ),
+                          )
                           .toList(),
                       onChanged: (val) {
                         if (val != null) {
@@ -1517,9 +1481,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                   // Table Select
                   Text(
                     'Table',
-                    style: AppTheme.labelSm.copyWith(
-                      color: AppTheme.secondary,
-                    ),
+                    style: AppTheme.labelSm.copyWith(color: AppTheme.secondary),
                   ),
                   SizedBox(height: 6.h),
                   Container(
@@ -1533,15 +1495,17 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       isExpanded: true,
                       underline: const SizedBox(),
                       items: ['All', '1', '2', '3', '4', '8', '12']
-                          .map((s) => DropdownMenuItem(
-                                value: s,
-                                child: Text(
-                                  s == 'All' ? 'All Tables' : 'Table $s',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13.sp,
-                                  ),
+                          .map(
+                            (s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(
+                                s == 'All' ? 'All Tables' : 'Table $s',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.sp,
                                 ),
-                              ))
+                              ),
+                            ),
+                          )
                           .toList(),
                       onChanged: (val) {
                         if (val != null) {

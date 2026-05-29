@@ -195,17 +195,56 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Hero Section Header
-              Center(
-                child: Text(
-                  'Welcome to Orderlyy - Your\nRestaurant Software',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w800,
-                    height: 1.25,
-                    color: AppTheme.onSurface,
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.admin_panel_settings_rounded, color: primaryRed, size: 36),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Orderlyy ',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: AppTheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        'Admin',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: primaryRed,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Welcome to Orderlyy Admin',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.onSurface,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your Restaurant Management Hub',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: primaryRed,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
 
               SizedBox(height: 24.h),
