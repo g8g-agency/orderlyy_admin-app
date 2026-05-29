@@ -104,80 +104,76 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       backgroundColor: _showLoginForm
           ? const Color(0xFFF8F9FA)
           : AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: _showLoginForm
-            ? const Color(0xFFF8F9FA)
-            : AppTheme.surfaceContainerLowest,
-        elevation: 0,
-        toolbarHeight: 68.h,
-        automaticallyImplyLeading: false,
-        leading: _showLoginForm
-            ? IconButton(
-                icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 16.r,
-                  color: AppTheme.secondary,
-                ),
-                onPressed: () => setState(() {
-                  _showLoginForm = false;
-                  _errorMessage = '';
-                }),
-              )
-            : null,
-        title: Row(
-          children: [
-            // Brand Cutlery Icon
-            Container(
-              width: 32.r,
-              height: 32.r,
+
+      body: Stack(
+        children: [
+          // Ambient Glow Background Top Left
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 384,
+              height: 384,
               decoration: BoxDecoration(
-                color: primaryRed.withValues(alpha: 0.08),
+                color: primaryRed.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryRed.withValues(alpha: 0.05),
+                    blurRadius: 100,
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.restaurant_menu_rounded,
-                size: 18.r,
-                color: primaryRed,
+            ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+             .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 4.seconds),
+          ),
+          // Ambient Glow Background Bottom Right
+          Positioned(
+            bottom: -100,
+            right: -100,
+            child: Container(
+              width: 384,
+              height: 384,
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.05),
+                    blurRadius: 100,
+                  ),
+                ],
               ),
+            ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+             .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 5.seconds),
+          ),
+          SafeArea(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0.0, 0.05),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  ),
+                );
+              },
+              child: _showLoginForm
+                  ? _buildLoginScreen(primaryRed)
+                  : _buildLaptopScreen(primaryRed),
             ),
-            SizedBox(width: 8.w),
-            Text(
-              'Orderlyy',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w800,
-                color: primaryRed,
-              ),
-            ),
-          ],
-        ),
-        actions: const [],
-      ),
-      body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position:
-                    Tween<Offset>(
-                      begin: const Offset(0.0, 0.05),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                child: child,
-              ),
-            );
-          },
-          child: _showLoginForm
-              ? _buildLoginScreen(primaryRed)
-              : _buildLaptopScreen(primaryRed),
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -195,17 +191,56 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Hero Section Header
-              Center(
-                child: Text(
-                  'Welcome to Orderlyy - Your\nRestaurant Software',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w800,
-                    height: 1.25,
-                    color: AppTheme.onSurface,
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.admin_panel_settings_rounded, color: primaryRed, size: 36),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Orderlyy ',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: AppTheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        'Admin',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: primaryRed,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Welcome to Orderlyy Admin',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.onSurface,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your Restaurant Management Hub',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: primaryRed,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
 
               SizedBox(height: 24.h),
