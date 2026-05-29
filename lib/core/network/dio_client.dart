@@ -5,7 +5,7 @@ import 'package:talker_dio_logger/talker_dio_logger.dart';
 import 'package:uuid/uuid.dart';
 import '../config/app_config.dart';
 import 'api_exception.dart';
-import '../providers/repository_providers.dart';
+
 import 'dio_retry_interceptor.dart';
 
 class DioClient {
@@ -57,14 +57,10 @@ class DioClient {
 
           // 4. Inject Auth Token
           try {
-            if (kUseMockRepositories) {
-              options.headers['Authorization'] = 'Bearer mock-jwt-token';
-            } else {
-              final session = Supabase.instance.client.auth.currentSession;
-              if (session != null) {
-                options.headers['Authorization'] =
-                    'Bearer ${session.accessToken}';
-              }
+            final session = Supabase.instance.client.auth.currentSession;
+            if (session != null) {
+              options.headers['Authorization'] =
+                  'Bearer ${session.accessToken}';
             }
           } catch (_) {
             options.headers['Authorization'] = 'Bearer mock-jwt-token';
@@ -74,9 +70,6 @@ class DioClient {
         },
         onError: (DioException err, handler) async {
           if (err.response?.statusCode == 401) {
-            if (kUseMockRepositories) {
-              return handler.next(err);
-            }
             return _handleTokenRefresh(err, handler);
           }
           return handler.next(err);

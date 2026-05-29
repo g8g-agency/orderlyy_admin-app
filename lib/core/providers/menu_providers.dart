@@ -11,7 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/dtos/menu_dto.dart';
 import 'repository_providers.dart';
 
-import '../auth/mock_auth_provider.dart';
+import '../auth/app_auth_provider.dart';
 
 // ── Menu items stream ─────────────────────────────────────────────────────────
 // Emits every time the underlying repository pushes an update.
@@ -82,3 +82,4 @@ final menuCategoriesFutureProvider = FutureProvider<List<MenuCategoryDto>>((
   final repo = ref.watch(menuRepositoryProvider);
   return repo.getCategories(tenantId);
 });
+

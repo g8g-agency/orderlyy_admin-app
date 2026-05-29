@@ -9,19 +9,13 @@ import 'core/network/secure_storage.dart';
 import 'core/network/network_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/data/mock/mock_auth_repository.dart';
 import 'core/providers/repository_providers.dart';
 import 'core/storage/local_storage.dart';
 import 'core/storage/hive_storage.dart';
 import 'core/device/device_fingerprint_provider.dart';
+import 'core/runtime/runtime_reset_service.dart';
 
 import 'core/constants/supabase_constants.dart';
-
-// ── Mock mode: Supabase.initialize() is intentionally removed. ────────────────
-// The app is fully decoupled from the backend during this phase.
-// See: core/providers/repository_providers.dart for wiring.
-// See: core/data/mock/ for all mock implementations.
-// Toggle `kUseMockRepositories` in repository_providers.dart when ready.
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,31 +34,6 @@ Future<void> main() async {
   // Initialize local storage
   final localStorage = SharedPreferencesStorage(prefs);
 
-  // ── Restore persisted mock session before the widget tree builds ──────────
-  // This ensures currentUserIdProvider has the correct value on first frame,
-  // preventing the splash → role-select flash for returning users.
-  if (kUseMockRepositories) {
-    debugPrint('[Main] 🔄 Force sign out to start from login page...');
-    final mockRepo = MockAuthRepository();
-    debugPrint('[AUTH INSTANCE] [Main] mockRepo.hashCode=${mockRepo.hashCode}');
-    await mockRepo.signOut();
-    // Override the providers with pre-seeded instances
-    runApp(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          localStorageProvider.overrideWithValue(localStorage),
-          authRepositoryProvider.overrideWithValue(mockRepo),
-          apiCacheBoxProvider.overrideWithValue(apiCacheBox),
-          offlineQueueBoxProvider.overrideWithValue(offlineQueueBox),
-          deviceFingerprintProvider.overrideWithValue(fingerprint),
-        ],
-        child: const OrderlliApp(),
-      ),
-    );
-    return;
-  }
-
   // Supabase initialization with Secure Token Storage
   const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
@@ -80,6 +49,24 @@ Future<void> main() async {
     anonKey: supabaseAnonKey,
     authOptions: FlutterAuthClientOptions(localStorage: SecureLocalStorage()),
   );
+
+  // ── PHASE 2: Hard User Validation & Schema Version Check Before Hydration ──────────
+  final previousUserId = prefs.getString('bootstrap_last_user_id');
+  final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+  
+  final storedSchemaVersion = prefs.getInt('runtime_schema_version') ?? 0;
+  const currentSchemaVersion = 1;
+
+  final isUserMismatch = previousUserId != null && currentUserId != null && previousUserId != currentUserId;
+  final isSchemaMismatch = storedSchemaVersion != currentSchemaVersion;
+
+  if (isUserMismatch || isSchemaMismatch) {
+    debugPrint('[Main] ⚠️ Runtime reset trigger detected (userMismatch: $isUserMismatch, schemaMismatch: $isSchemaMismatch). Performing hard reset.');
+    await RuntimeResetService.fullReset();
+    
+    // Save current schema version after reset to prevent loop
+    await prefs.setInt('runtime_schema_version', currentSchemaVersion);
+  }
 
   runApp(
     ProviderScope(

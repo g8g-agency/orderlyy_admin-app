@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/app_auth_provider.dart';
 import '../../core/data/dtos/menu_dto.dart';
 import '../../core/providers/menu_providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -1475,3 +1475,4 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     );
   }
 }
+

@@ -5,7 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../state/onboarding_notifier.dart';
-import '../../../../core/auth/mock_auth_provider.dart';
+import '../../../../core/auth/app_auth_provider.dart';
+import '../../data/repositories/onboarding_repository.dart'
+    as tableos_admin_onboarding_repository_provider;
+import '../../../../core/auth/bootstrap_provider.dart';
+import '../../../../core/runtime/runtime_reset_service.dart';
 
 class SetupDashboardScreen extends ConsumerWidget {
   const SetupDashboardScreen({super.key});
@@ -39,7 +43,7 @@ class SetupDashboardScreen extends ConsumerWidget {
               Text('Failed to load setup status: $err'),
               TextButton(
                 onPressed: () =>
-                    ref.read(onboardingNotifierProvider.notifier).hydrate(),
+                    ref.invalidate(onboardingNotifierProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -50,16 +54,12 @@ class SetupDashboardScreen extends ConsumerWidget {
             return const Center(child: Text('Initializing...'));
           }
 
-          // Calculate completion percentage
+          // Calculate completion percentage based only on Menu and Tables
           int completed = 0;
           if (status.hasCategories) completed++;
-          if (status.hasMenuItems) completed++;
-          if (status.hasTaxProfiles) completed++;
           if (status.hasTables) completed++;
-          if (status.hasStaff) completed++;
-          if (status.hasKdsStations) completed++;
 
-          final progress = completed / 6.0;
+          final progress = completed / 2.0;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -147,9 +147,8 @@ class SetupDashboardScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
 
                     _ChecklistCard(
-                      title: 'Create First Menu Category',
-                      description:
-                          'Group your items (e.g. Starters, Mains, Drinks)',
+                      title: 'Create First Menu',
+                      description: 'Add your menu items and categories',
                       isCompleted: status.hasCategories,
                       icon: Icons.category_rounded,
                       onTap: () {
@@ -158,72 +157,72 @@ class SetupDashboardScreen extends ConsumerWidget {
                     ),
 
                     _ChecklistCard(
-                      title: 'Configure Taxes',
-                      description:
-                          'Set up GST, VAT or other local tax profiles',
-                      isCompleted: status.hasTaxProfiles,
-                      icon: Icons.request_quote_rounded,
-                      onTap: () {
-                        context.push('/admin/taxes');
-                      },
-                    ),
-                    _ChecklistCard(
                       title: 'Create Tables',
-                      description: 'Map out your restaurant floor plan',
+                      description: 'Set up your restaurant tables and layout',
                       isCompleted: status.hasTables,
                       icon: Icons.table_restaurant_rounded,
                       onTap: () {
                         context.push('/admin/tables');
                       },
                     ),
-                    _ChecklistCard(
-                      title: 'Invite Staff',
-                      description: 'Add waiters, chefs, and managers',
-                      isCompleted: status.hasStaff,
-                      icon: Icons.people_rounded,
-                      onTap: () {
-                        context.push('/admin/staff');
-                      },
-                    ),
-                    _ChecklistCard(
-                      title: 'Configure Kitchen Stations',
-                      description: 'Set up KDS routing for your kitchen',
-                      isCompleted: status.hasKdsStations,
-                      icon: Icons.kitchen_rounded,
-                      onTap: () {
-                        context.push('/admin/kds');
-                      },
-                    ),
 
-                    if (progress >= 1.0)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 32),
-                        child: SizedBox(
+                    // Skip CTA
+                    Padding(
+                      padding: const EdgeInsets.only(top: 48),
+                      child: InkWell(
+                        onTap: () async {
+                          try {
+                            final repo = ref.read(
+                              tableos_admin_onboarding_repository_provider.onboardingRepositoryProvider,
+                            );
+                            await repo.skipOnboarding();
+                            
+                            await RuntimeResetService.clearRuntimeViews();
+                            
+                            // Hydrate bootstrap provider to fetch new context
+                            final appCtx = ref.read(appContextProvider);
+                            final userId = appCtx?.user.id ?? '';
+                            await ref.read(bootstrapProvider.notifier).resolve(userId);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to skip: $e')),
+                              );
+                            }
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
                           width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Manual redirect
-                              context.go('/admin/dashboard');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryContainer,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
                             ),
-                            child: const Text(
-                              'Complete Setup',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Skip for Now',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'You can complete setup anytime from Settings',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -292,3 +291,4 @@ class _ChecklistCard extends StatelessWidget {
     );
   }
 }
+

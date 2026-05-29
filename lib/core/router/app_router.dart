@@ -20,7 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/app_auth_provider.dart';
 import '../../core/auth/bootstrap_provider.dart';
 import '../../core/auth/bootstrap_state.dart';
 import '../../features/splash/splash_screen.dart';
@@ -386,3 +386,4 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+

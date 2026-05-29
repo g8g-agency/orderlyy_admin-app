@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/auth/bootstrap_provider.dart';
 import '../../core/auth/bootstrap_state.dart';
-import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/app_auth_provider.dart';
 import '../../core/providers/repository_providers.dart';
 
 /// Shown when bootstrap fails — either network unreachable or server error.
@@ -117,3 +117,4 @@ class BootstrapErrorScreen extends ConsumerWidget {
     );
   }
 }
+

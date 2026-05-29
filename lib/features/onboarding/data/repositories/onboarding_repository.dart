@@ -30,4 +30,15 @@ class OnboardingRepository {
       throw Exception('Network error while fetching onboarding status: $e');
     }
   }
+
+  Future<void> skipOnboarding() async {
+    try {
+      final response = await _dio.post('/v1/admin/onboarding/skip');
+      if (response.statusCode != 200 || response.data['success'] != true) {
+        throw Exception('Failed to skip onboarding: ${response.data['error']}');
+      }
+    } catch (e) {
+      throw Exception('Network error while skipping onboarding: $e');
+    }
+  }
 }

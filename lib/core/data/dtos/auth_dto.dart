@@ -184,16 +184,19 @@ class TenantContextDto {
 
 class OnboardingContextDto {
   final bool isComplete;
+  final bool isSkipped;
   final List<String> stepsCompleted;
 
   const OnboardingContextDto({
     required this.isComplete,
+    required this.isSkipped,
     required this.stepsCompleted,
   });
 
   factory OnboardingContextDto.fromJson(Map<String, dynamic> json) =>
       OnboardingContextDto(
         isComplete: json['is_complete'] as bool? ?? false,
+        isSkipped: json['is_skipped'] as bool? ?? false,
         stepsCompleted: List<String>.from(
           json['steps_completed'] as List? ?? [],
         ),

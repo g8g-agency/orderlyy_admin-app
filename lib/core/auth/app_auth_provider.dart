@@ -17,11 +17,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/repository_providers.dart';
 import '../data/dtos/auth_dto.dart';
 import '../network/api_exception.dart';
 import 'bootstrap_provider.dart';
 import 'bootstrap_state.dart';
+import '../runtime/runtime_reset_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 0. Auth Status & State Definitions
@@ -102,7 +104,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           _ref.read(bootstrapProvider.notifier).resolve(newUserId),
         );
       } else {
-        // Logout — reset bootstrap and context BEFORE clearing auth state
+        // Logout — clear local repositories and projections BEFORE clearing auth state
+        await RuntimeResetService.fullReset();
         _ref.read(bootstrapProvider.notifier).reset();
         state = AuthState.unauthenticated();
       }
@@ -167,10 +170,10 @@ final routerNotifierProvider = ChangeNotifierProvider<RouterNotifier>((ref) {
 // 4. App context notifier — holds resolved AppContextDto after login
 // ─────────────────────────────────────────────────────────────────────────────
 
-class MockAppContextNotifier extends StateNotifier<AppContextDto?> {
+class AppContextNotifier extends StateNotifier<AppContextDto?> {
   final Ref _ref;
 
-  MockAppContextNotifier(this._ref) : super(null);
+  AppContextNotifier(this._ref) : super(null);
 
   String? get currentUserEmail => null;
 
@@ -230,8 +233,9 @@ class MockAppContextNotifier extends StateNotifier<AppContextDto?> {
 
     // Update local state
     final newOnboarding = OnboardingContextDto(
-      stepsCompleted: currentSteps,
       isComplete: isLastStep,
+      isSkipped: state!.onboarding.isSkipped,
+      stepsCompleted: currentSteps,
     );
 
     state = AppContextDto(
@@ -253,8 +257,8 @@ class MockAppContextNotifier extends StateNotifier<AppContextDto?> {
 }
 
 final appContextProvider =
-    StateNotifierProvider<MockAppContextNotifier, AppContextDto?>((ref) {
-      return MockAppContextNotifier(ref);
+    StateNotifierProvider<AppContextNotifier, AppContextDto?>((ref) {
+      return AppContextNotifier(ref);
     });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -270,30 +274,29 @@ final authStateStreamProvider = StreamProvider<String?>((ref) {
 // 6. Compatibility providers for screens that expect Supabase User type
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Mock user class to replace Supabase User
-class MockUser {
+/// Basic user class for UI elements needing user details
+class AppUser {
   final String id;
   final String email;
 
-  const MockUser({required this.id, required this.email});
+  const AppUser({required this.id, required this.email});
 }
 
-/// Provides a mock user object for compatibility with screens expecting Supabase User
-final currentUserProvider = Provider<MockUser?>((ref) {
+/// Provides the current user object for UI compatibility
+final currentUserProvider = Provider<AppUser?>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
-  // For mock mode, derive email from userId
-  final email = 'admin@orderlli.com';
+  final email = Supabase.instance.client.auth.currentUser?.email ?? '';
 
-  return MockUser(id: userId, email: email);
+  return AppUser(id: userId, email: email);
 });
 
 /// Mock auth service for compatibility
-class MockAuthService {
+class AppAuthService {
   final Ref _ref;
 
-  MockAuthService(this._ref);
+  AppAuthService(this._ref);
 
   Future<void> signOut() async {
     final repo = _ref.read(authRepositoryProvider);
@@ -311,23 +314,24 @@ class MockAuthService {
 
     return ctx != null
         ? {
-            'name': 'Admin User',
-            'email': 'admin@orderlli.com',
+            'name': ctx.user.fullName,
+            'email': Supabase.instance.client.auth.currentUser?.email ?? '',
             'tenants': {
               'name': ctx.tenant.name,
               'slug': ctx.tenant.slug,
-              'address': 'Mock Address',
+              'address': '',
             },
           }
         : null;
   }
 }
 
-final authServiceProvider = Provider<MockAuthService>((ref) {
-  return MockAuthService(ref);
+final authServiceProvider = Provider<AppAuthService>((ref) {
+  return AppAuthService(ref);
 });
 
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final authService = ref.read(authServiceProvider);
   return await authService.getUserProfile();
 });
+

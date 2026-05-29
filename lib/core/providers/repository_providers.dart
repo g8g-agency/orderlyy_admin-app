@@ -22,10 +22,6 @@ import '../data/repositories/staff_repository.dart';
 import '../data/repositories/tables_repository.dart';
 import '../data/repositories/settings_repository.dart';
 
-import '../data/mock/mock_auth_repository.dart';
-import '../data/mock/mock_menu_repository.dart';
-import '../data/mock/mock_staff_repository.dart';
-
 import '../data/api/api_staff_repository.dart';
 
 
@@ -53,10 +49,6 @@ import '../../features/runtime_monitoring/data/api/api_runtime_observability_rep
 import '../data/local/offline_sync_queue.dart';
 import '../network/network_providers.dart';
 
-// ── Feature flag ──────────────────────────────────────────────────────────────
-// Toggle this to switch between mock and live repositories.
-const bool kUseMockRepositories = false;
-
 // ── SharedPreferences Provider ────────────────────────────────────────────────
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError(
@@ -76,10 +68,7 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
 });
 
 // ── Auth Repository Provider ──────────────────────────────────────────────────
-// NOTE: In mock mode this is overridden in main.dart with a pre-seeded
-// MockAuthRepository instance (session already restored from SharedPreferences).
 final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>((ref) {
-  if (kUseMockRepositories) return MockAuthRepository();
   final dioClient = ref.watch(dioClientProvider);
   final supabaseClient = ref.watch(supabaseClientProvider);
   return ApiAuthRepository(dioClient, supabaseClient);
@@ -87,7 +76,7 @@ final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>
 
 // ── Menu Repository Provider ──────────────────────────────────────────────────
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
-  return MockMenuRepository();
+  throw UnimplementedError('Wired in menu_providers.dart');
 });
 
 // ── Categories Repository Provider ────────────────────────────────────────────
@@ -159,7 +148,6 @@ final runtimeObservabilityRepositoryProvider = Provider<RuntimeObservabilityRepo
 });
 
 final staffRepositoryProvider = Provider<StaffRepository>((ref) {
-  if (kUseMockRepositories) return MockStaffRepository();
   final dioClient = ref.watch(dioClientProvider);
   final supabaseClient = ref.watch(supabaseClientProvider);
   return ApiStaffRepository(dioClient, supabaseClient);

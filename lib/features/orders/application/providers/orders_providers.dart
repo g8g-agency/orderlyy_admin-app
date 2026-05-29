@@ -4,8 +4,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/providers/orders_repository_providers.dart';
-import '../../../../core/auth/mock_auth_provider.dart';
-import '../../../../core/storage/state_persistence.dart';
+import '../../../../core/auth/app_auth_provider.dart';
+
 import '../../domain/models/order.dart';
 import '../../domain/models/order_status.dart';
 import '../state/orders_state.dart';
@@ -17,12 +17,10 @@ final ordersStateProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((
   ref,
 ) {
   final repository = ref.watch(ordersRepositoryProvider);
-  final persistence = ref.watch(statePersistenceProvider);
   final tenantId = ref.watch(currentTenantIdProvider);
 
   return OrdersNotifier(
     repository: repository,
-    persistence: persistence,
     tenantId: tenantId,
   );
 });
@@ -94,3 +92,4 @@ final currentTenantIdProvider = Provider<String>((ref) {
   final appContext = ref.watch(appContextProvider);
   return appContext?.tenant.id ?? '';
 });
+

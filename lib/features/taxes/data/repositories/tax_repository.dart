@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/auth/mock_auth_provider.dart';
+import '../../../../core/auth/app_auth_provider.dart';
 import '../dtos/tax_dto.dart';
 import 'dart:developer' as dev;
 
@@ -171,3 +171,4 @@ class TaxRepository {
         .eq('tenant_id', _tenantId);
   }
 }
+

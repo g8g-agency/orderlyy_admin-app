@@ -11,7 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/dtos/table_dto.dart';
 import 'repository_providers.dart';
 
-import '../auth/mock_auth_provider.dart';
+import '../auth/app_auth_provider.dart';
 
 // ── Tables stream ─────────────────────────────────────────────────────────────
 // Emits every time the underlying repository pushes an update.
@@ -57,3 +57,4 @@ final deleteTableProvider = Provider<Future<void> Function(String tableId)>((
   final repo = ref.read(tablesRepositoryProvider);
   return (tableId) async => repo.deleteTable(tableId);
 });
+

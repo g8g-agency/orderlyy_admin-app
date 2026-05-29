@@ -46,7 +46,7 @@ class _OperationalSafetyPanelState extends ConsumerState<OperationalSafetyPanel>
     
     // In a real app we would dispatch this to the backend API via repository
     // e.g. ref.read(apiRuntimeObservabilityRepositoryProvider).issueSafetyDirective(type, reason, incident);
-    debugPrint('Triggering $type with reason: $reason');
+    debugPrint('Triggering $type with reason: $reason, incident: $incident');
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

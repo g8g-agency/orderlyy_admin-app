@@ -8,7 +8,7 @@ import '../../../../core/data/dtos/menu_dto.dart';
 import '../../../../core/providers/menu_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/auth/mock_auth_provider.dart';
+import '../../../../core/auth/app_auth_provider.dart';
 import 'package:uuid/uuid.dart';
 
 const uuid = Uuid();
@@ -573,3 +573,4 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
   }
 }
+

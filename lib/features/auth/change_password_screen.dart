@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/app_auth_provider.dart';
 import '../../core/providers/repository_providers.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
@@ -371,3 +371,4 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     );
   }
 }
+

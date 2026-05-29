@@ -5,7 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/app_auth_provider.dart';
+import '../../core/auth/bootstrap_provider.dart';
+import '../../core/auth/bootstrap_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/dtos/order_dto.dart';
 import '../../core/providers/orders_providers.dart';
 import '../../core/theme/app_theme.dart';
@@ -26,6 +29,18 @@ class AdminDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ── DASHBOARD SAFETY ASSERTIONS ───────────────────────────────────────────
+    final bootstrap = ref.read(bootstrapProvider);
+    assert(
+      bootstrap.status == BootstrapStatus.tenantReady,
+      'Dashboard initialization requires BootstrapStatus.tenantReady. Found: ${bootstrap.status}',
+    );
+    final appCtx = ref.read(appContextProvider);
+    assert(
+      appCtx?.user.id == Supabase.instance.client.auth.currentUser?.id,
+      'Dashboard user ID must match Supabase authenticated user ID.',
+    );
+
     final navIndex = ref.watch(currentNavIndexProvider);
     final desktop = isDesktop(context);
 
@@ -544,37 +559,14 @@ class _MoreTab extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6.r,
-                            height: 6.r,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 5.w),
-                          Text(
-                            'ONLINE',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 9.sp,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF10B981),
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
+                    IconButton(
+                      icon: Icon(Icons.logout_rounded, color: AppTheme.error),
+                      onPressed: () async {
+                        final authService = ref.read(authServiceProvider);
+                        await authService.signOut();
+                        if (context.mounted) context.go('/admin/login');
+                      },
+                      tooltip: 'Logout',
                     ),
                   ],
                 ),
@@ -664,46 +656,6 @@ class _MoreTab extends ConsumerWidget {
                       );
                     },
                   ),
-
-                  SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-
-                  // Sign out button
-                  GestureDetector(
-                    onTap: () async {
-                      final authService = ref.read(authServiceProvider);
-                      await authService.signOut();
-                      if (context.mounted) context.go('/admin/login');
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF2F2),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppTheme.error.withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.logout_rounded,
-                            color: AppTheme.error,
-                            size: 18.r,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Sign Out',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.error,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ]),
               ),
             ),
@@ -763,7 +715,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
         : 'Chef Alex';
 
     final ordersState = ref.watch(ordersProvider);
-    final isStoreOpen = ref.watch(storeOpenProvider);
+
 
     if (ordersState.error != null) {
       return Scaffold(
@@ -933,78 +885,6 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                             ],
                           ),
                         ),
-                        SizedBox(width: 8.w),
-
-                        // Store Status Toggle Pill
-                        GestureDetector(
-                          onTap: () {
-                            ref.read(storeOpenProvider.notifier).state =
-                                !isStoreOpen;
-                          },
-                          child: AnimatedContainer(
-                            duration: 200.ms,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14.w,
-                              vertical: 8.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.surfaceContainerLowest,
-                              borderRadius: BorderRadius.circular(30.r),
-                              border: Border.all(
-                                color: isStoreOpen
-                                    ? AppTheme.primaryContainer.withValues(
-                                        alpha: 0.3,
-                                      )
-                                    : AppTheme.surfaceContainerHigh,
-                                width: 1.5.w,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x04000000),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                AnimatedContainer(
-                                  duration: 200.ms,
-                                  width: 8.r,
-                                  height: 8.r,
-                                  decoration: BoxDecoration(
-                                    color: isStoreOpen
-                                        ? AppTheme.primary
-                                        : AppTheme.secondary,
-                                    shape: BoxShape.circle,
-                                    boxShadow: isStoreOpen
-                                        ? [
-                                            BoxShadow(
-                                              color: AppTheme.primary
-                                                  .withValues(alpha: 0.5),
-                                              blurRadius: 6,
-                                              spreadRadius: 1,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                ),
-                                SizedBox(width: 8.w),
-                                Text(
-                                  isStoreOpen
-                                      ? 'Service Open'
-                                      : 'Service Closed',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     SizedBox(height: 24.h),
@@ -1024,21 +904,21 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                             _PulseCard(
                               title: 'Active Diners',
                               value: '$activeDinersCount',
-                              subtitle: '+4 since last hour',
+                              subtitle: '', // Placeholder removed for live data
                               icon: Icons.groups_rounded,
                               color: AppTheme.primary,
                             ),
                             _PulseCard(
                               title: "Today's GMV",
                               value: _fmtCurrency(totalSales),
-                              subtitle: '↑ 12% vs yesterday',
+                              subtitle: '', // Placeholder removed for live data
                               icon: Icons.payments_rounded,
                               color: AppTheme.primary,
                             ),
                             _PulseCard(
                               title: 'Avg. Turn Time',
-                              value: '42m',
-                              subtitle: 'On target',
+                              value: '0m',
+                              subtitle: 'No data',
                               icon: Icons.timer_rounded,
                               color: Colors.teal,
                               isBadge: true,
@@ -1046,10 +926,10 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                             _PulseCard(
                               title: 'Unresolved Issues',
                               value: '${unresolvedOrders.length}',
-                              subtitle: 'Requires attention',
+                              subtitle: unresolvedOrders.isNotEmpty ? 'Requires attention' : 'All clear',
                               icon: Icons.warning_amber_rounded,
-                              color: AppTheme.error,
-                              isError: true,
+                              color: unresolvedOrders.isNotEmpty ? AppTheme.error : Colors.grey,
+                              isError: unresolvedOrders.isNotEmpty,
                             ),
                           ],
                         );
@@ -1141,11 +1021,11 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                     borderRadius: BorderRadius.circular(20.r),
                   ),
                   child: Text(
-                    '3 Items',
+                    '0 Items',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.primary,
+                      color: AppTheme.secondary,
                     ),
                   ),
                 ),
@@ -1158,42 +1038,29 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
             padding: EdgeInsets.all(16.r),
             child: Column(
               children: [
-                // Alert 1
-                _AlertItem(
-                  icon: Icons.receipt_outlined,
-                  title: 'Table 8 requested bill',
-                  subtitle: '5 mins ago • Server: Maria',
-                  actionText: 'Review Bill',
-                  onTap: () {
-                    ref.read(currentNavIndexProvider.notifier).state = 1;
-                  },
-                ),
-                SizedBox(height: 12.h),
-
-                // Alert 2
-                _AlertItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  title: 'Reconciliation Mismatch',
-                  subtitle: 'Table 12 • \$4.50 discrepancy',
-                  actionText: 'Resolve',
-                  isWarning: true,
-                  onTap: () {
-                    // Navigate to reconciliation disputes
-                    context.push('/admin/occ-conflict');
-                  },
-                ),
-                SizedBox(height: 12.h),
-
-                // Alert 3
-                _AlertItem(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Ribeye Steak out of stock',
-                  subtitle: 'Inventory alert • POS updated',
-                  actionText: 'Update Menu',
-                  isSecondary: true,
-                  onTap: () {
-                    context.push('/admin/menu');
-                  },
+                // Empty State for New Account / No Issues
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.h),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: AppTheme.secondary.withValues(alpha: 0.5),
+                          size: 48.sp,
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          'No urgent actions required',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppTheme.secondary,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1271,59 +1138,34 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                 width: 1.w,
               ),
             ),
-            child: Stack(
-              children: [
-                // Custom Paint chart curves
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _RevenueSparklinePainter(
-                      todayData: const [0.15, 0.4, 0.3, 0.65, 0.85, 0.72, 0.95],
-                      yesterdayData: const [
-                        0.25,
-                        0.35,
-                        0.45,
-                        0.38,
-                        0.55,
-                        0.62,
-                        0.7,
-                      ],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.show_chart_rounded,
+                    color: AppTheme.secondary.withValues(alpha: 0.3),
+                    size: 48.sp,
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'No data available yet',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.secondary,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-
-                // Y-Axis Labels overlay
-                Positioned(
-                  left: -24.w,
-                  top: 8.h,
-                  bottom: 24.h,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildAxisLabel('₹30k'),
-                      _buildAxisLabel('₹20k'),
-                      _buildAxisLabel('₹10k'),
-                      _buildAxisLabel('0'),
-                    ],
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Charts will appear once orders are processed.',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.secondary.withValues(alpha: 0.7),
+                      fontSize: 11.sp,
+                    ),
                   ),
-                ),
-
-                // X-Axis Labels overlay
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: -16.h,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildAxisLabel('8 AM'),
-                      _buildAxisLabel('11 AM'),
-                      _buildAxisLabel('2 PM'),
-                      _buildAxisLabel('5 PM'),
-                      _buildAxisLabel('Now'),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -2341,3 +2183,4 @@ class _RevenueSparklinePainter extends CustomPainter {
         oldDelegate.yesterdayData != yesterdayData;
   }
 }
+

@@ -108,15 +108,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  assets:
-    # ── Mock fixture data (loaded by Mock*Repository classes) ────────────────
-    - lib/core/data/mock/fixtures/auth_fixtures.json
-    - lib/core/data/mock/fixtures/menu_fixtures.json
-    - lib/core/data/mock/fixtures/orders_fixtures.json
-    - lib/core/data/mock/fixtures/settings_fixtures.json
-    - lib/core/data/mock/fixtures/staff_fixtures.json
-    - lib/core/data/mock/fixtures/tables_fixtures.json
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

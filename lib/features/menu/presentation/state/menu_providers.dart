@@ -65,16 +65,7 @@ class MenuSnapshotNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
       final isConnected = await _ref.read(networkInfoProvider).isConnected;
       _isOfflineCache = !isConnected;
 
-      // Hydrate from cache first if not forced refresh to ensure instant load
-      if (!forceRefresh) {
-        final cached = await _repository.getCachedMenuSnapshot(branchId);
-        if (cached != null) {
-          state = AsyncValue.data(cached);
-          // Fetch fresh from network in the background
-          _fetch(branchId: branchId, forceRefresh: false).catchError((_) {});
-          return;
-        }
-      }
+
 
       await _fetch(branchId: branchId, forceRefresh: forceRefresh);
     } catch (e, stack) {
@@ -145,18 +136,7 @@ final menuSnapshotProvider =
     });
 
 class MenuAvailabilityNotifier extends StateNotifier<Map<String, bool>> {
-  final MenuRepository _repository;
-  final Ref _ref;
-
-  MenuAvailabilityNotifier(this._repository, this._ref) : super(const {}) {
-    hydrate();
-  }
-
-  Future<void> hydrate() async {
-    final branchId = _ref.read(branchIdProvider);
-    final cached = await _repository.getCachedAvailabilityOverlay(branchId);
-    state = cached;
-  }
+  MenuAvailabilityNotifier() : super(const {});
 
   void updateAvailability(Map<String, bool> availabilityMap) {
     state = {...state, ...availabilityMap};
@@ -165,8 +145,7 @@ class MenuAvailabilityNotifier extends StateNotifier<Map<String, bool>> {
 
 final menuAvailabilityProvider =
     StateNotifierProvider<MenuAvailabilityNotifier, Map<String, bool>>((ref) {
-      final repository = ref.watch(menuSnapshotRepositoryProvider);
-      return MenuAvailabilityNotifier(repository, ref);
+      return MenuAvailabilityNotifier();
     });
 
 // Derived Providers

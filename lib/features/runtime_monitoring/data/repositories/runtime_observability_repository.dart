@@ -1,6 +1,6 @@
 import '../../../../core/network/api_exception.dart';
 import '../dtos/runtime_event_dto.dart';
-import '../dtos/runtime_incident_dto.dart';
+
 import '../dtos/runtime_snapshot_dto.dart';
 import '../api/api_runtime_observability_repository.dart' show GraphCursorResponse;
 

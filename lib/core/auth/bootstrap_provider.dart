@@ -21,7 +21,7 @@ import '../network/api_exception.dart';
 import '../providers/repository_providers.dart';
 import '../data/dtos/auth_dto.dart';
 import 'bootstrap_state.dart';
-import 'mock_auth_provider.dart';
+import 'app_auth_provider.dart';
 
 // ── Persisted user-consistency key ────────────────────────────────────────────
 const _kLastAuthUserId = 'bootstrap_last_user_id';
@@ -66,12 +66,11 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
         // Set app context
         _ref.read(appContextProvider.notifier).setContext(ctx);
 
-        // Persist userId and bootstrap version for next-session consistency check
-        await _persistBootstrapMeta(authenticatedUserId);
+        // Persist userId, tenantId, and bootstrap version for next-session consistency check
+        await _persistBootstrapMeta(authenticatedUserId, ctx);
 
         // Determine routing outcome from context flags
-        final requiresOnboarding =
-            !ctx.onboarding.isComplete || ctx.flags.onboardingRequired;
+        final requiresOnboarding = ctx.flags.onboardingRequired;
 
         if (requiresOnboarding) {
           debugPrint('[Bootstrap] 📋 Onboarding required');
@@ -160,11 +159,13 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
     }
   }
 
-  Future<void> _persistBootstrapMeta(String userId) async {
+  Future<void> _persistBootstrapMeta(String userId, AppContextDto ctx) async {
     try {
       final prefs = _ref.read(sharedPreferencesProvider);
       await prefs.setString(_kLastAuthUserId, userId);
+      await prefs.setString('last_tenant_id', ctx.tenant.id);
       await prefs.setInt(_kBootstrapVersion, _kCurrentBootstrapVersion);
+      await prefs.setInt('runtime_schema_version', 1);
     } catch (e) {
       debugPrint('[Bootstrap] ⚠️ Failed to persist bootstrap meta: $e');
     }
@@ -177,3 +178,4 @@ final bootstrapProvider =
     StateNotifierProvider<BootstrapNotifier, BootstrapState>((ref) {
   return BootstrapNotifier(ref);
 });
+

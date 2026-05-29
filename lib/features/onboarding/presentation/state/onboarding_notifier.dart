@@ -18,10 +18,6 @@ class OnboardingNotifier extends _$OnboardingNotifier {
     return await repo.getOnboardingStatus();
   }
 
-  Future<void> hydrate() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchStatus());
-  }
 
   void reset() {
     state = const AsyncValue.data(null);

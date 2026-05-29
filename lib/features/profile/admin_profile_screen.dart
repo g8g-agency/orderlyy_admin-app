@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/auth/mock_auth_provider.dart';
+import '../../core/auth/app_auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 
 class AdminProfileScreen extends ConsumerWidget {
@@ -506,3 +506,4 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+

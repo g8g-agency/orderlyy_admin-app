@@ -11,7 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/dtos/staff_dto.dart';
 import 'repository_providers.dart';
 
-import '../auth/mock_auth_provider.dart';
+import '../auth/app_auth_provider.dart';
 
 // ── Staff stream ──────────────────────────────────────────────────────────────
 // Emits every time the underlying repository pushes an update.
@@ -50,3 +50,4 @@ final deleteStaffProvider = Provider<Future<void> Function(String staffId)>((
   final repo = ref.read(staffRepositoryProvider);
   return (staffId) async => repo.deleteStaff(staffId);
 });
+
