@@ -26,11 +26,16 @@ import '../../core/auth/bootstrap_state.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/auth/admin_login_screen.dart';
 import '../../features/auth/change_password_screen.dart';
+import '../../features/auth/set_password_screen.dart';
 import '../../features/auth/subscription_expired_screen.dart';
 import '../../features/auth/account_suspended_screen.dart';
 import '../../features/auth/bootstrap_loading_screen.dart';
 import '../../features/auth/bootstrap_error_screen.dart';
 import '../../features/onboarding/presentation/screens/setup_dashboard_screen.dart';
+import '../../features/onboarding/presentation/screens/restaurant_info_screen.dart';
+import '../../features/onboarding/presentation/screens/business_config_screen.dart';
+import '../../features/onboarding/presentation/screens/gst_legal_screen.dart';
+import '../../features/onboarding/presentation/screens/tables_hours_screen.dart';
 import '../../features/dashboard/admin_dashboard_screen.dart';
 import '../../features/profile/admin_profile_screen.dart';
 import '../../features/inventory/inventory_screen.dart';
@@ -154,8 +159,32 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Onboarding required — hard block on all operational routes
       if (bootstrapState.requiresOnboarding) {
+        if (appCtx != null) {
+          final step = appCtx.onboarding.step;
+          if (step == 1 && loc != '/onboarding/restaurant-info') {
+            debugPrint('[ROUTER] 📋 Onboarding Step 1 → /onboarding/restaurant-info');
+            return '/onboarding/restaurant-info';
+          }
+          if (step == 2 && loc != '/onboarding/business-config') {
+            debugPrint('[ROUTER] 📋 Onboarding Step 2 → /onboarding/business-config');
+            return '/onboarding/business-config';
+          }
+          if (step == 3 && loc != '/onboarding/gst-legal') {
+            debugPrint('[ROUTER] 📋 Onboarding Step 3 → /onboarding/gst-legal');
+            return '/onboarding/gst-legal';
+          }
+          if (step == 4 && loc != '/onboarding/tables-hours') {
+            debugPrint('[ROUTER] 📋 Onboarding Step 4 → /onboarding/tables-hours');
+            return '/onboarding/tables-hours';
+          }
+        }
+        
         const onboardingAllowed = {
           '/onboarding',
+          '/onboarding/restaurant-info',
+          '/onboarding/business-config',
+          '/onboarding/gst-legal',
+          '/onboarding/tables-hours',
           '/admin/menu',
           '/admin/categories',
           '/admin/tables',
@@ -183,6 +212,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           debugPrint('[ROUTER] 💳 Subscription expired → /subscription-expired');
           return '/subscription-expired';
         }
+        if (flags.isFirstLogin && loc != '/onboarding/set-password') {
+          debugPrint('[ROUTER] 🔑 First login password setup → /onboarding/set-password');
+          return '/onboarding/set-password';
+        }
         if (flags.mustChangePassword && loc != '/change-password') {
           debugPrint('[ROUTER] 🔑 Must change password → /change-password');
           return '/change-password';
@@ -191,6 +224,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         // Onboarding complete — lock out the setup screen
         if (loc == '/onboarding') {
           debugPrint('[ROUTER] ✅ Onboarding done → /admin/dashboard');
+          return '/admin/dashboard';
+        }
+        
+        // Prevent accessing set-password if first login is already complete
+        if (loc == '/onboarding/set-password') {
+          debugPrint('[ROUTER] ✅ First login already completed → /admin/dashboard');
           return '/admin/dashboard';
         }
       }
@@ -240,6 +279,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
+        path: '/onboarding/set-password',
+        name: 'onboarding-set-password',
+        builder: (context, state) => const SetPasswordScreen(),
+      ),
+      GoRoute(
         path: '/subscription-expired',
         name: 'subscription-expired',
         builder: (context, state) => const SubscriptionExpiredScreen(),
@@ -253,6 +297,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         name: 'onboarding',
         builder: (context, state) => const SetupDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/restaurant-info',
+        name: 'onboarding-restaurant-info',
+        builder: (context, state) => const RestaurantInfoScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/business-config',
+        name: 'onboarding-business-config',
+        builder: (context, state) => const BusinessConfigScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/gst-legal',
+        name: 'onboarding-gst-legal',
+        builder: (context, state) => const GstLegalScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/tables-hours',
+        name: 'onboarding-tables-hours',
+        builder: (context, state) => const TablesHoursScreen(),
       ),
 
       // ── Admin Operational App ─────────────────────────────────────────────

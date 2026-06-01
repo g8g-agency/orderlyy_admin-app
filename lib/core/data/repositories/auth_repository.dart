@@ -20,6 +20,9 @@ abstract class AuthRepository {
   // ── Change password (requires active session) ────────────────────────────
   Future<Result<void>> changePassword(String email, String newPassword);
 
+  // ── Configure first login password setup ─────────────────────────────────
+  Future<Result<void>> setFirstLoginPassword(String newPassword);
+
   // ── Sign out ─────────────────────────────────────────────────────────────
   Future<Result<void>> signOut();
 

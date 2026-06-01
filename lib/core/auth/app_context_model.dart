@@ -8,12 +8,14 @@ class UserContext {
   final String fullName;
   final String role;
   final bool mustChangePassword;
+  final bool isFirstLogin;
 
   const UserContext({
     required this.id,
     required this.fullName,
     required this.role,
     required this.mustChangePassword,
+    required this.isFirstLogin,
   });
 
   factory UserContext.fromJson(Map<String, dynamic> json) => UserContext(
@@ -21,6 +23,7 @@ class UserContext {
     fullName: json['full_name'] as String,
     role: json['role'] as String,
     mustChangePassword: json['must_change_password'] as bool? ?? false,
+    isFirstLogin: json['is_first_login'] as bool? ?? false,
   );
 }
 
@@ -74,12 +77,14 @@ class OnboardingContext {
 
 class ContextFlags {
   final bool mustChangePassword;
+  final bool isFirstLogin;
   final bool subscriptionExpired;
   final bool accountSuspended;
   final bool onboardingRequired;
 
   const ContextFlags({
     required this.mustChangePassword,
+    required this.isFirstLogin,
     required this.subscriptionExpired,
     required this.accountSuspended,
     required this.onboardingRequired,
@@ -87,6 +92,7 @@ class ContextFlags {
 
   factory ContextFlags.fromJson(Map<String, dynamic> json) => ContextFlags(
     mustChangePassword: json['must_change_password'] as bool? ?? false,
+    isFirstLogin: json['is_first_login'] as bool? ?? false,
     subscriptionExpired: json['subscription_expired'] as bool? ?? false,
     accountSuspended: json['account_suspended'] as bool? ?? false,
     onboardingRequired: json['onboarding_required'] as bool? ?? false,

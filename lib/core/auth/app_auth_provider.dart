@@ -251,12 +251,14 @@ class AppContextNotifier extends StateNotifier<AppContextDto?> {
     final newOnboarding = OnboardingContextDto(
       isComplete: isLastStep,
       isSkipped: false,
+      step: isLastStep ? 4 : state!.onboarding.step + 1,
       stepsCompleted: currentSteps,
     );
 
     // If onboarding is complete, flags should also reflect that onboarding is no longer required
     final newFlags = ContextFlagsDto(
       mustChangePassword: state!.flags.mustChangePassword,
+      isFirstLogin: state!.flags.isFirstLogin,
       subscriptionExpired: state!.flags.subscriptionExpired,
       accountSuspended: state!.flags.accountSuspended,
       onboardingRequired: !isLastStep,
