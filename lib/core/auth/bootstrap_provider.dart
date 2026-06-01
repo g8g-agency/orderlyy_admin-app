@@ -22,6 +22,7 @@ import '../providers/repository_providers.dart';
 import '../data/dtos/auth_dto.dart';
 import 'bootstrap_state.dart';
 import 'app_auth_provider.dart';
+import '../runtime/runtime_reset_service.dart';
 
 // ── Persisted user-consistency key ────────────────────────────────────────────
 const _kLastAuthUserId = 'bootstrap_last_user_id';
@@ -153,6 +154,7 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
 
       // Clear all Hive boxes via repository layer
       // Individual feature providers will re-initialise when tenantReady
+      await RuntimeResetService.fullReset();
       debugPrint('[Bootstrap] ✅ Persisted state destroyed (${keysToRemove.length} keys cleared)');
     } catch (e) {
       debugPrint('[Bootstrap] ⚠️ Failed to fully destroy persisted state: $e');

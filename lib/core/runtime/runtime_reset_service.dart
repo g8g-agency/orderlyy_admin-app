@@ -29,6 +29,9 @@ class RuntimeResetService {
       if (Hive.isBoxOpen('offline_writes')) {
         await Hive.box<String>('offline_writes').clear();
       }
+      if (Hive.isBoxOpen('app_snapshot_cache')) {
+        await Hive.box('app_snapshot_cache').clear();
+      }
     } catch (e) {
       debugPrint('[RuntimeReset] ⚠️ Failed to clear Hive boxes: $e');
     }

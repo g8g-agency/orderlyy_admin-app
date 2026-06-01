@@ -396,14 +396,15 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
     }
   }
 
-  @override
+  // NOTE: deleteAllOrders is NOT part of OrdersRepository interface.
+  // It is an internal maintenance method called directly when needed.
   Future<void> deleteAllOrders(String tenantId) async {
     final action = SyncAction(
-      id: UuidGenerator.generateRuntimeId(prefix: 'act-delete-all'),
+      id: 'act-delete-all-${uuid.v4()}',
       type: 'deleteAllOrders',
       payload: {'tenantId': tenantId},
       timestamp: DateTime.now(),
-      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-delete-all'),
+      idempotencyKey: 'idem-delete-all-${uuid.v4()}',
     );
 
     await _queue.enqueue(action);

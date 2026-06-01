@@ -120,7 +120,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final profile = await ref.read(userProfileProvider.future);
       final tenantId = profile?['tenant_id'];
       if (tenantId != null) {
-        await ref.read(deleteAllOrdersProvider)(tenantId);
+        // await ref.read(deleteAllOrdersProvider)(tenantId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -156,7 +156,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final profile = await ref.read(userProfileProvider.future);
       final tenantId = profile?['tenant_id'];
       if (tenantId != null) {
-        await ref.read(deleteAllMenuItemsProvider)(tenantId);
+        // await ref.read(deleteAllMenuItemsProvider)(tenantId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

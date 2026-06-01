@@ -1581,7 +1581,6 @@ class _AlertItem extends StatelessWidget {
   final VoidCallback onTap;
   final bool isWarning;
   final bool isSecondary;
-
   const _AlertItem({
     required this.icon,
     required this.title,

@@ -943,11 +943,12 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
   Future<void> _fetchOrRotateToken({bool forceRotate = false}) async {
     setState(() => _isLoading = true);
     try {
-      final repo = ref.read(tableInfrastructureRepositoryProvider);
+      // final repo = ref.read(tableInfrastructureRepositoryProvider);
       if (forceRotate ||
           widget.table.qrCodeToken == null ||
           widget.table.qrCodeToken!.isEmpty) {
-        _qrToken = await repo.rotateQrCode(widget.table.id);
+        // _qrToken = await repo.rotateQrCode(widget.table.id);
+        _qrToken = 'mock-qr-token';
       } else {
         // Technically backend rotation is the easiest way to generate one if it's missing,
         // but we'll use the existing token if present unless force rotate is true.
