@@ -12,6 +12,8 @@ class ApiOrdersRepository implements OrdersRepository {
 
   @override
   Future<Result<List<OrderDto>>> getOrdersPaginated({
+    required String branchId,
+    CancelToken? cancelToken,
     OrderStatus? status,
     String? tableId,
     int page = 1,
@@ -19,15 +21,17 @@ class ApiOrdersRepository implements OrdersRepository {
   }) async {
     try {
       final queryParams = <String, dynamic>{
+        'branch_id': branchId,
         'page': page,
         'limit': limit,
         if (status != null) 'status': status.name,
-        'table_id': ?tableId,
+        if (tableId != null) 'table_id': tableId,
       };
 
       final response = await _dioClient.dio.get(
         ApiConstants.orders,
         queryParameters: queryParams,
+        cancelToken: cancelToken,
       );
 
       if (response.data['success'] == true) {
@@ -51,11 +55,13 @@ class ApiOrdersRepository implements OrdersRepository {
   @override
   Future<Result<OrderDto>> createOrderEntity(
     OrderDto order, {
+    required String branchId,
     required String idempotencyKey,
   }) async {
     try {
       final response = await _dioClient.dio.post(
         ApiConstants.orders,
+        queryParameters: {'branch_id': branchId},
         data: order.toJson(),
         options: Options(headers: {'Idempotency-Key': idempotencyKey}),
       );
@@ -79,11 +85,13 @@ class ApiOrdersRepository implements OrdersRepository {
     String orderId,
     OrderStatus newStatus,
     int currentVersion, {
+    required String branchId,
     required String idempotencyKey,
   }) async {
     try {
       final response = await _dioClient.dio.patch(
         '${ApiConstants.orders}/$orderId/status',
+        queryParameters: {'branch_id': branchId},
         data: {'status': newStatus.name, 'version_num': currentVersion},
         options: Options(headers: {'Idempotency-Key': idempotencyKey}),
       );
@@ -108,11 +116,13 @@ class ApiOrdersRepository implements OrdersRepository {
     String orderId,
     List<OrderItemDto> items,
     int currentVersion, {
+    required String branchId,
     required String idempotencyKey,
   }) async {
     try {
       final response = await _dioClient.dio.patch(
         '${ApiConstants.orders}/$orderId/items',
+        queryParameters: {'branch_id': branchId},
         data: {
           'items': items.map((i) => i.toJson()).toList(),
           'version_num': currentVersion,

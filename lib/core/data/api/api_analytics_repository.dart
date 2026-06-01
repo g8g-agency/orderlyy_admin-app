@@ -17,7 +17,7 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
     try {
       final queryParams = <String, dynamic>{
         'date': date.toIso8601String().split('T').first,
-        'branch_id': ?branchId,
+        if (branchId != null) 'branch_id': branchId,
       };
 
       final response = await _dioClient.get(
@@ -52,7 +52,7 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
       final queryParams = <String, dynamic>{
         'start_date': startDate.toIso8601String().split('T').first,
         'end_date': endDate.toIso8601String().split('T').first,
-        'branch_id': ?branchId,
+        if (branchId != null) 'branch_id': branchId,
       };
 
       final response = await _dioClient.get(

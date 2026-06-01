@@ -19,4 +19,11 @@ abstract class CategoriesRepository {
 
   /// Soft-deletes a category. Backend updates `deleted_at`.
   Future<Result<void>> deleteCategory(String categoryId, int currentVersion);
+
+  /// Sets visibility of a category for a specific branch.
+  Future<Result<void>> setCategoryVisibility({
+    required String categoryId,
+    required String branchId,
+    required bool isVisible,
+  });
 }

@@ -6,8 +6,9 @@ import '../../constants/api_constants.dart';
 
 class ApiModifierRepository implements ModifierRepository {
   final DioClient _dioClient;
+  final String _tenantId;
 
-  ApiModifierRepository(this._dioClient);
+  ApiModifierRepository(this._dioClient, this._tenantId);
 
   @override
   Future<Result<List<ModifierGroupDto>>> getModifierGroups({
@@ -23,7 +24,7 @@ class ApiModifierRepository implements ModifierRepository {
       };
 
       final response = await _dioClient.get(
-        ApiConstants.modifiers,
+        ApiConstants.modifiers(_tenantId),
         queryParameters: queryParams,
       );
 
@@ -64,7 +65,7 @@ class ApiModifierRepository implements ModifierRepository {
       };
 
       final response = await _dioClient.get(
-        '${ApiConstants.modifiers}/items',
+        '${ApiConstants.modifiers(_tenantId)}/items',
         queryParameters: queryParams,
       );
 
@@ -96,7 +97,7 @@ class ApiModifierRepository implements ModifierRepository {
   ) async {
     try {
       final response = await _dioClient.post(
-        ApiConstants.modifiers,
+        ApiConstants.modifiers(_tenantId),
         data: group.toJson(),
       );
 
@@ -121,7 +122,7 @@ class ApiModifierRepository implements ModifierRepository {
   ) async {
     try {
       final response = await _dioClient.patch(
-        '${ApiConstants.modifiers}/${group.id}',
+        '${ApiConstants.modifiers(_tenantId)}/${group.id}',
         data: group.toJson(), // version_num sent for OCC
       );
 
@@ -147,7 +148,7 @@ class ApiModifierRepository implements ModifierRepository {
   ) async {
     try {
       final response = await _dioClient.delete(
-        '${ApiConstants.modifiers}/$groupId',
+        '${ApiConstants.modifiers(_tenantId)}/$groupId',
         data: {
           'version_num':
               currentVersion, // Explicit OCC boundary for safe deletion
@@ -176,7 +177,7 @@ class ApiModifierRepository implements ModifierRepository {
   ) async {
     try {
       final response = await _dioClient.post(
-        '${ApiConstants.modifiers}/items',
+        '${ApiConstants.modifiers(_tenantId)}/items',
         data: item.toJson(),
       );
 
@@ -201,7 +202,7 @@ class ApiModifierRepository implements ModifierRepository {
   ) async {
     try {
       final response = await _dioClient.patch(
-        '${ApiConstants.modifiers}/items/${item.id}',
+        '${ApiConstants.modifiers(_tenantId)}/items/${item.id}',
         data: item.toJson(), // version_num sent for OCC
       );
 
@@ -227,7 +228,7 @@ class ApiModifierRepository implements ModifierRepository {
   ) async {
     try {
       final response = await _dioClient.delete(
-        '${ApiConstants.modifiers}/items/$itemId',
+        '${ApiConstants.modifiers(_tenantId)}/items/$itemId',
         data: {
           'version_num':
               currentVersion, // Explicit OCC boundary for safe deletion

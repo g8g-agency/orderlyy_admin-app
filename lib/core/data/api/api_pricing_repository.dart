@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../dtos/pricing_dto.dart';
 import '../repositories/pricing_repository.dart';
 import '../../network/dio_client.dart';
@@ -6,8 +7,9 @@ import '../../constants/api_constants.dart';
 
 class ApiPricingRepository implements PricingRepository {
   final DioClient _dioClient;
+  final String _tenantId;
 
-  ApiPricingRepository(this._dioClient);
+  ApiPricingRepository(this._dioClient, this._tenantId);
 
   @override
   Future<Result<List<PricingRecordDto>>> getPricingHistory(
@@ -15,7 +17,11 @@ class ApiPricingRepository implements PricingRepository {
   ) async {
     try {
       final response = await _dioClient.get(
-        '${ApiConstants.pricing}/history/$entityId',
+        '${ApiConstants.pricing(_tenantId)}/history/$entityId',
+        options: Options(
+          receiveTimeout: const Duration(seconds: 10),
+          sendTimeout: const Duration(seconds: 10),
+        ),
       );
 
       if (response.data['success'] == true) {
@@ -45,8 +51,12 @@ class ApiPricingRepository implements PricingRepository {
   ) async {
     try {
       final response = await _dioClient.post(
-        '${ApiConstants.pricing}/resolved',
+        '${ApiConstants.pricing(_tenantId)}/resolved',
         data: {'entity_ids': entityIds},
+        options: Options(
+          receiveTimeout: const Duration(seconds: 10),
+          sendTimeout: const Duration(seconds: 10),
+        ),
       );
 
       if (response.data['success'] == true) {
@@ -78,9 +88,12 @@ class ApiPricingRepository implements PricingRepository {
   ) async {
     try {
       final response = await _dioClient.post(
-        ApiConstants.pricing,
-        data: record
-            .toJson(), // Backend enforces append-only logic and version_num constraints
+        ApiConstants.pricing(_tenantId),
+        data: record.toJson(), // Backend enforces append-only logic and version_num constraints
+        options: Options(
+          receiveTimeout: const Duration(seconds: 10),
+          sendTimeout: const Duration(seconds: 10),
+        ),
       );
 
       if (response.data['success'] == true) {

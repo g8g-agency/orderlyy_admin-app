@@ -3,6 +3,7 @@ import '../repositories/tables_repository.dart';
 import '../../network/dio_client.dart';
 import '../../network/api_exception.dart';
 import '../../constants/api_constants.dart';
+import 'package:dio/dio.dart';
 
 class ApiTablesRepository implements TablesRepository {
   final DioClient _dioClient;
@@ -11,6 +12,8 @@ class ApiTablesRepository implements TablesRepository {
 
   @override
   Future<Result<List<RestaurantTableDto>>> getTablesPaginated({
+    required String branchId,
+    CancelToken? cancelToken,
     String? sectionId,
     int page = 1,
     int limit = 200,
@@ -18,15 +21,17 @@ class ApiTablesRepository implements TablesRepository {
   }) async {
     try {
       final queryParams = <String, dynamic>{
+        'branch_id': branchId,
         'page': page,
         'limit': limit,
-        'section_id': ?sectionId,
-        if (includeDeleted) 'include_deleted': 'true',
+        'include_deleted': includeDeleted,
+        if (sectionId != null) 'section_id': sectionId,
       };
 
-      final response = await _dioClient.get(
+      final response = await _dioClient.dio.get(
         ApiConstants.tables,
         queryParameters: queryParams,
+        cancelToken: cancelToken,
       );
 
       if (response.data['success'] == true) {
@@ -52,11 +57,13 @@ class ApiTablesRepository implements TablesRepository {
 
   @override
   Future<Result<RestaurantTableDto>> createTableEntity(
-    RestaurantTableDto table,
-  ) async {
+    RestaurantTableDto table, {
+    required String branchId,
+  }) async {
     try {
-      final response = await _dioClient.post(
+      final response = await _dioClient.dio.post(
         ApiConstants.tables,
+        queryParameters: {'branch_id': branchId},
         data: table.toJson(),
       );
 
@@ -76,12 +83,14 @@ class ApiTablesRepository implements TablesRepository {
 
   @override
   Future<Result<RestaurantTableDto>> updateTableEntity(
-    RestaurantTableDto table,
-  ) async {
+    RestaurantTableDto table, {
+    required String branchId,
+  }) async {
     try {
-      final response = await _dioClient.patch(
+      final response = await _dioClient.dio.put(
         '${ApiConstants.tables}/${table.id}',
-        data: table.toJson(), // version_num sent for OCC
+        queryParameters: {'branch_id': branchId},
+        data: table.toJson(),
       );
 
       if (response.data['success'] == true) {
@@ -101,14 +110,15 @@ class ApiTablesRepository implements TablesRepository {
   @override
   Future<Result<void>> deleteTableEntity(
     String tableId,
-    int currentVersion,
-  ) async {
+    int currentVersion, {
+    required String branchId,
+  }) async {
     try {
-      final response = await _dioClient.delete(
+      final response = await _dioClient.dio.delete(
         '${ApiConstants.tables}/$tableId',
-        data: {
-          'version_num':
-              currentVersion, // Explicit OCC boundary for safe deletion
+        queryParameters: {
+          'version_num': currentVersion,
+          'branch_id': branchId,
         },
       );
 

@@ -6,8 +6,9 @@ import '../../constants/api_constants.dart';
 
 class ApiMenuItemsRepository implements MenuItemsRepository {
   final DioClient _dioClient;
+  final String _tenantId;
 
-  ApiMenuItemsRepository(this._dioClient);
+  ApiMenuItemsRepository(this._dioClient, this._tenantId);
 
   @override
   Future<Result<List<MenuItemDto>>> getMenuItems({
@@ -21,19 +22,27 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
       final queryParams = <String, dynamic>{
         'page': page,
         'limit': limit,
-        'category_id': ?categoryId,
+        if (categoryId != null) 'category_id': categoryId,
         if (search != null && search.isNotEmpty) 'search': search,
         if (includeDeleted) 'include_deleted': 'true',
       };
 
       final response = await _dioClient.get(
-        ApiConstants.menuItems,
+        ApiConstants.menuItems(_tenantId),
         queryParameters: queryParams,
       );
 
       if (response.data['success'] == true) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
-        final items = data
+        final dynamic rawData = response.data['data'];
+        final List<dynamic> dataList;
+        if (rawData is Map && rawData.containsKey('data')) {
+          dataList = rawData['data'] as List<dynamic>? ?? [];
+        } else if (rawData is List) {
+          dataList = rawData;
+        } else {
+          dataList = [];
+        }
+        final items = dataList
             .map((json) => MenuItemDto.fromJson(json as Map<String, dynamic>))
             .toList();
         return Success(items);
@@ -53,7 +62,7 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
   Future<Result<MenuItemDto>> createMenuItem(MenuItemDto item) async {
     try {
       final response = await _dioClient.post(
-        ApiConstants.menuItems,
+        ApiConstants.menuItems(_tenantId),
         data: item.toJson(),
       );
 
@@ -75,7 +84,7 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
   Future<Result<MenuItemDto>> updateMenuItem(MenuItemDto item) async {
     try {
       final response = await _dioClient.patch(
-        '${ApiConstants.menuItems}/${item.id}',
+        '${ApiConstants.menuItems(_tenantId)}/${item.id}',
         data: item.toJson(), // version_num sent for OCC
       );
 
@@ -97,7 +106,7 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
   Future<Result<void>> deleteMenuItem(String itemId, int currentVersion) async {
     try {
       final response = await _dioClient.delete(
-        '${ApiConstants.menuItems}/$itemId',
+        '${ApiConstants.menuItems(_tenantId)}/$itemId',
         data: {
           'version_num':
               currentVersion, // Explicit OCC boundary for safe deletion

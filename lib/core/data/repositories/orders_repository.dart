@@ -5,11 +5,15 @@
 import '../dtos/order_dto.dart';
 import '../../network/api_exception.dart';
 
+import 'package:dio/dio.dart';
+
 abstract class OrdersRepository {
   // ── Phase 10: Strict State Machine & Projection Retrieval ─────────────────
 
   /// Fetches paginated, backend-resolved order projections.
   Future<Result<List<OrderDto>>> getOrdersPaginated({
+    required String branchId,
+    CancelToken? cancelToken,
     OrderStatus? status,
     String? tableId,
     int page = 1,
@@ -20,6 +24,7 @@ abstract class OrdersRepository {
   /// Backend calculates all totals, taxes, discounts.
   Future<Result<OrderDto>> createOrderEntity(
     OrderDto order, {
+    required String branchId,
     required String idempotencyKey,
   });
 
@@ -28,6 +33,7 @@ abstract class OrdersRepository {
     String orderId,
     OrderStatus newStatus,
     int currentVersion, {
+    required String branchId,
     required String idempotencyKey,
   });
 
@@ -36,6 +42,7 @@ abstract class OrdersRepository {
     String orderId,
     List<OrderItemDto> items,
     int currentVersion, {
+    required String branchId,
     required String idempotencyKey,
   });
 

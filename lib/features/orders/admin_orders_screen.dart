@@ -175,7 +175,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                           thickness: 1.h,
                           color: AppTheme.surfaceContainerHigh,
                         ),
-                        Expanded(child: _buildOrdersList(filteredOrders, true)),
+                        Expanded(child: _buildOrdersList(filteredOrders, true, allOrders.isEmpty)),
                       ],
                     ),
                   ),
@@ -201,7 +201,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                     thickness: 1.h,
                     color: AppTheme.surfaceContainerHigh,
                   ),
-                  Expanded(child: _buildOrdersList(filteredOrders, false)),
+                  Expanded(child: _buildOrdersList(filteredOrders, false, allOrders.isEmpty)),
                 ],
               );
             }
@@ -409,7 +409,38 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
   }
 
   // ── Orders List Stream Builder ──────────────────────────────────────────────
-  Widget _buildOrdersList(List<OrderDto> orders, bool isDesktop) {
+  Widget _buildOrdersList(List<OrderDto> orders, bool isDesktop, bool hasNoDataAtAll) {
+    if (hasNoDataAtAll) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.r),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.inbox_rounded,
+                size: 48.r,
+                color: AppTheme.secondary.withValues(alpha: 0.3),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'No orders yet',
+                style: AppTheme.titleSm.copyWith(color: AppTheme.secondary),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'Orders from the POS or QR will appear here.',
+                textAlign: TextAlign.center,
+                style: AppTheme.bodySm.copyWith(
+                  color: AppTheme.secondary.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (orders.isEmpty) {
       return Center(
         child: Padding(

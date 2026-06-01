@@ -135,7 +135,9 @@ class MenuItemDto {
       name: json['name'] as String,
       slug: json['slug'] as String?,
       description: json['description'] as String?,
-      basePriceAmount: (json['base_price_amount'] as num?)?.toInt() ?? 0,
+      basePriceAmount: json['base_price_amount'] != null
+          ? (json['base_price_amount'] as num).toInt()
+          : (((json['base_price'] as num?)?.toDouble() ?? 0.0) * 100).round(),
       imageUrl: json['image_url'] as String?,
       isAvailable: json['status'] == 'active',
       isVegetarian: isVeg,
@@ -169,12 +171,47 @@ class MenuItemDto {
       'name': name,
       'slug': slug ?? _slugify(name),
       'description': description,
+      'base_price': basePriceAmount / 100.0,
       'base_price_amount': basePriceAmount,
-      'image_url': imageUrl,
+      'image_url': (imageUrl != null && imageUrl!.trim().isEmpty) ? null : imageUrl,
       'status': isAvailable ? 'active' : 'inactive',
       'dietary_tags': combinedTags,
       'prep_time_minutes': prepTimeMinutes,
       'version_num': versionNum, // sent for OCC
     };
+  }
+
+  MenuItemDto copyWith({
+    String? id,
+    String? tenantId,
+    String? categoryId,
+    String? name,
+    String? slug,
+    String? description,
+    int? basePriceAmount,
+    String? imageUrl,
+    bool? isAvailable,
+    bool? isVegetarian,
+    int? prepTimeMinutes,
+    List<String>? tags,
+    int? versionNum,
+    DateTime? deletedAt,
+  }) {
+    return MenuItemDto(
+      id: id ?? this.id,
+      tenantId: tenantId ?? this.tenantId,
+      categoryId: categoryId ?? this.categoryId,
+      name: name ?? this.name,
+      slug: slug ?? this.slug,
+      description: description ?? this.description,
+      basePriceAmount: basePriceAmount ?? this.basePriceAmount,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isAvailable: isAvailable ?? this.isAvailable,
+      isVegetarian: isVegetarian ?? this.isVegetarian,
+      prepTimeMinutes: prepTimeMinutes ?? this.prepTimeMinutes,
+      tags: tags ?? this.tags,
+      versionNum: versionNum ?? this.versionNum,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
   }
 }

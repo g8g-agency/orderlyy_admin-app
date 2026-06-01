@@ -5,7 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/providers/menu_providers.dart';
+import '../../../../core/providers/categories_provider.dart';
+import '../../../../core/providers/menu_items_provider.dart';
 import '../../../../core/data/dtos/menu_dto.dart';
 
 class ModifierMatrixScreen extends ConsumerStatefulWidget {
@@ -112,11 +113,11 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
     final desktop = MediaQuery.of(context).size.width >= 960;
     final selectedCount = _mappedItemIds.values.where((v) => v).length;
 
-    final itemsAsync = ref.watch(menuItemsStreamProvider);
-    final categoriesAsync = ref.watch(menuCategoriesFutureProvider);
+    final itemsState = ref.watch(menuItemsProvider);
+    final categoriesState = ref.watch(categoriesProvider);
 
-    final items = itemsAsync.value ?? [];
-    final categories = categoriesAsync.value ?? [];
+    final items = itemsState.byId.values.toList();
+    final categories = categoriesState.byId.values.toList();
 
     final Map<String, String> categoryNames = {
       for (var cat in categories) cat.id: cat.name,

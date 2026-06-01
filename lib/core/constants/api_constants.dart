@@ -13,11 +13,11 @@ class ApiConstants {
   static const String selectOrganization = '$apiVersion/tenants/select';
 
   // Menu & Catalog Endpoints
-  static const String categories = '$apiVersion/menu/categories';
-  static const String menuItems = '$apiVersion/menu/items';
-  static const String pricing = '$apiVersion/pricing';
-  static const String taxes = '$apiVersion/tax/profiles';
-  static const String modifiers = '$apiVersion/modifier/groups';
+  static String categories(String tenantId) => '$apiVersion/tenants/$tenantId/menu/categories';
+  static String menuItems(String tenantId) => '$apiVersion/tenants/$tenantId/menu/items';
+  static String pricing(String tenantId) => '$apiVersion/tenants/$tenantId/pricing';
+  static String taxes(String tenantId) => '$apiVersion/tenants/$tenantId/tax/profiles';
+  static String modifiers(String tenantId) => '$apiVersion/tenants/$tenantId/modifier/groups';
 
   // Operational Endpoints
   static const String tables = '$apiVersion/tables';

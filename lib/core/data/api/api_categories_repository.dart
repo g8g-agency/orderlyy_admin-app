@@ -6,8 +6,11 @@ import '../../constants/api_constants.dart';
 
 class ApiCategoriesRepository implements CategoriesRepository {
   final DioClient _dioClient;
+  final String _tenantId;
+  final String? _branchId;
 
-  ApiCategoriesRepository(this._dioClient);
+  ApiCategoriesRepository(this._dioClient, this._tenantId, {String? branchId})
+      : _branchId = branchId;
 
   @override
   Future<Result<List<MenuCategoryDto>>> getCategories({
@@ -24,14 +27,29 @@ class ApiCategoriesRepository implements CategoriesRepository {
         if (includeDeleted) 'include_deleted': 'true',
       };
 
+      final String path;
+      if (_branchId != null) {
+        path = '${ApiConstants.categories(_tenantId)}/branch/$_branchId';
+      } else {
+        path = ApiConstants.categories(_tenantId);
+      }
+
       final response = await _dioClient.get(
-        ApiConstants.categories,
+        path,
         queryParameters: queryParams,
       );
 
       if (response.data['success'] == true) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
-        final categories = data
+        final dynamic rawData = response.data['data'];
+        final List<dynamic> dataList;
+        if (rawData is Map && rawData.containsKey('data')) {
+          dataList = rawData['data'] as List<dynamic>? ?? [];
+        } else if (rawData is List) {
+          dataList = rawData;
+        } else {
+          dataList = [];
+        }
+        final categories = dataList
             .map(
               (json) => MenuCategoryDto.fromJson(json as Map<String, dynamic>),
             )
@@ -55,7 +73,7 @@ class ApiCategoriesRepository implements CategoriesRepository {
   ) async {
     try {
       final response = await _dioClient.post(
-        ApiConstants.categories,
+        ApiConstants.categories(_tenantId),
         data: category.toJson(),
       );
 
@@ -79,7 +97,7 @@ class ApiCategoriesRepository implements CategoriesRepository {
   ) async {
     try {
       final response = await _dioClient.patch(
-        '${ApiConstants.categories}/${category.id}',
+        '${ApiConstants.categories(_tenantId)}/${category.id}',
         data: category
             .toJson(), // version_num is sent to backend for OCC validation
       );
@@ -105,7 +123,7 @@ class ApiCategoriesRepository implements CategoriesRepository {
   ) async {
     try {
       final response = await _dioClient.delete(
-        '${ApiConstants.categories}/$categoryId',
+        '${ApiConstants.categories(_tenantId)}/$categoryId',
         data: {
           'version_num':
               currentVersion, // Backend expects version_num for safe deletion
@@ -117,6 +135,35 @@ class ApiCategoriesRepository implements CategoriesRepository {
       } else {
         final errorMessage =
             response.data['error']?['message'] ?? 'Failed to delete category';
+        return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
+      }
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
+    } catch (e) {
+      return Failure(ApiFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> setCategoryVisibility({
+    required String categoryId,
+    required String branchId,
+    required bool isVisible,
+  }) async {
+    try {
+      final response = await _dioClient.put(
+        '${ApiConstants.categories(_tenantId)}/$categoryId/visibility',
+        data: {
+          'branch_id': branchId,
+          'is_visible': isVisible,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return const Success(null);
+      } else {
+        final errorMessage =
+            response.data['error']?['message'] ?? 'Failed to update visibility';
         return Failure(ApiFailure(errorMessage, ApiErrorCode.serverError));
       }
     } on ApiException catch (e) {

@@ -5,11 +5,15 @@
 import '../dtos/table_dto.dart';
 import '../../network/api_exception.dart';
 
+import 'package:dio/dio.dart';
+
 abstract class TablesRepository {
   // ── Phase 9: New Backend-Authoritative Methods ──────────────────────────────
 
   /// Fetches a paginated/filtered list of tables from the backend.
   Future<Result<List<RestaurantTableDto>>> getTablesPaginated({
+    required String branchId,
+    CancelToken? cancelToken,
     String? sectionId,
     int page = 1,
     int limit = 200,
@@ -18,16 +22,18 @@ abstract class TablesRepository {
 
   /// Creates a new table. Backend manages `id`, `version_num`, `deleted_at`.
   Future<Result<RestaurantTableDto>> createTableEntity(
-    RestaurantTableDto table,
-  );
+    RestaurantTableDto table, {
+    required String branchId,
+  });
 
   /// Updates a table. Mandatory OCC checking using `version_num`.
   Future<Result<RestaurantTableDto>> updateTableEntity(
-    RestaurantTableDto table,
-  );
+    RestaurantTableDto table, {
+    required String branchId,
+  });
 
   /// Soft-deletes a table. Backend updates `deleted_at`.
-  Future<Result<void>> deleteTableEntity(String tableId, int currentVersion);
+  Future<Result<void>> deleteTableEntity(String tableId, int currentVersion, {required String branchId});
 
   // ── Legacy Methods (Deprecated) ───────────────────────────────────────────
 

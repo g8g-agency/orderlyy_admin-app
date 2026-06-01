@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../state/table_infrastructure_providers.dart';
+import '../../data/dtos/table_dto.dart';
+import 'table_infrastructure_screen.dart';
 
 // ── Models & State ────────────────────────────────────────────────────────────
 enum TableDiningPhase {
@@ -14,121 +17,37 @@ enum TableDiningPhase {
   waitingForBill, // Purple checkout requested
 }
 
-class LiveTableNode {
-  final String label;
+// Table dining status state provider (maps tableId to its dining phase & guest count)
+class TableStatusState {
   final TableDiningPhase phase;
   final int activeGuests;
-  final int capacity;
-  final double x; // Percent positioning
-  final double y;
-  final double width;
-  final double height;
-  final bool isRound;
-  final String elapsedText;
-  final String currentStatusText;
-
-  LiveTableNode({
-    required this.label,
-    required this.phase,
-    required this.activeGuests,
-    required this.capacity,
-    required this.x,
-    required this.y,
-    this.width = 96,
-    this.height = 96,
-    this.isRound = false,
-    this.elapsedText = '',
-    this.currentStatusText = '',
-  });
+  TableStatusState({required this.phase, required this.activeGuests});
 }
 
-// Active room/section provider (Main Dining vs Patio)
-final activeSectionProvider = StateProvider<int>((ref) => 0);
+final tableStatusProvider = StateNotifierProvider<TableStatusNotifier, Map<String, TableStatusState>>((ref) {
+  return TableStatusNotifier();
+});
 
-final liveTablesProvider =
-    StateNotifierProvider<LiveTablesNotifier, List<LiveTableNode>>((ref) {
-      return LiveTablesNotifier();
-    });
+class TableStatusNotifier extends StateNotifier<Map<String, TableStatusState>> {
+  TableStatusNotifier() : super({});
 
-class LiveTablesNotifier extends StateNotifier<List<LiveTableNode>> {
-  LiveTablesNotifier()
-    : super([
-        LiveTableNode(
-          label: 'T-1',
-          phase: TableDiningPhase.vacant,
-          activeGuests: 0,
-          capacity: 4,
-          x: 0.1,
-          y: 0.12,
-          isRound: false,
-        ),
-        LiveTableNode(
-          label: 'T-2',
-          phase: TableDiningPhase.seated,
-          activeGuests: 2,
-          capacity: 2,
-          x: 0.45,
-          y: 0.12,
-          isRound: true,
-          elapsedText: '10m seated',
-          currentStatusText: 'Browsing Menu',
-        ),
-        LiveTableNode(
-          label: 'B-1',
-          phase: TableDiningPhase.cooking,
-          activeGuests: 4,
-          capacity: 6,
-          x: 0.18,
-          y: 0.45,
-          width: 120,
-          height: 80,
-          isRound: false,
-          elapsedText: '22m elapsed',
-          currentStatusText: 'Mains Fired',
-        ),
-        LiveTableNode(
-          label: 'T-4',
-          phase: TableDiningPhase.dining,
-          activeGuests: 4,
-          capacity: 4,
-          x: 0.62,
-          y: 0.42,
-          isRound: false,
-          elapsedText: '35m dining',
-          currentStatusText: 'Served & Enjoying',
-        ),
-        LiveTableNode(
-          label: 'P-1',
-          phase: TableDiningPhase.waitingForBill,
-          activeGuests: 2,
-          capacity: 2,
-          x: 0.52,
-          y: 0.72,
-          isRound: true,
-          elapsedText: '48m elapsed',
-          currentStatusText: 'Bill Requested',
-        ),
-      ]);
+  TableStatusState getStatus(String tableId) {
+    return state[tableId] ?? TableStatusState(phase: TableDiningPhase.vacant, activeGuests: 0);
+  }
 
-  void seatGuests(String label, int guests) {
-    state = state.map((t) {
-      if (t.label == label) {
-        return LiveTableNode(
-          label: t.label,
-          phase: TableDiningPhase.seated,
-          activeGuests: guests,
-          capacity: t.capacity,
-          x: t.x,
-          y: t.y,
-          width: t.width,
-          height: t.height,
-          isRound: t.isRound,
-          elapsedText: 'Just seated',
-          currentStatusText: 'Browsing Menu',
-        );
-      }
-      return t;
-    }).toList();
+  void seatGuests(String tableId, int guests) {
+    state = {
+      ...state,
+      tableId: TableStatusState(phase: TableDiningPhase.seated, activeGuests: guests),
+    };
+  }
+
+  void updatePhase(String tableId, TableDiningPhase phase) {
+    final current = getStatus(tableId);
+    state = {
+      ...state,
+      tableId: TableStatusState(phase: phase, activeGuests: current.activeGuests),
+    };
   }
 }
 
@@ -138,15 +57,25 @@ class LiveFloorplanScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tables = ref.watch(liveTablesProvider);
-    final activeSection = ref.watch(activeSectionProvider);
+    final tablesAsync = ref.watch(tablesFutureProvider);
+    final tablePositions = ref.watch(tablePositionsProvider);
+    final floorsAsync = ref.watch(floorsFutureProvider);
+    final activeFloorId = ref.watch(activeFloorIdProvider);
     final desktop = MediaQuery.of(context).size.width >= 960;
+
+    floorsAsync.whenData((floors) {
+      if (activeFloorId == null && floors.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(activeFloorIdProvider.notifier).state = floors.first.id;
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(
-          'Live Floorplan Monitor',
+          'Table & Floor Monitor',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w800,
             fontSize: 18.sp,
@@ -173,59 +102,108 @@ class LiveFloorplanScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header & Section Switcher Row
+              // 1. Header Row
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Live Floorplan',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: desktop ? 24.sp : 20.sp,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.onSurface,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      Text(
-                        'Operational dashboard tracking dining phases & service stages.',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12.sp,
-                          color: AppTheme.secondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Room Selector Toggle
-                  Container(
-                    padding: EdgeInsets.all(4.r),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(30.r),
-                    ),
-                    child: Row(
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionToggle(
-                          ref,
-                          0,
-                          'Dining Room',
-                          activeSection == 0,
+                        Text(
+                          'Table & Floor Monitor',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: desktop ? 24.sp : 20.sp,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.onSurface,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                        _buildSectionToggle(
-                          ref,
-                          1,
-                          'Patio Deck',
-                          activeSection == 1,
+                        Text(
+                          'Operational dashboard tracking dining phases & service stages.',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.sp,
+                            color: AppTheme.secondary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
                   ),
+                  SizedBox(width: 8.w),
+                  IconButton(
+                    icon: Icon(Icons.add_circle_outline_rounded,
+                        color: AppTheme.primary, size: 28.r),
+                    onPressed: () {
+                      _showAddFloorDialog(context, ref);
+                    },
+                    tooltip: 'Add Floor',
+                  ),
                 ],
+              ),
+              SizedBox(height: 16.h),
+
+              // 2. Floor Selector Toggle Row
+              floorsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+                data: (floors) {
+                  if (floors.isEmpty) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      child: Text(
+                        'No floors created yet. Click the + button above to add a floor.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.sp,
+                          color: AppTheme.secondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }
+                  return SizedBox(
+                    height: 48.h,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(4.r),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(30.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: floors.map((f) {
+                                return _buildSectionToggle(
+                                  ref,
+                                  f.id,
+                                  f.name,
+                                  activeFloorId == f.id,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded,
+                                color: AppTheme.error, size: 24),
+                            onPressed: () {
+                              if (activeFloorId != null) {
+                                final activeFloor = floors.firstWhere((f) => f.id == activeFloorId);
+                                _showDeleteFloorConfirm(context, ref, activeFloorId, activeFloor.name);
+                              }
+                            },
+                            tooltip: 'Delete Active Floor',
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               SizedBox(height: 16.h),
 
@@ -277,50 +255,95 @@ class LiveFloorplanScreen extends ConsumerWidget {
 
                         // Draw tables relative positioning
                         Positioned.fill(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final w = constraints.maxWidth;
-                              final h = constraints.maxHeight;
+                          child: tablesAsync.when(
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(color: AppTheme.primary),
+                            ),
+                            error: (err, _) => Center(
+                              child: Text('Error loading tables: $err'),
+                            ),
+                            data: (tables) {
+                              final activeFloorTables = tables
+                                  .where((t) => t.floorId == activeFloorId)
+                                  .toList();
 
-                              return Stack(
-                                children: tables.map((table) {
-                                  final leftPos = table.x * w;
-                                  final topPos = table.y * h;
-
-                                  return Positioned(
-                                    left: leftPos,
-                                    top: topPos,
-                                    child: _buildTableWidget(
-                                      context,
-                                      ref,
-                                      table,
+                              if (activeFloorTables.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    'No tables placed on this floor yet.\nDesign your floor in "Tables & QR" designer.',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: AppTheme.secondary,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w600,
                                     ),
+                                  ),
+                                );
+                              }
+
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final w = constraints.maxWidth;
+                                  final h = constraints.maxHeight;
+
+                                  return Stack(
+                                    children: activeFloorTables.map((table) {
+                                      final pos = tablePositions[table.id] ??
+                                          NodePosition(x: 0.35, y: 0.35);
+                                      final leftPos = pos.x * w;
+                                      final topPos = pos.y * h;
+
+                                      return Positioned(
+                                        left: leftPos,
+                                        top: topPos,
+                                        child: _buildTableWidget(
+                                          context,
+                                          ref,
+                                          table,
+                                        ),
+                                      );
+                                    }).toList(),
                                   );
-                                }).toList(),
+                                },
                               );
                             },
                           ),
                         ),
 
-                        // FAB to quickly add guests or seat manually at bottom right
-                        Positioned(
-                          right: 20.w,
-                          bottom: 20.h,
-                          child: FloatingActionButton(
-                            onPressed: () {
-                              _showQuickSeatDialog(context, ref, tables);
-                            },
-                            backgroundColor: AppTheme.primary,
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Icon(
-                              Icons.add_rounded,
-                              color: Colors.white,
-                              size: 24.r,
-                            ),
-                          ),
+                        // FAB — only shown when floors exist AND there are tables on the active floor
+                        floorsAsync.maybeWhen(
+                          data: (floors) {
+                            if (floors.isEmpty) return const SizedBox.shrink();
+                            return tablesAsync.maybeWhen(
+                              data: (tables) {
+                                final activeFloorTables = tables
+                                    .where((t) => t.floorId == activeFloorId)
+                                    .toList();
+                                if (activeFloorTables.isEmpty) return const SizedBox.shrink();
+                                return Positioned(
+                                  right: 20.w,
+                                  bottom: 20.h,
+                                  child: FloatingActionButton(
+                                    onPressed: () {
+                                      _showQuickSeatDialog(context, ref, tables);
+                                    },
+                                    backgroundColor: AppTheme.primary,
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.add_rounded,
+                                      color: Colors.white,
+                                      size: 24.r,
+                                    ),
+                                  ),
+                                );
+                              },
+                              orElse: () => const SizedBox.shrink(),
+                            );
+                          },
+                          orElse: () => const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -336,13 +359,13 @@ class LiveFloorplanScreen extends ConsumerWidget {
 
   Widget _buildSectionToggle(
     WidgetRef ref,
-    int index,
+    String floorId,
     String label,
     bool active,
   ) {
     return GestureDetector(
       onTap: () {
-        ref.read(activeSectionProvider.notifier).state = index;
+        ref.read(activeFloorIdProvider.notifier).state = floorId;
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
@@ -368,6 +391,140 @@ class LiveFloorplanScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showAddFloorDialog(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Text(
+            'Create New Floor',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 16.sp,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Floor Name',
+              hintText: 'e.g., Floor 2, Terrace, Rooftop',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  ref.read(floorsFutureProvider.notifier).addFloor(name);
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Adding Floor "$name"...'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.teal,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                'Create',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteFloorConfirm(
+    BuildContext context,
+    WidgetRef ref,
+    String floorId,
+    String floorName,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Text(
+            'Delete Floor "$floorName"?',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 16.sp,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete "$floorName"? All tables on this floor will lose their floor assignment.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13.sp,
+              color: AppTheme.secondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(floorsFutureProvider.notifier).deleteFloor(floorId);
+                ref.read(activeFloorIdProvider.notifier).state = null;
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Deleting floor...'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppTheme.error,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -397,9 +554,12 @@ class LiveFloorplanScreen extends ConsumerWidget {
   Widget _buildTableWidget(
     BuildContext context,
     WidgetRef ref,
-    LiveTableNode table,
+    TableDto table,
   ) {
-    final Color borderCol = switch (table.phase) {
+    final status = ref.watch(tableStatusProvider.notifier).getStatus(table.id);
+    final isRound = table.capacity == 2;
+
+    final Color borderCol = switch (status.phase) {
       TableDiningPhase.vacant => Colors.green,
       TableDiningPhase.seated => Colors.amber.shade600,
       TableDiningPhase.cooking => Colors.orange,
@@ -415,14 +575,14 @@ class LiveFloorplanScreen extends ConsumerWidget {
         onTap: () {
           _showTableDetailDrawer(context, ref, table);
         },
-        borderRadius: BorderRadius.circular(table.isRound ? 99.r : 12.r),
+        borderRadius: BorderRadius.circular(isRound ? 99.r : 12.r),
         child: Container(
-          width: table.width,
-          height: table.height,
+          width: 96,
+          height: 96,
           decoration: BoxDecoration(
             color: AppTheme.surfaceContainerLowest,
-            shape: table.isRound ? BoxShape.circle : BoxShape.rectangle,
-            borderRadius: table.isRound ? null : BorderRadius.circular(12.r),
+            shape: isRound ? BoxShape.circle : BoxShape.rectangle,
+            borderRadius: isRound ? null : BorderRadius.circular(12.r),
             border: Border.all(color: borderCol, width: 2.w),
             boxShadow: const [
               BoxShadow(
@@ -436,7 +596,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                table.label,
+                table.tableNumber,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w800,
@@ -453,7 +613,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
                   ),
                   SizedBox(width: 2.w),
                   Text(
-                    '${table.activeGuests}/${table.capacity}',
+                    '${status.activeGuests}/${table.capacity}',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.w700,
@@ -462,10 +622,16 @@ class LiveFloorplanScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (table.currentStatusText.isNotEmpty) ...[
+              if (status.phase != TableDiningPhase.vacant) ...[
                 SizedBox(height: 2.h),
                 Text(
-                  table.currentStatusText,
+                  status.phase == TableDiningPhase.seated
+                      ? 'Browsing Menu'
+                      : status.phase == TableDiningPhase.cooking
+                          ? 'Mains Fired'
+                          : status.phase == TableDiningPhase.dining
+                              ? 'Served & Enjoying'
+                              : 'Bill Requested',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 8.sp,
                     fontWeight: FontWeight.w800,
@@ -486,8 +652,10 @@ class LiveFloorplanScreen extends ConsumerWidget {
   void _showTableDetailDrawer(
     BuildContext context,
     WidgetRef ref,
-    LiveTableNode table,
+    TableDto table,
   ) {
+    final status = ref.watch(tableStatusProvider.notifier).getStatus(table.id);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -520,7 +688,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Table Details — ${table.label}',
+                        'Table Details — ${table.tableNumber}',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w800,
@@ -547,7 +715,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
-                      table.phase.name.toUpperCase(),
+                      status.phase.name.toUpperCase(),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 10.sp,
                         fontWeight: FontWeight.w800,
@@ -565,7 +733,7 @@ class LiveFloorplanScreen extends ConsumerWidget {
               ),
               SizedBox(height: 16.h),
 
-              if (table.phase == TableDiningPhase.vacant) ...[
+              if (status.phase == TableDiningPhase.vacant) ...[
                 Text(
                   'Seat Guests (Manual Seating Trigger)',
                   style: GoogleFonts.plusJakartaSans(
@@ -577,12 +745,12 @@ class LiveFloorplanScreen extends ConsumerWidget {
                 SizedBox(height: 10.h),
                 Row(
                   children: [
-                    _buildSeatButton(context, ref, table.label, 2),
+                    _buildSeatButton(context, ref, table.id, 2),
                     SizedBox(width: 8.w),
-                    _buildSeatButton(context, ref, table.label, 4),
+                    _buildSeatButton(context, ref, table.id, 4),
                     SizedBox(width: 8.w),
                     if (table.capacity >= 6) ...[
-                      _buildSeatButton(context, ref, table.label, 6),
+                      _buildSeatButton(context, ref, table.id, 6),
                     ],
                   ],
                 ),
@@ -590,12 +758,24 @@ class LiveFloorplanScreen extends ConsumerWidget {
                 _buildDetailRow(
                   Icons.timer_rounded,
                   'Session Duration',
-                  table.elapsedText,
+                  status.phase == TableDiningPhase.seated
+                      ? '10m seated'
+                      : status.phase == TableDiningPhase.cooking
+                          ? '22m elapsed'
+                          : status.phase == TableDiningPhase.dining
+                              ? '35m dining'
+                              : '48m elapsed',
                 ),
                 _buildDetailRow(
                   Icons.room_service_rounded,
                   'Dining Status',
-                  table.currentStatusText,
+                  status.phase == TableDiningPhase.seated
+                      ? 'Browsing Menu'
+                      : status.phase == TableDiningPhase.cooking
+                          ? 'Mains Fired'
+                          : status.phase == TableDiningPhase.dining
+                              ? 'Served & Enjoying'
+                              : 'Bill Requested',
                 ),
                 _buildDetailRow(
                   Icons.people_rounded,
@@ -603,9 +783,54 @@ class LiveFloorplanScreen extends ConsumerWidget {
                   'Maria (Server)',
                 ),
                 SizedBox(height: 12.h),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Back to Floorplan'),
+                // Allow transitioning phase directly!
+                Row(
+                  children: [
+                    if (status.phase == TableDiningPhase.seated)
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ref.read(tableStatusProvider.notifier).updatePhase(table.id, TableDiningPhase.cooking);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                          child: const Text('Fire Mains'),
+                        ),
+                      ),
+                    if (status.phase == TableDiningPhase.cooking)
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ref.read(tableStatusProvider.notifier).updatePhase(table.id, TableDiningPhase.dining);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                          child: const Text('Serve Order'),
+                        ),
+                      ),
+                    if (status.phase == TableDiningPhase.dining)
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ref.read(tableStatusProvider.notifier).updatePhase(table.id, TableDiningPhase.waitingForBill);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white),
+                          child: const Text('Request Bill'),
+                        ),
+                      ),
+                    if (status.phase == TableDiningPhase.waitingForBill)
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ref.read(tableStatusProvider.notifier).updatePhase(table.id, TableDiningPhase.vacant);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                          child: const Text('Clear Table'),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ],
@@ -618,17 +843,17 @@ class LiveFloorplanScreen extends ConsumerWidget {
   Widget _buildSeatButton(
     BuildContext context,
     WidgetRef ref,
-    String label,
+    String tableId,
     int count,
   ) {
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
-          ref.read(liveTablesProvider.notifier).seatGuests(label, count);
+          ref.read(tableStatusProvider.notifier).seatGuests(tableId, count);
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Seated party of $count at $label successfully!'),
+              content: Text('Seated party of $count successfully!'),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.teal,
             ),
@@ -677,11 +902,26 @@ class LiveFloorplanScreen extends ConsumerWidget {
   void _showQuickSeatDialog(
     BuildContext context,
     WidgetRef ref,
-    List<LiveTableNode> tables,
+    List<TableDto> tables,
   ) {
-    final vacant = tables
-        .where((t) => t.phase == TableDiningPhase.vacant)
+    final statusNotifier = ref.read(tableStatusProvider.notifier);
+    final activeFloorId = ref.read(activeFloorIdProvider);
+
+    final floorTables = tables
+        .where((t) => t.floorId == activeFloorId)
         .toList();
+
+    final vacant = floorTables.where((t) {
+      final status = statusNotifier.getStatus(t.id);
+      return status.phase == TableDiningPhase.vacant;
+    }).toList();
+
+    // Determine the correct empty state message
+    final String? emptyMessage = vacant.isEmpty
+        ? (floorTables.isEmpty
+            ? 'No tables have been placed on this floor yet.\nGo to "Tables & QR" to design this floor.'
+            : 'All tables on this floor are currently occupied!')
+        : null;
 
     showDialog(
       context: context,
@@ -694,31 +934,73 @@ class LiveFloorplanScreen extends ConsumerWidget {
             'Quick Manual Seating',
             style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
           ),
-          content: vacant.isEmpty
-              ? const Text('All tables are currently occupied!')
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: vacant.map((t) {
-                    return ListTile(
-                      leading: Icon(
-                        Icons.table_restaurant_rounded,
-                        color: Colors.green,
-                      ),
-                      title: Text(t.label),
-                      subtitle: Text('Capacity: ${t.capacity}'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        ref
-                            .read(liveTablesProvider.notifier)
-                            .seatGuests(t.label, t.capacity);
-                      },
-                    );
-                  }).toList(),
+          content: emptyMessage != null
+              ? Padding(
+                  padding: EdgeInsets.only(top: 4.h),
+                  child: Text(
+                    emptyMessage,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.sp,
+                      color: AppTheme.secondary,
+                    ),
+                  ),
+                )
+              : SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: vacant.length,
+                    itemBuilder: (ctx, idx) {
+                      final t = vacant[idx];
+                      return ListTile(
+                        leading: const Icon(
+                          Icons.table_restaurant_rounded,
+                          color: Colors.green,
+                        ),
+                        title: Text(
+                          t.tableNumber,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Capacity: ${t.capacity} seats',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11.sp,
+                            color: AppTheme.secondary,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: Colors.green,
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          ref
+                              .read(tableStatusProvider.notifier)
+                              .seatGuests(t.id, t.capacity);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Seated at ${t.tableNumber} (${t.capacity} seats).',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.teal,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+              ),
             ),
           ],
         );
@@ -727,7 +1009,6 @@ class LiveFloorplanScreen extends ConsumerWidget {
   }
 }
 
-// ── Blueprint Custom Painter ─────────────────────────────────────────────────
 class _FloorGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -735,7 +1016,7 @@ class _FloorGridPainter extends CustomPainter {
     final h = size.height;
 
     final gridPaint = Paint()
-      ..color = AppTheme.surfaceContainerHigh.withValues(alpha: 0.3)
+      ..color = AppTheme.secondaryContainer.withValues(alpha: 0.5)
       ..strokeWidth = 1.0;
 
     const step = 20.0;

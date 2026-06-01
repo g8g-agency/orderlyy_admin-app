@@ -5,7 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/data/dtos/menu_dto.dart';
-import '../../../../core/providers/menu_providers.dart';
+import '../../../../core/providers/categories_provider.dart';
+import '../../../../core/providers/menu_items_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/auth/app_auth_provider.dart';
@@ -111,7 +112,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           tags: widget.item!.tags,
           versionNum: widget.item!.versionNum,
         );
-        await ref.read(updateMenuItemProvider)(updated);
+        await ref.read(menuItemsProvider.notifier).updateMenuItem(updated);
       } else {
         final tenantId = ref.read(appContextProvider)?.tenant.id ?? '';
         final newItem = MenuItemDto(
@@ -130,12 +131,12 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           tags: [],
           versionNum: 1,
         );
-        await ref.read(createMenuItemProvider)(newItem);
+        await ref.read(menuItemsProvider.notifier).createMenuItem(newItem);
       }
 
-      // Force a manual refresh of the stream provider since Supabase Realtime
-      // may not be active for the menu_items table in the Postgres publication.
-      ref.invalidate(menuItemsStreamProvider);
+      // Force a manual refresh is no longer needed locally as it updates local state,
+      // but if you want to be sure it syncs with remote changes from others, you can trigger a reload.
+      // ref.read(menuItemsProvider.notifier).loadMenuItems(forceRefresh: true);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -164,8 +165,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(menuCategoriesFutureProvider);
-    final categories = categoriesAsync.value ?? [];
+    final categoriesState = ref.watch(categoriesProvider);
+    final categories = categoriesState.byId.values.toList();
 
     if (categories.isNotEmpty && !categories.any((c) => c.id == _categoryId)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

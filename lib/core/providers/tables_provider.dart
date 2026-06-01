@@ -3,6 +3,10 @@ import '../data/dtos/table_dto.dart';
 import '../data/repositories/tables_repository.dart';
 import '../network/api_exception.dart';
 import 'repository_providers.dart';
+import 'branch_context_service.dart';
+import '../network/cancellation_service.dart';
+import 'package:dio/dio.dart';
+import 'repository_providers.dart';
 
 class TablesState {
   final bool isLoading;
@@ -32,8 +36,10 @@ class TablesState {
 
 class TablesNotifier extends StateNotifier<TablesState> {
   final TablesRepository _repository;
+  final String _branchId;
+  final CancelToken _cancelToken;
 
-  TablesNotifier(this._repository) : super(const TablesState());
+  TablesNotifier(this._repository, this._branchId, this._cancelToken) : super(const TablesState());
 
   Future<void> loadTables({
     String? sectionId,
@@ -46,7 +52,11 @@ class TablesNotifier extends StateNotifier<TablesState> {
 
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.getTablesPaginated(sectionId: sectionId);
+    final result = await _repository.getTablesPaginated(
+      branchId: _branchId,
+      cancelToken: _cancelToken,
+      sectionId: sectionId,
+    );
 
     if (result is Success<List<RestaurantTableDto>>) {
       final newTables = forceRefresh
@@ -64,7 +74,7 @@ class TablesNotifier extends StateNotifier<TablesState> {
   Future<Result<RestaurantTableDto>> createTable(
     RestaurantTableDto table,
   ) async {
-    final result = await _repository.createTableEntity(table);
+    final result = await _repository.createTableEntity(table, branchId: _branchId);
 
     if (result is Success<RestaurantTableDto>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);
@@ -78,7 +88,7 @@ class TablesNotifier extends StateNotifier<TablesState> {
   Future<Result<RestaurantTableDto>> updateTable(
     RestaurantTableDto table,
   ) async {
-    final result = await _repository.updateTableEntity(table);
+    final result = await _repository.updateTableEntity(table, branchId: _branchId);
 
     if (result is Success<RestaurantTableDto>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);
@@ -100,6 +110,7 @@ class TablesNotifier extends StateNotifier<TablesState> {
     final result = await _repository.deleteTableEntity(
       tableId,
       table.versionNum,
+      branchId: _branchId,
     );
 
     if (result is Success<void>) {
@@ -132,7 +143,9 @@ final tablesProvider = StateNotifierProvider<TablesNotifier, TablesState>((
   ref,
 ) {
   final repo = ref.watch(tablesRepositoryProvider);
-  return TablesNotifier(repo);
+  final currentBranch = ref.watch(currentBranchProvider).value;
+  final cancelToken = ref.watch(branchCancellationServiceProvider).token;
+  return TablesNotifier(repo, currentBranch?.id ?? '', cancelToken);
 });
 
 // Selector for rendering tables by section abstracting visual layout

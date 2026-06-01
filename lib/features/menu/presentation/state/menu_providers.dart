@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import '../../../../core/providers/branch_context_service.dart';
 
 import '../../../../core/network/network_providers.dart';
 import '../../../../core/network/network_info.dart';
@@ -28,7 +29,8 @@ final menuSnapshotRepositoryProvider = Provider<MenuRepository>((ref) {
 
 // Core Providers
 final branchIdProvider = Provider<String>((ref) {
-  return 'branch_1';
+  final branchAsync = ref.watch(currentBranchProvider);
+  return branchAsync.value?.id ?? 'branch_1';
 });
 
 final menuCacheProvider = Provider<MenuRepository>((ref) {
