@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:orderlli_admin/core/auth/app_context_provider.dart';
+import 'package:orderlli_admin/core/auth/app_auth_provider.dart';
+import 'package:orderlli_admin/core/providers/branch_context_service.dart';
 import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/table_dto.dart';
+import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/floor_dto.dart';
 import 'package:orderlli_admin/features/tables_infrastructure/data/repositories/table_infrastructure_repository.dart';
 
 final tablesFutureProvider =
@@ -14,44 +16,168 @@ class TablesNotifier extends AsyncNotifier<List<TableDto>> {
     final ctx = ref.watch(appContextProvider);
     if (ctx == null) return [];
 
-    // For now we assume a default branch from the first branch linked, but let's hardcode 'branch_1' fallback if context doesn't have it.
-    // Assuming context has a branch or we just fetch from API.
-    // The backend uses JWT to scope tenant.
+    final branchAsync = ref.watch(currentBranchProvider);
+    final branch = branchAsync.value;
+    if (branch == null) return [];
+
     final repo = ref.watch(tableInfrastructureRepositoryProvider);
-    // Actually the UI currently hardcodes branch_1
-    return repo.getTables(ctx.tenant.id, 'branch_1');
+    return repo.getTables(ctx.tenant.id, branch.id);
   }
 
-  Future<void> addTable(String tableNumber, int capacity) async {
+  Future<void> addTable(String tableNumber, int capacity, {String? floorId}) async {
     final ctx = ref.read(appContextProvider);
     if (ctx == null) return;
+
+    final branch = ref.read(currentBranchProvider).value;
+    if (branch == null) return;
+
     final repo = ref.read(tableInfrastructureRepositoryProvider);
 
     final dto = TableDto(
       id: '', // Empty, backend generates it
       tenantId: ctx.tenant.id,
-      branchId: 'branch_1',
+      branchId: branch.id,
       tableNumber: tableNumber,
       capacity: capacity,
+      floorId: floorId,
       isActive: true,
     );
 
+    final previousState = state;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       await repo.createTable(dto);
-      return repo.getTables(ctx.tenant.id, 'branch_1');
-    });
+      final list = await repo.getTables(ctx.tenant.id, branch.id);
+      state = AsyncValue.data(list);
+    } catch (e, stack) {
+      state = previousState;
+      rethrow;
+    }
   }
 
   Future<void> deleteTable(String tableId) async {
     final ctx = ref.read(appContextProvider);
     if (ctx == null) return;
+
+    final branch = ref.read(currentBranchProvider).value;
+    if (branch == null) return;
+
     final repo = ref.read(tableInfrastructureRepositoryProvider);
 
+    final previousState = state;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       await repo.deleteTable(tableId);
-      return repo.getTables(ctx.tenant.id, 'branch_1');
-    });
+      final list = await repo.getTables(ctx.tenant.id, branch.id);
+      state = AsyncValue.data(list);
+    } catch (e, stack) {
+      state = previousState;
+      rethrow;
+    }
   }
 }
+
+final floorsFutureProvider =
+    AsyncNotifierProvider<FloorsNotifier, List<FloorDto>>(() {
+      return FloorsNotifier();
+    });
+
+class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
+  @override
+  Future<List<FloorDto>> build() async {
+    final ctx = ref.watch(appContextProvider);
+    print('[FloorsNotifier.build] WATCH appContextProvider: $ctx');
+    if (ctx == null) {
+      print('[FloorsNotifier.build] RETURN [] because ctx is null');
+      return [];
+    }
+
+    final branchAsync = ref.watch(currentBranchProvider);
+    print('[FloorsNotifier.build] WATCH currentBranchProvider state: $branchAsync');
+    final branch = branchAsync.value;
+    if (branch == null) {
+      print('[FloorsNotifier.build] RETURN [] because branch is null (branchAsync.value is null)');
+      return [];
+    }
+
+    final repo = ref.watch(tableInfrastructureRepositoryProvider);
+    print('[FloorsNotifier.build] CALL getFloors with tenant: ${ctx.tenant.id}, branch: ${branch.id}');
+    try {
+      final list = await repo.getFloors(ctx.tenant.id, branch.id);
+      print('[FloorsNotifier.build] SUCCESS: returned ${list.length} floors');
+      return list;
+    } catch (e, stack) {
+      print('[FloorsNotifier.build] ERROR: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<void> addFloor(String name) async {
+    final ctx = ref.read(appContextProvider);
+    print('[FloorsNotifier.addFloor] READ appContextProvider: $ctx');
+    if (ctx == null) {
+      print('[FloorsNotifier.addFloor] RETURN because ctx is null');
+      return;
+    }
+
+    final branch = ref.read(currentBranchProvider).value;
+    print('[FloorsNotifier.addFloor] READ currentBranchProvider value: $branch');
+    if (branch == null) {
+      print('[FloorsNotifier.addFloor] RETURN because branch is null');
+      return;
+    }
+
+    final repo = ref.read(tableInfrastructureRepositoryProvider);
+    print('[FloorsNotifier.addFloor] CALL createFloor with branch: ${branch.id}, name: $name');
+
+    final previousState = state;
+    state = const AsyncValue.loading();
+    try {
+      final newFloor = await repo.createFloor(branch.id, name);
+      print('[FloorsNotifier.addFloor] createFloor SUCCESS: $newFloor');
+      final list = await repo.getFloors(ctx.tenant.id, branch.id);
+      print('[FloorsNotifier.addFloor] getFloors SUCCESS: returned ${list.length} floors');
+      state = AsyncValue.data(list);
+    } catch (e, stack) {
+      print('[FloorsNotifier.addFloor] ERROR: $e\n$stack');
+      state = previousState;
+      rethrow;
+    }
+  }
+
+  Future<void> deleteFloor(String floorId) async {
+    final ctx = ref.read(appContextProvider);
+    print('[FloorsNotifier.deleteFloor] READ appContextProvider: $ctx');
+    if (ctx == null) {
+      print('[FloorsNotifier.deleteFloor] RETURN because ctx is null');
+      return;
+    }
+
+    final branch = ref.read(currentBranchProvider).value;
+    print('[FloorsNotifier.deleteFloor] READ currentBranchProvider value: $branch');
+    if (branch == null) {
+      print('[FloorsNotifier.deleteFloor] RETURN because branch is null');
+      return;
+    }
+
+    final repo = ref.read(tableInfrastructureRepositoryProvider);
+    print('[FloorsNotifier.deleteFloor] CALL deleteFloor: $floorId');
+
+    final previousState = state;
+    state = const AsyncValue.loading();
+    try {
+      await repo.deleteFloor(floorId);
+      print('[FloorsNotifier.deleteFloor] deleteFloor SUCCESS');
+      final list = await repo.getFloors(ctx.tenant.id, branch.id);
+      print('[FloorsNotifier.deleteFloor] getFloors SUCCESS: returned ${list.length} floors');
+      state = AsyncValue.data(list);
+    } catch (e, stack) {
+      print('[FloorsNotifier.deleteFloor] ERROR: $e\n$stack');
+      state = previousState;
+      rethrow;
+    }
+  }
+}
+
+final activeFloorIdProvider = StateProvider<String?>((ref) => null);
+

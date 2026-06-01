@@ -6,8 +6,9 @@ import '../../constants/api_constants.dart';
 
 class ApiTaxRepository implements TaxRepository {
   final DioClient _dioClient;
+  final String _tenantId;
 
-  ApiTaxRepository(this._dioClient);
+  ApiTaxRepository(this._dioClient, this._tenantId);
 
   @override
   Future<Result<List<TaxProfileDto>>> getTaxProfiles({
@@ -23,7 +24,7 @@ class ApiTaxRepository implements TaxRepository {
       };
 
       final response = await _dioClient.get(
-        ApiConstants.taxes,
+        ApiConstants.taxes(_tenantId),
         queryParameters: queryParams,
       );
 
@@ -52,7 +53,7 @@ class ApiTaxRepository implements TaxRepository {
   ) async {
     try {
       final response = await _dioClient.get(
-        '${ApiConstants.taxes}/resolved/$entityId',
+        '${ApiConstants.taxes(_tenantId)}/resolved/$entityId',
       );
 
       if (response.data['success'] == true) {
@@ -76,7 +77,7 @@ class ApiTaxRepository implements TaxRepository {
   Future<Result<TaxProfileDto>> createTaxProfile(TaxProfileDto profile) async {
     try {
       final response = await _dioClient.post(
-        ApiConstants.taxes,
+        ApiConstants.taxes(_tenantId),
         data: profile.toJson(),
       );
 
@@ -99,7 +100,7 @@ class ApiTaxRepository implements TaxRepository {
   Future<Result<TaxProfileDto>> updateTaxProfile(TaxProfileDto profile) async {
     try {
       final response = await _dioClient.patch(
-        '${ApiConstants.taxes}/${profile.id}',
+        '${ApiConstants.taxes(_tenantId)}/${profile.id}',
         data: profile.toJson(), // version_num sent for OCC
       );
 
@@ -125,7 +126,7 @@ class ApiTaxRepository implements TaxRepository {
   ) async {
     try {
       final response = await _dioClient.delete(
-        '${ApiConstants.taxes}/$profileId',
+        '${ApiConstants.taxes(_tenantId)}/$profileId',
         data: {
           'version_num':
               currentVersion, // Explicit OCC boundary for safe deletion

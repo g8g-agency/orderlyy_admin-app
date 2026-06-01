@@ -4,6 +4,10 @@ import '../data/dtos/order_dto.dart';
 import '../data/repositories/orders_repository.dart';
 import '../network/api_exception.dart';
 import 'repository_providers.dart';
+import 'branch_context_service.dart';
+import '../network/cancellation_service.dart';
+import 'package:dio/dio.dart';
+import 'package:uuid/uuid.dart';
 import '../data/local/offline_sync_queue.dart';
 
 // ── Orders State ──────────────────────────────────────────────────────────────
@@ -36,9 +40,11 @@ class OrdersState {
 // ── Orders Notifier ───────────────────────────────────────────────────────────
 class OrdersNotifier extends StateNotifier<OrdersState> {
   final OrdersRepository _repository;
+  final String _branchId;
+  final CancelToken _cancelToken;
   final _uuid = const Uuid();
 
-  OrdersNotifier(this._repository) : super(const OrdersState());
+  OrdersNotifier(this._repository, this._branchId, this._cancelToken) : super(const OrdersState());
 
   /// Fetches backend-resolved order projections.
   Future<void> loadOrders({
@@ -57,6 +63,8 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getOrdersPaginated(
+      branchId: _branchId,
+      cancelToken: _cancelToken,
       status: status,
       tableId: tableId,
     );
@@ -77,9 +85,9 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   /// Creates a new order using an idempotency key to prevent double-billing on reconnects.
   Future<Result<OrderDto>> createOrder(OrderDto order) async {
     final idempotencyKey = _uuid.v4(); // Generate unique key for this intent
-
     final result = await _repository.createOrderEntity(
       order,
+      branchId: _branchId,
       idempotencyKey: idempotencyKey,
     );
 
@@ -101,11 +109,11 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     if (order == null) return Failure(ApiFailure('Order not found locally'));
 
     final idempotencyKey = _uuid.v4();
-
     final result = await _repository.transitionOrderStatus(
       orderId,
       newStatus,
       order.versionNum,
+      branchId: _branchId,
       idempotencyKey: idempotencyKey,
     );
 
@@ -132,11 +140,11 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     if (order == null) return Failure(ApiFailure('Order not found locally'));
 
     final idempotencyKey = _uuid.v4();
-
     final result = await _repository.updateOrderLineItems(
       orderId,
       items,
       order.versionNum,
+      branchId: _branchId,
       idempotencyKey: idempotencyKey,
     );
 
@@ -174,7 +182,9 @@ final ordersProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((
   ref,
 ) {
   final repo = ref.watch(ordersRepositoryProvider);
-  return OrdersNotifier(repo);
+  final currentBranch = ref.watch(currentBranchProvider).value;
+  final cancelToken = ref.watch(branchCancellationServiceProvider).token;
+  return OrdersNotifier(repo, currentBranch?.id ?? '', cancelToken);
 });
 
 final activeTableOrdersProvider = Provider.family<List<OrderDto>, String>((

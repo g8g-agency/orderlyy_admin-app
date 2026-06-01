@@ -14,6 +14,7 @@ class OfflineSyncQueue {
 
   // Push-based count stream — emits only when queue actually changes.
   final _countController = StreamController<int>.broadcast();
+  bool _isPaused = false;
 
   OfflineSyncQueue(this._prefs);
 
@@ -53,6 +54,10 @@ class OfflineSyncQueue {
   }
 
   Future<void> enqueue(SyncAction action) async {
+    if (_isPaused) {
+      debugPrint('[OfflineSyncQueue] Queue is paused, enqueue deferred or rejected.');
+      // Depending on epoch rules we could reject here. But for now we just log or queue it if it's a soft freeze.
+    }
     try {
       final queue = await getQueue();
       queue.add(action);
@@ -64,6 +69,16 @@ class OfflineSyncQueue {
     } catch (e) {
       debugPrint('[OfflineSyncQueue] Error enqueuing action: $e');
     }
+  }
+
+  void pause() {
+    _isPaused = true;
+    debugPrint('[OfflineSyncQueue] Paused');
+  }
+
+  void resume() {
+    _isPaused = false;
+    debugPrint('[OfflineSyncQueue] Resumed');
   }
 
   Future<void> dequeue(String actionId) async {

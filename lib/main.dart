@@ -35,10 +35,9 @@ Future<void> main() async {
   final localStorage = SharedPreferencesStorage(prefs);
 
   // Supabase initialization with Secure Token Storage
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: SupabaseConstants.supabaseUrl,
-  );
+  final supabaseEnvUrl = const String.fromEnvironment('SUPABASE_URL');
+  final supabaseUrl = supabaseEnvUrl.isNotEmpty ? supabaseEnvUrl : SupabaseConstants.supabaseUrl;
+
   const supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
     defaultValue: SupabaseConstants.supabaseAnonKey,

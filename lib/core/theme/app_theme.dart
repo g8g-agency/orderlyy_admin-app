@@ -5,9 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 /// Orderlli Design System — "The Culinary Architect"
 /// Based on Stitch orderlli_crimson design tokens.
 class AppTheme {
-  // ── Primary Palette ───────────────────────────────────────────────────────
-  static const Color primary = Color(0xFFBA0013);
-  static const Color primaryContainer = Color(0xFFE31E24);
+  // ── Primary Palette  // Bright, high-contrast, confident red for Orderlli.
+  static const Color primary = Color(0xFFFF2A2A); 
+  static const Color primaryContainer = Color(0xFFFF5252);
   static const Color onPrimary = Color(0xFFFFFFFF);
   static const Color primaryFixed = Color(0xFFFFDAD6);
   static const Color primaryFixedDim = Color(0xFFFFB4AB);

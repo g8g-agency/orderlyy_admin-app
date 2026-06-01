@@ -174,57 +174,60 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
             SizedBox(height: 24.h),
 
             // Controls
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _runConflictResolution,
-                  icon: const Icon(
-                    Icons.merge_type_rounded,
-                    color: Colors.white,
-                  ),
-                  label: const Text('AUTO-MERGE CHANGES (3-WAY MERGE)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC0272D),
-                    foregroundColor: Colors.white,
-                    minimumSize: Size(0, 48.h),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 14.h,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _runConflictResolution,
+                    icon: const Icon(
+                      Icons.merge_type_rounded,
+                      color: Colors.white,
+                    ),
+                    label: const Text('AUTO-MERGE CHANGES (3-WAY MERGE)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC0272D),
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(0, 48.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 14.h,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 12.w),
-                OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _mergeResult = OccConflictResult(
-                        hasConflict: false,
-                        reconciledState: _serverAuthoritative,
-                      );
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: Size(0, 48.h),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 14.h,
+                  SizedBox(width: 12.w),
+                  OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        _mergeResult = OccConflictResult(
+                          hasConflict: false,
+                          reconciledState: _serverAuthoritative,
+                        );
+                      });
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: Size(0, 48.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 14.h,
+                      ),
                     ),
+                    child: const Text('KEEP SERVER VERSION (ROLLBACK)'),
                   ),
-                  child: const Text('KEEP SERVER VERSION (ROLLBACK)'),
-                ),
-                SizedBox(width: 12.w),
-                OutlinedButton(
-                  onPressed: _resetSimState,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: Size(0, 48.h),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 14.h,
+                  SizedBox(width: 12.w),
+                  OutlinedButton(
+                    onPressed: _resetSimState,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: Size(0, 48.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 14.h,
+                      ),
                     ),
+                    child: const Text('RESET SIMULATOR'),
                   ),
-                  child: const Text('RESET SIMULATOR'),
-                ),
-              ],
+                ],
+              ),
             ),
             SizedBox(height: 32.h),
 
@@ -334,6 +337,8 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
                     ? const Color(0xFFC0272D)
                     : AppTheme.onSurface,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             SizedBox(height: 4.h),
             Text(
@@ -359,10 +364,23 @@ class _OccConflictScreenState extends State<OccConflictScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.inter(color: AppTheme.secondary)),
-          Text(
-            val,
-            style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w700),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(color: AppTheme.secondary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Text(
+              val,
+              style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

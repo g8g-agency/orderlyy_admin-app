@@ -79,6 +79,8 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         elevation: 0,
       ),
@@ -91,59 +93,71 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Immutable Configuration Audit History',
-                      style: GoogleFonts.inter(
-                        fontSize: 22.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.onSurface,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Immutable Configuration Audit History',
+                        style: GoogleFonts.inter(
+                          fontSize: 22.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.onSurface,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      'Operational ledger listing who, when, and what changed in the system.',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.sp,
-                        color: AppTheme.secondary,
+                      Text(
+                        'Operational ledger listing who, when, and what changed in the system.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.sp,
+                          color: AppTheme.secondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                SizedBox(width: 16.w),
 
                 // Filters Row
-                Row(
-                  children: [
-                    _filterDropdown(
-                      label: 'Action Scope',
-                      value: _selectedScope,
-                      items: [
-                        'ALL',
-                        'AVAILABILITY',
-                        'PRICING',
-                        'TAXES',
-                        'STAFF',
-                      ],
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedScope = val);
-                      },
-                    ),
-                    SizedBox(width: 12.w),
-                    _filterDropdown(
-                      label: 'Target Branch',
-                      value: _selectedBranch,
-                      items: [
-                        'ALL',
-                        'London Soho',
-                        'Manchester',
-                        'System Wide',
-                      ],
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedBranch = val);
-                      },
-                    ),
-                  ],
+                Flexible(
+                  child: Wrap(
+                    spacing: 12.w,
+                    runSpacing: 8.h,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      _filterDropdown(
+                        label: 'Action Scope',
+                        value: _selectedScope,
+                        items: [
+                          'ALL',
+                          'AVAILABILITY',
+                          'PRICING',
+                          'TAXES',
+                          'STAFF',
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _selectedScope = val);
+                        },
+                      ),
+                      _filterDropdown(
+                        label: 'Target Branch',
+                        value: _selectedBranch,
+                        items: [
+                          'ALL',
+                          'London Soho',
+                          'Manchester',
+                          'System Wide',
+                        ],
+                        onChanged: (val) {
+                          if (val != null)
+                            setState(() => _selectedBranch = val);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -229,18 +243,28 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                            log['action'] as String,
-                                            style: GoogleFonts.inter(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15.sp,
+                                          Expanded(
+                                            child: Text(
+                                              log['action'] as String,
+                                              style: GoogleFonts.inter(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15.sp,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
-                                          Text(
-                                            log['timestamp'] as String,
-                                            style: GoogleFonts.jetBrainsMono(
-                                              fontSize: 12.sp,
-                                              color: AppTheme.secondary,
+                                          SizedBox(width: 8.w),
+                                          Flexible(
+                                            child: Text(
+                                              log['timestamp'] as String,
+                                              style: GoogleFonts.jetBrainsMono(
+                                                fontSize: 12.sp,
+                                                color: AppTheme.secondary,
+                                              ),
+                                              textAlign: TextAlign.right,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ],
@@ -254,7 +278,11 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                                         ),
                                       ),
                                       SizedBox(height: 8.h),
-                                      Row(
+                                      Wrap(
+                                        spacing: 12.w,
+                                        runSpacing: 6.h,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
                                         children: [
                                           Text(
                                             'Actor: ${log['actor']} (${log['role']})',
@@ -264,7 +292,6 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                          SizedBox(width: 12.w),
                                           Container(
                                             width: 4.r,
                                             height: 4.r,
@@ -273,7 +300,6 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                                               shape: BoxShape.circle,
                                             ),
                                           ),
-                                          SizedBox(width: 12.w),
                                           Text(
                                             'Branch: ${log['branch']}',
                                             style: GoogleFonts.inter(

@@ -135,6 +135,90 @@ class QRExportService {
     return doc.save();
   }
 
+  /// Generates a PDF containing a single beautiful QR code card for the provided table
+  Future<Uint8List> generateSingleQrPdf(
+    TableDto table,
+    String branchName,
+    String qrUrl, {
+    PdfPageFormat format = PdfPageFormat.a4,
+  }) async {
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: format,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return pw.Center(
+            child: pw.Container(
+              width: 320,
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400, width: 2),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
+              ),
+              padding: const pw.EdgeInsets.all(24),
+              child: pw.Column(
+                mainAxisSize: pw.MainAxisSize.min,
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  pw.Text(
+                    branchName,
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 14,
+                      color: PdfColors.grey700,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    'Table ${table.tableNumber}',
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 26,
+                    ),
+                  ),
+                  if (table.displayName != null &&
+                      table.displayName!.isNotEmpty) ...[
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      table.displayName!,
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                  ],
+                  pw.SizedBox(height: 24),
+                  pw.BarcodeWidget(
+                    data: qrUrl,
+                    barcode: pw.Barcode.qrCode(),
+                    width: 180,
+                    height: 180,
+                    drawText: false,
+                  ),
+                  pw.SizedBox(height: 24),
+                  pw.Text(
+                    'Scan to Order',
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 16,
+                      color: PdfColors.blueGrey800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    return doc.save();
+  }
+
   /// Opens a print/share dialog for the generated PDF
   Future<void> printOrSharePdf(Uint8List pdfBytes, String fileName) async {
     await Printing.layoutPdf(

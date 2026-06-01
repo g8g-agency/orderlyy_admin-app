@@ -14,6 +14,7 @@ import '../../core/providers/orders_providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../orders/admin_orders_screen.dart';
 import '../analytics/analytics_screen.dart';
+import '../../core/widgets/admin_shell.dart';
 
 // ── State Providers ──────────────────────────────────────────────────────────
 final currentNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -156,7 +157,7 @@ class _DesktopSidebar extends ConsumerWidget {
           ),
           _SidebarItem(
             icon: Icons.grid_view_rounded,
-            label: 'Live Floorplan',
+            label: 'Table & Floor Monitor',
             onTap: () => context.push('/admin/live-floorplan'),
           ),
           _SidebarItem(
@@ -432,7 +433,7 @@ class _MoreTab extends ConsumerWidget {
       ),
       (
         icon: Icons.grid_view_rounded,
-        label: 'Live Floorplan',
+        label: 'Table & Floor Monitor',
         sub: 'Dining room & patio',
         route: '/admin/live-floorplan',
         color: const Color(0xFF0F766E),
@@ -784,14 +785,19 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                     size: 24.r,
                   ),
                   SizedBox(width: 8.w),
-                  Text(
-                    'KitchenSync',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primary,
+                  Flexible(
+                    child: Text(
+                      'HOME',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  const BranchSwitcher(),
                   const Spacer(),
                   // Bell icon
                   Stack(
@@ -853,34 +859,92 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // ── Store Header + Greeting ───────────────────────────
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // ── Primary App Actions ───────────────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '$_greeting, $capitalizedName',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: isDesktop(context) ? 28.sp : 22.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.onSurface,
-                                  letterSpacing: -0.5,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(20.r),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x08000000),
+                                blurRadius: 15,
+                                offset: Offset(0, 8),
                               ),
-                              Text(
-                                'Morning Shift • Orderlyy Operating Pulse',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12.sp,
-                                  color: AppTheme.secondary,
-                                  fontWeight: FontWeight.w500,
+                            ],
+                            border: Border.all(
+                              color: AppTheme.surfaceContainerHigh.withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                          ),
+                          padding: EdgeInsets.all(8.r),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    ref.invalidate(ordersProvider);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text('Refreshing Orderlyy...'),
+                                        behavior: SnackBarBehavior.floating,
+                                        backgroundColor: AppTheme.primary,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 4,
+                                    shadowColor: AppTheme.primary.withValues(alpha: 0.6),
+                                    padding: EdgeInsets.symmetric(vertical: 18.h),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14.r),
+                                    ),
+                                  ),
+                                  icon: Icon(Icons.restaurant_rounded, size: 24.sp),
+                                  label: Text(
+                                    'Orderlyy',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16.sp,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: TextButton.icon(
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text('NoMen - Coming soon'),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF4B6BF5),
+                                    backgroundColor: const Color(0xFF4B6BF5).withValues(alpha: 0.05),
+                                    padding: EdgeInsets.symmetric(vertical: 18.h),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14.r),
+                                    ),
+                                  ),
+                                  icon: Icon(Icons.delivery_dining_rounded, size: 24.sp),
+                                  label: Text(
+                                    'NoMen',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16.sp,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -1169,17 +1233,6 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAxisLabel(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 9.sp,
-        fontWeight: FontWeight.w700,
-        color: AppTheme.secondary.withValues(alpha: 0.7),
       ),
     );
   }
@@ -1573,133 +1626,6 @@ class _PulseCard extends StatelessWidget {
 }
 
 // ── Alert Item Widget ────────────────────────────────────────────────────────
-class _AlertItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String actionText;
-  final VoidCallback onTap;
-  final bool isWarning;
-  final bool isSecondary;
-
-  const _AlertItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.actionText,
-    required this.onTap,
-    this.isWarning = false,
-    this.isSecondary = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Color bgCircle = AppTheme.background;
-    Color iconCol = AppTheme.secondary;
-    Color borderCol = AppTheme.surfaceContainerHigh;
-
-    if (isWarning) {
-      bgCircle = AppTheme.errorContainer;
-      iconCol = AppTheme.error;
-      borderCol = AppTheme.error.withValues(alpha: 0.1);
-    }
-
-    return Container(
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: isWarning
-            ? AppTheme.errorContainer.withValues(alpha: 0.15)
-            : AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: borderCol, width: 1.w),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 18.r,
-            backgroundColor: bgCircle,
-            child: Icon(icon, color: iconCol, size: 18.r),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.onSurface,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.sp,
-                    color: AppTheme.secondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: onTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isSecondary
-                          ? AppTheme.surfaceContainerLowest
-                          : AppTheme.primaryContainer,
-                      foregroundColor: isSecondary
-                          ? AppTheme.onSurface
-                          : AppTheme.onPrimary,
-                      elevation: 0,
-                      minimumSize: Size(110.w, 32.h),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 6.h,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.r),
-                        side: isSecondary
-                            ? BorderSide(
-                                color: AppTheme.surfaceContainerHigh,
-                                width: 1.w,
-                              )
-                            : BorderSide.none,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          actionText,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Icon(
-                          isSecondary
-                              ? Icons.edit_rounded
-                              : Icons.chevron_right_rounded,
-                          size: 14.r,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Live Order Card Widget ────────────────────────────────────────────────────
 class _LiveOrderCard extends StatelessWidget {
@@ -2026,161 +1952,5 @@ class _NotificationSheet extends StatelessWidget {
 }
 
 // ── Custom Sparkline Area Painter (Today vs Yesterday) ────────────────────────
-class _RevenueSparklinePainter extends CustomPainter {
-  final List<double> todayData;
-  final List<double> yesterdayData;
 
-  _RevenueSparklinePainter({
-    required this.todayData,
-    required this.yesterdayData,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (todayData.isEmpty || yesterdayData.isEmpty) return;
-
-    final width = size.width;
-    final height = size.height;
-
-    // Draw grid background lines
-    final gridPaint = Paint()
-      ..color = AppTheme.surfaceContainer
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    for (int i = 0; i <= 3; i++) {
-      final y = (height / 3) * i;
-      canvas.drawLine(Offset(0, y), Offset(width, y), gridPaint);
-    }
-
-    // Yesterday: Dashed Grey Path (using bezier curve points)
-    final yesterdayPath = Path();
-    final yesterdayPoints = _getCurvePoints(yesterdayData, width, height);
-
-    yesterdayPath.moveTo(yesterdayPoints.first.dx, yesterdayPoints.first.dy);
-    for (int i = 0; i < yesterdayPoints.length - 1; i++) {
-      final p1 = yesterdayPoints[i];
-      final p2 = yesterdayPoints[i + 1];
-      final controlX = p1.dx + (p2.dx - p1.dx) / 2;
-      yesterdayPath.cubicTo(controlX, p1.dy, controlX, p2.dy, p2.dx, p2.dy);
-    }
-
-    // Draw Yesterday's dashed path
-    _drawDashedPath(
-      canvas,
-      yesterdayPath,
-      AppTheme.secondary.withValues(alpha: 0.5),
-      1.5,
-    );
-
-    // Today: Smooth Solid Red Bezier Curve + Red Gradient Fill
-    final todayPoints = _getCurvePoints(todayData, width, height);
-    final todayPath = Path();
-    final areaPath = Path();
-
-    todayPath.moveTo(todayPoints.first.dx, todayPoints.first.dy);
-    areaPath.moveTo(todayPoints.first.dx, height);
-    areaPath.lineTo(todayPoints.first.dx, todayPoints.first.dy);
-
-    for (int i = 0; i < todayPoints.length - 1; i++) {
-      final p1 = todayPoints[i];
-      final p2 = todayPoints[i + 1];
-      final controlX = p1.dx + (p2.dx - p1.dx) / 2;
-
-      todayPath.cubicTo(controlX, p1.dy, controlX, p2.dy, p2.dx, p2.dy);
-
-      areaPath.cubicTo(controlX, p1.dy, controlX, p2.dy, p2.dx, p2.dy);
-    }
-
-    areaPath.lineTo(width, height);
-    areaPath.close();
-
-    // 1. Draw Today's Area Gradient fill underneath the line
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          AppTheme.primary.withValues(alpha: 0.16),
-          AppTheme.primary.withValues(alpha: 0.0),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, width, height))
-      ..style = PaintingStyle.fill;
-
-    canvas.drawPath(areaPath, fillPaint);
-
-    // 2. Draw Today's Solid Stroke Curve
-    final strokePaint = Paint()
-      ..color = AppTheme.primary
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawPath(todayPath, strokePaint);
-
-    // 3. Draw a glowing dot on the latest today data point
-    if (todayPoints.isNotEmpty) {
-      final lastPoint = todayPoints.last;
-      final glowPaint = Paint()
-        ..color = AppTheme.primary.withValues(alpha: 0.25)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(lastPoint, 8, glowPaint);
-
-      final dotPaint = Paint()
-        ..color = AppTheme.primary
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(lastPoint, 4, dotPaint);
-
-      final dotCenterPaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(lastPoint, 1.5, dotCenterPaint);
-    }
-  }
-
-  // Calculate pixel coordinates mapping values to canvas coordinates
-  List<Offset> _getCurvePoints(List<double> data, double width, double height) {
-    final List<Offset> points = [];
-    final step = width / (data.length - 1);
-    for (int i = 0; i < data.length; i++) {
-      final x = step * i;
-      // Invert Y coordinate so 1.0 (max) is at the top of the canvas
-      final y = height - (data[i] * (height - 20)) - 10;
-      points.add(Offset(x, y));
-    }
-    return points;
-  }
-
-  // Draws a dashed line along a path
-  void _drawDashedPath(
-    Canvas canvas,
-    Path path,
-    Color color,
-    double strokeWidth,
-  ) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    const dashWidth = 4.0;
-    const dashSpace = 4.0;
-
-    for (final pathMetric in path.computeMetrics()) {
-      double distance = 0.0;
-      while (distance < pathMetric.length) {
-        final len = math.min(dashWidth, pathMetric.length - distance);
-        final segment = pathMetric.extractPath(distance, distance + len);
-        canvas.drawPath(segment, paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _RevenueSparklinePainter oldDelegate) {
-    return oldDelegate.todayData != todayData ||
-        oldDelegate.yesterdayData != yesterdayData;
-  }
-}
 

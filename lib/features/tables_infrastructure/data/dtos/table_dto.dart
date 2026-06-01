@@ -6,8 +6,10 @@ class TableDto {
   final String? displayName;
   final int capacity;
   final String? qrCodeToken;
+  final String? floorId;
   final String? sectionId;
   final bool isActive;
+  final int versionNum;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,8 +21,10 @@ class TableDto {
     this.displayName,
     required this.capacity,
     this.qrCodeToken,
+    this.floorId,
     this.sectionId,
     required this.isActive,
+    this.versionNum = 1,
     this.createdAt,
     this.updatedAt,
   });
@@ -33,8 +37,10 @@ class TableDto {
     String? displayName,
     int? capacity,
     String? qrCodeToken,
+    String? floorId,
     String? sectionId,
     bool? isActive,
+    int? versionNum,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -46,8 +52,10 @@ class TableDto {
       displayName: displayName ?? this.displayName,
       capacity: capacity ?? this.capacity,
       qrCodeToken: qrCodeToken ?? this.qrCodeToken,
+      floorId: floorId ?? this.floorId,
       sectionId: sectionId ?? this.sectionId,
       isActive: isActive ?? this.isActive,
+      versionNum: versionNum ?? this.versionNum,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -61,8 +69,10 @@ class TableDto {
     displayName: json['display_name'] as String?,
     capacity: json['capacity'] as int,
     qrCodeToken: json['qr_code_token'] as String?,
+    floorId: json['floor_id'] as String?,
     sectionId: json['section_id'] as String?,
     isActive: json['is_active'] as bool? ?? true,
+    versionNum: json['version_num'] as int? ?? 1,
     createdAt: json['created_at'] != null
         ? DateTime.tryParse(json['created_at'] as String)
         : null,
@@ -79,8 +89,10 @@ class TableDto {
     'display_name': displayName,
     'capacity': capacity,
     'qr_code_token': qrCodeToken,
+    'floor_id': floorId,
     'section_id': sectionId,
     'is_active': isActive,
+    'version_num': versionNum,
     'created_at': createdAt?.toIso8601String(),
     'updated_at': updatedAt?.toIso8601String(),
   };

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../../../core/network/api_exception.dart';
+import '../../../../core/providers/branch_context_service.dart';
+import '../services/qr_export_service.dart';
 import '../../data/dtos/table_dto.dart';
+import '../../data/dtos/floor_dto.dart';
+import '../../data/repositories/table_infrastructure_repository.dart';
 import '../state/table_infrastructure_providers.dart';
 
 // ── Local State & Interaction Providers ───────────────────────────────────────
@@ -57,16 +61,20 @@ class TablePositionsNotifier extends StateNotifier<Map<String, NodePosition>> {
   TablePositionsNotifier() : super({});
 
   void initialize(List<TableDto> tables) {
-    if (state.isNotEmpty) return;
-    final Map<String, NodePosition> initial = {};
+    final Map<String, NodePosition> updated = Map.from(state);
+    bool changed = false;
     for (int i = 0; i < tables.length; i++) {
       final t = tables[i];
-      // Default spacing logic
-      final row = i ~/ 3;
-      final col = i % 3;
-      initial[t.id] = NodePosition(x: 0.15 + (col * 0.2), y: 0.2 + (row * 0.2));
+      if (!updated.containsKey(t.id)) {
+        final row = i ~/ 3;
+        final col = i % 3;
+        updated[t.id] = NodePosition(x: 0.15 + (col * 0.2), y: 0.2 + (row * 0.2));
+        changed = true;
+      }
     }
-    state = initial;
+    if (changed || state.isEmpty) {
+      state = updated;
+    }
   }
 
   void updatePosition(String id, double dx, double dy) {
@@ -99,6 +107,7 @@ class TablePositionsNotifier extends StateNotifier<Map<String, NodePosition>> {
 
 // Bulk QR PDF build checked set
 final checkedQrTablesProvider = StateProvider<Set<String>>((ref) => {});
+final tableSelectedFloorIdProvider = StateProvider<String?>((ref) => null);
 
 // ── Screen Class ──────────────────────────────────────────────────────────────
 class TableInfrastructureScreen extends ConsumerWidget {
@@ -107,11 +116,20 @@ class TableInfrastructureScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tablesAsync = ref.watch(tablesFutureProvider);
-    final selectedTool = ref.watch(selectedToolProvider);
+    final selectedFloorId = ref.watch(tableSelectedFloorIdProvider);
+    final floorsAsync = ref.watch(floorsFutureProvider);
     final tablePositions = ref.watch(tablePositionsProvider);
     final checkedTables = ref.watch(checkedQrTablesProvider);
 
     final desktop = MediaQuery.of(context).size.width >= 960;
+
+    floorsAsync.whenData((floors) {
+      if (selectedFloorId == null && floors.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(tableSelectedFloorIdProvider.notifier).state = floors.first.id;
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -179,12 +197,14 @@ class TableInfrastructureScreen extends ConsumerWidget {
           ),
         ),
         data: (tables) {
+          final filteredTables = tables.where((t) => t.floorId == selectedFloorId).toList();
+
           // Initialize default nodes position if empty
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(tablePositionsProvider.notifier).initialize(tables);
+            ref.read(tablePositionsProvider.notifier).initialize(filteredTables);
             // Default select all tables for bulk builder
             if (checkedTables.isEmpty) {
-              ref.read(checkedQrTablesProvider.notifier).state = tables
+              ref.read(checkedQrTablesProvider.notifier).state = filteredTables
                   .map((t) => t.id)
                   .toSet();
             }
@@ -193,8 +213,8 @@ class TableInfrastructureScreen extends ConsumerWidget {
           return SafeArea(
             child: Row(
               children: [
-                // 1. Sidebar Tools (Round, Rectangle, Booth library - desktop only)
-                if (desktop) _buildSidebarTools(context, ref, selectedTool),
+                // 1. Sidebar Tools (Floor dropdown & Circle/Square shapes - desktop only)
+                if (desktop) _buildSidebarTools(context, ref, selectedFloorId, floorsAsync),
 
                 // 2. Gridded Vector Canvas
                 Expanded(
@@ -202,9 +222,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
                     color: AppTheme.surfaceContainerLow,
                     child: Column(
                       children: [
-                        // Mobile Toolbar (Top scroll)
+                        // Mobile Toolbar (Floor dropdown & Circle/Square shapes)
                         if (!desktop)
-                          _buildMobileToolbar(context, ref, selectedTool),
+                          _buildMobileToolbar(context, ref, selectedFloorId, floorsAsync),
 
                         Expanded(
                           child: Stack(
@@ -216,12 +236,7 @@ class TableInfrastructureScreen extends ConsumerWidget {
                                 ),
                               ),
 
-                              // Zone boundary outline dividers
-                              Positioned.fill(
-                                child: _buildZoneOutlineBoundaries(desktop),
-                              ),
-
-                              // Render drag-and-drop table nodes
+                              // Render drag-and-drop table nodes (Filtered to selected floor)
                               Positioned.fill(
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
@@ -229,7 +244,7 @@ class TableInfrastructureScreen extends ConsumerWidget {
                                     final canvasHeight = constraints.maxHeight;
 
                                     return Stack(
-                                      children: tables.map((table) {
+                                      children: filteredTables.map((table) {
                                         final pos =
                                             tablePositions[table.id] ??
                                             NodePosition(x: 0.3, y: 0.3);
@@ -280,7 +295,8 @@ class TableInfrastructureScreen extends ConsumerWidget {
   Widget _buildSidebarTools(
     BuildContext context,
     WidgetRef ref,
-    EditorTool tool,
+    String? selectedFloorId,
+    AsyncValue<List<FloorDto>> floorsAsync,
   ) {
     return Container(
       width: 260.w,
@@ -291,60 +307,92 @@ class TableInfrastructureScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Editor Tools',
+            'Select Active Floor',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 16.sp,
+              fontSize: 14.sp,
               fontWeight: FontWeight.w800,
               color: AppTheme.onSurface,
             ),
           ),
-          SizedBox(height: 12.h),
-
-          // Tools list
-          _buildToolBtn(
-            ref,
-            EditorTool.select,
-            'Select / Move',
-            Icons.near_me_rounded,
-            tool,
+          SizedBox(height: 8.h),
+          floorsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Text('Error loading floors: $err'),
+            data: (floors) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedFloorId,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    items: floors.map((f) {
+                      return DropdownMenuItem<String>(
+                        value: f.id,
+                        child: Text(
+                          f.name,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      ref.read(tableSelectedFloorIdProvider.notifier).state = val;
+                    },
+                    hint: const Text('Choose a Floor'),
+                  ),
+                  SizedBox(height: 8.h),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddFloorDialog(context, ref),
+                    icon: Icon(Icons.add_rounded, size: 16.r),
+                    label: Text(
+                      'Create Floor',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11.sp, fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.surfaceContainerLow,
+                      foregroundColor: AppTheme.primary,
+                      elevation: 0,
+                      side: const BorderSide(color: AppTheme.surfaceContainerHigh),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-          _buildToolBtn(
-            ref,
-            EditorTool.drawZone,
-            'Draw Zone Area',
-            Icons.architecture,
-            tool,
-          ),
-          _buildToolBtn(
-            ref,
-            EditorTool.addLabel,
-            'Add Custom Label',
-            Icons.label_outline_rounded,
-            tool,
-          ),
-          _buildToolBtn(
-            ref,
-            EditorTool.multiSelect,
-            'Multi-Select',
-            Icons.check_box_outlined,
-            tool,
-          ),
-
           SizedBox(height: 24.h),
           Divider(height: 1.h, color: AppTheme.surfaceContainerHigh),
           SizedBox(height: 20.h),
 
           Text(
-            'Shapes Library',
+            'Tables Library',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 15.sp,
+              fontSize: 14.sp,
               fontWeight: FontWeight.w800,
               color: AppTheme.onSurface,
             ),
           ),
+          SizedBox(height: 4.h),
+          Text(
+            'Click a box below to add a table to the active floor:',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 10.sp,
+              color: AppTheme.secondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           SizedBox(height: 12.h),
 
-          // Draggable library grid
+          // Draggable library shapes grid
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
@@ -355,20 +403,16 @@ class TableInfrastructureScreen extends ConsumerWidget {
                 _buildLibraryShapeCard(
                   context,
                   ref,
-                  'Round',
+                  'Circle Box',
                   Icons.circle_outlined,
+                  selectedFloorId,
                 ),
                 _buildLibraryShapeCard(
                   context,
                   ref,
-                  'Rectangle',
+                  'Square Box',
                   Icons.crop_din_rounded,
-                ),
-                _buildLibraryShapeCard(
-                  context,
-                  ref,
-                  'Booth Table',
-                  Icons.table_rows_rounded,
+                  selectedFloorId,
                 ),
               ],
             ),
@@ -381,120 +425,53 @@ class TableInfrastructureScreen extends ConsumerWidget {
   Widget _buildMobileToolbar(
     BuildContext context,
     WidgetRef ref,
-    EditorTool tool,
+    String? selectedFloorId,
+    AsyncValue<List<FloorDto>> floorsAsync,
   ) {
     return Container(
-      height: 48.h,
+      height: 56.h,
       color: AppTheme.surfaceContainerLowest,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      child: Row(
         children: [
-          _buildMobileToolIcon(
-            ref,
-            EditorTool.select,
-            Icons.near_me_rounded,
-            tool,
-          ),
-          _buildMobileToolIcon(
-            ref,
-            EditorTool.drawZone,
-            Icons.architecture,
-            tool,
-          ),
-          _buildMobileToolIcon(
-            ref,
-            EditorTool.multiSelect,
-            Icons.check_box_outlined,
-            tool,
+          Expanded(
+            child: floorsAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
+              data: (floors) {
+                return DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedFloorId,
+                    isExpanded: true,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.sp,
+                      color: AppTheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    items: floors.map((f) {
+                      return DropdownMenuItem<String>(
+                        value: f.id,
+                        child: Text(f.name),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      ref.read(tableSelectedFloorIdProvider.notifier).state = val;
+                    },
+                    hint: const Text('Select Floor'),
+                  ),
+                );
+              },
+            ),
           ),
           VerticalDivider(
             width: 16.w,
             thickness: 1.w,
             color: AppTheme.surfaceContainerHigh,
           ),
-          _buildMobileShapeTextBtn(context, ref, 'Round'),
+          _buildMobileShapeTextBtn(context, ref, 'Circle Box', selectedFloorId),
           SizedBox(width: 8.w),
-          _buildMobileShapeTextBtn(context, ref, 'Rectangle'),
+          _buildMobileShapeTextBtn(context, ref, 'Square Box', selectedFloorId),
         ],
-      ),
-    );
-  }
-
-  Widget _buildToolBtn(
-    WidgetRef ref,
-    EditorTool current,
-    String text,
-    IconData icon,
-    EditorTool active,
-  ) {
-    final isSel = current == active;
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: InkWell(
-        onTap: () => ref.read(selectedToolProvider.notifier).state = current,
-        borderRadius: BorderRadius.circular(8.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: isSel
-                ? AppTheme.primaryContainer.withValues(alpha: 0.08)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(
-              color: isSel
-                  ? AppTheme.primaryContainer.withValues(alpha: 0.2)
-                  : Colors.transparent,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: isSel ? AppTheme.primary : AppTheme.secondary,
-                size: 18.r,
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                text,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12.sp,
-                  fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
-                  color: isSel ? AppTheme.primary : AppTheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMobileToolIcon(
-    WidgetRef ref,
-    EditorTool current,
-    IconData icon,
-    EditorTool active,
-  ) {
-    final isSel = current == active;
-    return Container(
-      margin: EdgeInsets.only(right: 6.w),
-      child: IconButton(
-        icon: Icon(
-          icon,
-          color: isSel ? AppTheme.primary : AppTheme.secondary,
-          size: 20.r,
-        ),
-        style: IconButton.styleFrom(
-          backgroundColor: isSel
-              ? AppTheme.primaryContainer.withValues(alpha: 0.1)
-              : Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-        ),
-        onPressed: () =>
-            ref.read(selectedToolProvider.notifier).state = current,
       ),
     );
   }
@@ -503,9 +480,10 @@ class TableInfrastructureScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     String text,
+    String? selectedFloorId,
   ) {
     return ElevatedButton(
-      onPressed: () => _addLibraryTable(context, ref, text),
+      onPressed: () => _addLibraryTable(context, ref, text, selectedFloorId),
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.surfaceContainerLowest,
         foregroundColor: AppTheme.onSurface,
@@ -532,10 +510,11 @@ class TableInfrastructureScreen extends ConsumerWidget {
     WidgetRef ref,
     String label,
     IconData icon,
+    String? selectedFloorId,
   ) {
     return InkWell(
       onTap: () {
-        _addLibraryTable(context, ref, label);
+        _addLibraryTable(context, ref, label, selectedFloorId);
       },
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
@@ -563,133 +542,256 @@ class TableInfrastructureScreen extends ConsumerWidget {
     );
   }
 
-  void _addLibraryTable(BuildContext context, WidgetRef ref, String shapeType) {
-    final label = shapeType == 'Round'
-        ? 'R-${math.Random().nextInt(20) + 1}'
-        : shapeType == 'Rectangle'
-        ? 'T-${math.Random().nextInt(20) + 1}'
-        : 'B-${math.Random().nextInt(20) + 1}';
+  void _addLibraryTable(BuildContext context, WidgetRef ref, String shapeType, String? floorId) {
+    if (floorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select or create a Floor first before adding tables.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    final existingTables = ref.read(tablesFutureProvider).value ?? [];
+    final nextNum = existingTables.length + 1;
+    final defaultLabel = 'Table $nextNum';
+    final defaultCapacity = shapeType.contains('Circle') ? 2 : 4;
 
-    final capacity = shapeType == 'Round'
-        ? 2
-        : shapeType == 'Rectangle'
-        ? 4
-        : 6;
+    _showAddTableDialog(context, ref, defaultLabel, defaultCapacity, floorId, shapeType);
+  }
 
-    ref.read(tablesFutureProvider.notifier).addTable(label, capacity);
+  void _showAddTableDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String defaultLabel,
+    int defaultCapacity,
+    String floorId,
+    String shapeType,
+  ) {
+    final nameController = TextEditingController(text: defaultLabel);
+    final capacityController = TextEditingController(text: defaultCapacity.toString());
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Adding $shapeType Table ($label) to the backend...'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.teal,
-      ),
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        bool isLoading = false;
+        String? errorMessage;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                'Add $shapeType Table',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+                      ),
+                      child: Text(
+                        errorMessage!,
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.error,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    enabled: !isLoading,
+                    decoration: InputDecoration(
+                      labelText: 'Table Number / Name',
+                      hintText: 'e.g., Table 5, T1, VIP',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: capacityController,
+                    keyboardType: TextInputType.number,
+                    enabled: !isLoading,
+                    decoration: InputDecoration(
+                      labelText: 'Capacity (Seats)',
+                      hintText: 'e.g., 2, 4, 6',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(ctx),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final label = nameController.text.trim();
+                          final capacityStr = capacityController.text.trim();
+                          final capacity = int.tryParse(capacityStr) ?? defaultCapacity;
+
+                          if (label.isEmpty) {
+                            setState(() => errorMessage = 'Table Name cannot be empty.');
+                            return;
+                          }
+
+                          setState(() {
+                            isLoading = true;
+                            errorMessage = null;
+                          });
+
+                          try {
+                            await ref
+                                .read(tablesFutureProvider.notifier)
+                                .addTable(label, capacity, floorId: floorId);
+                            if (context.mounted) {
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Table "$label" added successfully.'),
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: Colors.teal,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              setState(() {
+                                isLoading = false;
+                                if (e is ApiException) {
+                                  errorMessage = e.message;
+                                } else {
+                                  errorMessage = e.toString().replaceAll('Exception: ', '');
+                                }
+                              });
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'Create',
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
-  // ── Zones Boundaries Builder ───────────────────────────────────────────────
-  Widget _buildZoneOutlineBoundaries(bool desktop) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
-
-        return Stack(
-          children: [
-            // Zone 1: Main Dining Hall
-            Positioned(
-              left: w * 0.05,
-              top: h * 0.05,
-              width: w * 0.55,
-              height: h * 0.85,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: AppTheme.secondary.withValues(alpha: 0.3),
-                    width: 2.w,
-                    style: BorderStyle
-                        .none, // We will paint dashes or simple border
-                  ),
-                ),
-                child: Center(
-                  child: Opacity(
-                    opacity: 0.15,
-                    child: Text(
-                      'MAIN HALL',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: desktop ? 40.sp : 24.sp,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.secondary,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                ),
+  void _showAddFloorDialog(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Text(
+            'Create New Floor',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 16.sp,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Floor Name',
+              hintText: 'e.g., Floor 2, Terrace, Rooftop',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
               ),
             ),
-
-            // Zone divider
-            Positioned(
-              left: w * 0.65,
-              top: h * 0.05,
-              bottom: h * 0.05,
-              child: const VerticalDivider(
-                color: AppTheme.surfaceContainerHigh,
-                thickness: 2,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
               ),
             ),
-
-            // Zone 2: Lounge
-            Positioned(
-              left: w * 0.70,
-              top: h * 0.05,
-              width: w * 0.25,
-              height: h * 0.4,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: Center(
-                  child: Opacity(
-                    opacity: 0.15,
-                    child: Text(
-                      'LOUNGE',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: desktop ? 24.sp : 16.sp,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.secondary,
-                      ),
+            ElevatedButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  ref.read(floorsFutureProvider.notifier).addFloor(name).then((_) {
+                    final floors = ref.read(floorsFutureProvider).value;
+                    if (floors != null && floors.isNotEmpty) {
+                      final newFloor = floors.firstWhere(
+                        (f) => f.name.toLowerCase() == name.toLowerCase(),
+                        orElse: () => floors.last,
+                      );
+                      ref.read(tableSelectedFloorIdProvider.notifier).state = newFloor.id;
+                    }
+                  });
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Adding Floor "$name"...'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.teal,
                     ),
-                  ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-            ),
-
-            // Zone 3: Outdoor Patio
-            Positioned(
-              left: w * 0.70,
-              top: h * 0.50,
-              width: w * 0.25,
-              height: h * 0.4,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: Center(
-                  child: Opacity(
-                    opacity: 0.15,
-                    child: Text(
-                      'PATIO DECK',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: desktop ? 24.sp : 16.sp,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.secondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
+              child: Text(
+                'Create',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -697,6 +799,72 @@ class TableInfrastructureScreen extends ConsumerWidget {
       },
     );
   }
+
+  void _showDeleteTableConfirm(
+    BuildContext context,
+    WidgetRef ref,
+    TableDto table,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Delete Table?',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete Table ${table.tableNumber}?',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: AppTheme.secondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(tablesFutureProvider.notifier).deleteTable(table.id);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Table ${table.tableNumber} deleted.'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppTheme.error,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
   // ── Draggable Table Node Builder ────────────────────────────────────────────
   Widget _buildDraggableTableNode(
@@ -805,20 +973,7 @@ class TableInfrastructureScreen extends ConsumerWidget {
                   top: -16.h,
                   right: -16.w,
                   child: GestureDetector(
-                    onTap: () {
-                      ref
-                          .read(tablesFutureProvider.notifier)
-                          .deleteTable(table.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Deleting Table ${table.tableNumber}...',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: AppTheme.error,
-                        ),
-                      );
-                    },
+                    onTap: () => _showDeleteTableConfirm(context, ref, table),
                     child: Container(
                       padding: EdgeInsets.all(4.r),
                       decoration: const BoxDecoration(
@@ -931,17 +1086,23 @@ class _SingleQrCodeDialog extends ConsumerStatefulWidget {
 }
 
 class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
-  bool _isLoading = false;
+  bool _isLoading = true;
   String? _qrToken;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchOrRotateToken();
+    Future.microtask(() => _fetchOrRotateToken());
   }
 
   Future<void> _fetchOrRotateToken({bool forceRotate = false}) async {
-    setState(() => _isLoading = true);
+    if (!_isLoading) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
     try {
       final repo = ref.read(tableInfrastructureRepositoryProvider);
       if (forceRotate ||
@@ -953,12 +1114,9 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
         // but we'll use the existing token if present unless force rotate is true.
         _qrToken = widget.table.qrCodeToken;
       }
+      _errorMessage = null;
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading QR: $e')));
-      }
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -968,101 +1126,175 @@ class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final domain = 'https://tableos.app/table';
-    final qrData = _qrToken != null ? '$domain/$_qrToken' : '';
+    try {
+      final domain = 'https://tableos.app/table';
+      final qrData = _qrToken != null ? '$domain/$_qrToken' : '';
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Table ${widget.table.tableNumber} QR Code',
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 16.sp,
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Table ${widget.table.tableNumber} QR Code',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.close, size: 20.r, color: AppTheme.secondary),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_isLoading)
-            SizedBox(
-              width: 200.r,
-              height: 200.r,
-              child: const Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
-              ),
-            )
-          else if (_qrToken != null)
-            Container(
-              padding: EdgeInsets.all(16.r),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: AppTheme.surfaceContainerHigh),
-              ),
-              child: QrImageView(
-                data: qrData,
-                version: QrVersions.auto,
-                size: 200.r,
-                backgroundColor: Colors.white,
-                eyeStyle: const QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: Colors.black87,
-                ),
-                dataModuleStyle: const QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: Colors.black87,
-                ),
-              ),
-            )
-          else
-            const Text('No QR Token available.'),
-          SizedBox(height: 16.h),
-          Text(
-            'Token: ${_qrToken ?? 'N/A'}',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 10.sp,
-              color: AppTheme.secondary,
+            IconButton(
+              icon: const Icon(Icons.close, size: 20, color: AppTheme.secondary),
+              onPressed: () => Navigator.pop(context),
             ),
-          ),
-          SizedBox(height: 24.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isLoading)
+              const SizedBox(
+                width: 200,
+                height: 200,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.primary),
+                ),
+              )
+            else if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppTheme.error,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppTheme.error),
+                    ),
+                  ],
+                ),
+              )
+            else if (_qrToken != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.surfaceContainerHigh),
+                ),
+                child: QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Colors.black87,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Colors.black87,
+                  ),
+                ),
+              )
+            else
+              const Text('No QR Token available.'),
+            const SizedBox(height: 16),
+            Text(
+              'Token: ${_qrToken ?? 'N/A'}',
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                color: AppTheme.secondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _isLoading
+                      ? null
+                      : () => _fetchOrRotateToken(forceRotate: true),
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: const Text('Rotate Token'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.error,
+                    side: const BorderSide(color: AppTheme.error),
+                    minimumSize: const Size(0, 40),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _qrToken == null || _isLoading
+                      ? null
+                      : () async {
+                          setState(() => _isLoading = true);
+                          try {
+                            final branch = ref.read(currentBranchProvider).value;
+                            final branchName = branch?.name ?? 'Orderlli';
+                            final exportService = ref.read(qrExportServiceProvider);
+                            final pdfBytes = await exportService.generateSingleQrPdf(
+                              widget.table,
+                              branchName,
+                              qrData,
+                            );
+                            await exportService.printOrSharePdf(
+                              pdfBytes,
+                              'Table_${widget.table.tableNumber}_QR.pdf',
+                            );
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to download QR PDF: $e')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          }
+                        },
+                  icon: const Icon(Icons.download_rounded, size: 16),
+                  label: const Text('Download'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 40),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } catch (e, stackTrace) {
+      return AlertDialog(
+        title: const Text('Error Rendering Dialog'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              OutlinedButton.icon(
-                onPressed: _isLoading
-                    ? null
-                    : () => _fetchOrRotateToken(forceRotate: true),
-                icon: Icon(Icons.refresh_rounded, size: 16.r),
-                label: const Text('Rotate Token'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.error,
-                  side: const BorderSide(color: AppTheme.error),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              ElevatedButton.icon(
-                onPressed: _qrToken == null ? null : () {},
-                icon: Icon(Icons.download_rounded, size: 16.r),
-                label: const Text('Download'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                ),
-              ),
+              Text('An error occurred during build:\n$e', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              Text('Stack Trace:\n$stackTrace', style: const TextStyle(fontSize: 10)),
             ],
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
         ],
-      ),
-    );
+      );
+    }
   }
 }
 
@@ -1146,6 +1378,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
               foregroundColor: Colors.white,
+              minimumSize: const Size(120, 40),
             ),
             child: const Text('Download PDF'),
           ),

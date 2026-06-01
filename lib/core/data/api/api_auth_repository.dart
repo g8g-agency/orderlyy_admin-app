@@ -187,17 +187,23 @@ class ApiAuthRepository implements AuthRepository {
   @override
   Future<Result<void>> changePassword(String email, String newPassword) async {
     try {
-      // Assuming backend has a change-password route or we use Supabase GoTrue directly
-      final res = await _supabaseClient.auth.updateUser(
-        UserAttributes(password: newPassword),
+      final res = await _dioClient.post(
+        ApiConstants.changePassword,
+        data: {
+          'new_password': newPassword,
+          'confirm_password': newPassword,
+        },
       );
 
-      if (res.user == null) {
-        return Failure(ApiFailure('Failed to update password'));
+      if (res.data != null && res.data['success'] == true) {
+        return const Success(null);
+      } else {
+        return Failure(
+          ApiFailure(res.data?['message'] ?? 'Failed to update password'),
+        );
       }
-      return const Success(null);
-    } on AuthException catch (e) {
-      return Failure(ApiFailure(e.message, ApiErrorCode.unauthorized));
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
     } catch (e) {
       return Failure(ApiFailure(e.toString()));
     }

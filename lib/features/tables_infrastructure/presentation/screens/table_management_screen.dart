@@ -43,7 +43,7 @@ class TableManagementScreen extends ConsumerWidget {
           if (tables.isEmpty) {
             return _buildEmptyState();
           }
-          return _buildGrid(tables, ref);
+          return _buildGrid(context, tables, ref);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(
@@ -93,7 +93,7 @@ class TableManagementScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildGrid(List<TableDto> tables, WidgetRef ref) {
+  Widget _buildGrid(BuildContext context, List<TableDto> tables, WidgetRef ref) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -174,9 +174,7 @@ class TableManagementScreen extends ConsumerWidget {
                       size: 20,
                       color: Colors.red,
                     ),
-                    onPressed: () => ref
-                        .read(tablesFutureProvider.notifier)
-                        .deleteTable(table.id),
+                    onPressed: () => _showDeleteTableConfirm(context, ref, table),
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
                   ),
@@ -184,6 +182,70 @@ class TableManagementScreen extends ConsumerWidget {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteTableConfirm(
+    BuildContext context,
+    WidgetRef ref,
+    TableDto table,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Delete Table?',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete Table ${table.tableNumber}?',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppTheme.secondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(color: AppTheme.secondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(tablesFutureProvider.notifier).deleteTable(table.id);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Table ${table.tableNumber} deleted.'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppTheme.error,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         );
       },
     );

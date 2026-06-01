@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/providers/branch_context_service.dart';
 import '../../data/dtos/kitchen_station_dto.dart';
 import '../../data/repositories/kds_repository.dart';
 
@@ -259,12 +260,14 @@ class _KdsFormSheetState extends ConsumerState<_KdsFormSheet> {
 
     try {
       final repo = ref.read(kdsRepositoryProvider);
+      final branch = ref.read(currentBranchProvider).value;
+      final branchId = branch?.id ?? 'branch_1';
 
       if (widget.existing == null) {
         await repo.createStation(
           name: _nameCtrl.text,
           description: _descCtrl.text,
-          branchId: 'branch_1', // default fallback
+          branchId: branchId,
           isDefault: _isDefault,
         );
       } else {

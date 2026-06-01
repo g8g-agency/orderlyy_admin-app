@@ -38,8 +38,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     if (!value.contains(RegExp(r'[A-Z]'))) {
       return 'Must contain at least 1 uppercase letter';
     }
+    if (!value.contains(RegExp(r'[a-z]'))) {
+      return 'Must contain at least 1 lowercase letter';
+    }
     if (!value.contains(RegExp(r'[0-9]'))) {
       return 'Must contain at least 1 number';
+    }
+    if (!value.contains(RegExp(r'[@$!%*?&]'))) {
+      return 'Must contain at least 1 special character (@\$!%*?&)';
     }
     return null;
   }
@@ -143,7 +149,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Text(
-                      '• Minimum 8 characters\n• At least 1 uppercase letter\n• At least 1 number',
+                      '• Minimum 8 characters\n• At least 1 uppercase & 1 lowercase letter\n• At least 1 number\n• At least 1 special character (@\$!%*?&)',
                       style: GoogleFonts.inter(
                         fontSize: 12.sp,
                         color: AppTheme.secondary,

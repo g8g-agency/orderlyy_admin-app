@@ -13,7 +13,7 @@ class ApiSettingsRepository implements SettingsRepository {
   Future<Result<TenantSettingsDto>> getSettings({String? branchId}) async {
     try {
       final queryParams = <String, dynamic>{
-        'branch_id': ?branchId,
+        if (branchId != null) 'branch_id': branchId,
       };
 
       final response = await _dioClient.get(

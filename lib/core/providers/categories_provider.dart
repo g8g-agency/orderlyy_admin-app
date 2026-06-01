@@ -3,6 +3,9 @@ import '../data/dtos/menu_dto.dart';
 import '../data/repositories/categories_repository.dart';
 import '../network/api_exception.dart';
 import 'repository_providers.dart';
+import 'branch_context_service.dart';
+import '../../features/organization/presentation/state/branch_providers.dart';
+import '../../features/organization/domain/entities/branch_entity.dart';
 
 // ── Category Tree Node ────────────────────────────────────────────────────────
 class CategoryNode {
@@ -81,8 +84,9 @@ class CategoriesState {
 // ── Categories Notifier ───────────────────────────────────────────────────────
 class CategoriesNotifier extends StateNotifier<CategoriesState> {
   final CategoriesRepository _repository;
+  final Ref _ref;
 
-  CategoriesNotifier(this._repository) : super(const CategoriesState());
+  CategoriesNotifier(this._repository, this._ref) : super(const CategoriesState());
 
   /// Loads the entire category list. Server handles pagination internally if limit > items.
   Future<void> loadCategories({bool forceRefresh = false}) async {
@@ -115,6 +119,25 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
 
     if (result is Success<MenuCategoryDto>) {
       final newCat = result.value;
+
+      try {
+        final currentBranch = _ref.read(currentBranchProvider).value;
+        if (currentBranch != null) {
+          final branches = _ref.read(branchesProvider).value ?? [];
+          for (final branch in branches) {
+            if (branch.id != currentBranch.id) {
+              await _repository.setCategoryVisibility(
+                categoryId: newCat.id,
+                branchId: branch.id,
+                isVisible: false,
+              );
+            }
+          }
+        }
+      } catch (e) {
+        // Log or handle gracefully
+      }
+
       final newById = Map<String, MenuCategoryDto>.from(state.byId);
       newById[newCat.id] = newCat;
       state = state.copyWith(byId: newById);
@@ -184,7 +207,7 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
 final categoriesProvider =
     StateNotifierProvider<CategoriesNotifier, CategoriesState>((ref) {
       final repo = ref.watch(categoriesRepositoryProvider);
-      return CategoriesNotifier(repo);
+      return CategoriesNotifier(repo, ref)..loadCategories();
     });
 
 // Derived Provider for Tree

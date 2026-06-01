@@ -6,6 +6,7 @@ import '../../data/local/offline_sync_queue.dart';
 import 'orders_repository.dart';
 import '../../network/api_exception.dart';
 import 'package:uuid/uuid.dart';
+import 'package:dio/dio.dart';
 
 final uuid = Uuid();
 
@@ -49,15 +50,19 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
   // ── Phase 10 implementations ────────────────────────────────────────────────
   @override
   Future<Result<List<OrderDto>>> getOrdersPaginated({
+    required String branchId,
+    CancelToken? cancelToken,
     OrderStatus? status,
     String? tableId,
     int page = 1,
     int limit = 100,
   }) async {
-    // Pass through, since online sync is complex, but delegate handles it.
-    // For proper offline first with projections, queue needs projection sync logic.
+    // 1. Return whatever we have offline immediately for this branch/table/status
+    // 2. Queue background fetch if online first with projections, queue needs projection sync logic.
     // For now, pass directly to delegate.
     return _delegate.getOrdersPaginated(
+      branchId: branchId,
+      cancelToken: cancelToken,
       status: status,
       tableId: tableId,
       page: page,
@@ -68,6 +73,7 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
   @override
   Future<Result<OrderDto>> createOrderEntity(
     OrderDto order, {
+    required String branchId,
     required String idempotencyKey,
   }) async {
     final action = SyncAction(
@@ -97,6 +103,7 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
     String orderId,
     OrderStatus newStatus,
     int currentVersion, {
+    required String branchId,
     required String idempotencyKey,
   }) async {
     final cachedList = await _queue.getCachedOrders();
@@ -119,6 +126,14 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
       idempotencyKey: idempotencyKey,
     );
 
+    await _delegate.transitionOrderStatus(
+      orderId,
+      newStatus,
+      currentVersion,
+      branchId: branchId,
+      idempotencyKey: idempotencyKey,
+    );
+
     await _queue.enqueue(action);
     _updateController.add(null);
 
@@ -136,6 +151,7 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
     String orderId,
     List<OrderItemDto> items,
     int currentVersion, {
+    required String branchId,
     required String idempotencyKey,
   }) async {
     final cachedList = await _queue.getCachedOrders();
@@ -155,6 +171,14 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
       type: 'updateOrder',
       payload: order.toJson(),
       timestamp: DateTime.now(),
+      idempotencyKey: idempotencyKey,
+    );
+
+    await _delegate.updateOrderLineItems(
+      orderId,
+      items,
+      currentVersion,
+      branchId: branchId,
       idempotencyKey: idempotencyKey,
     );
 
@@ -396,26 +420,6 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
     }
   }
 
-  @override
-  Future<void> deleteAllOrders(String tenantId) async {
-    final action = SyncAction(
-      id: UuidGenerator.generateRuntimeId(prefix: 'act-delete-all'),
-      type: 'deleteAllOrders',
-      payload: {'tenantId': tenantId},
-      timestamp: DateTime.now(),
-      idempotencyKey: UuidGenerator.generateRuntimeId(prefix: 'idem-delete-all'),
-    );
-
-    await _queue.enqueue(action);
-    _updateController.add(null);
-
-    if (_queue.isOnline()) {
-      syncPendingQueue().catchError((e) {
-        debugPrint('[OfflineFirstOrdersRepository] Immediate sync error: $e');
-      });
-    }
-  }
-
   // ── Sync Queue ─────────────────────────────────────────────────────────────
   // NOTE: Not part of OrdersRepository interface — called internally and by IsOnlineNotifier.
   Future<void> syncPendingQueue() async {
@@ -445,9 +449,6 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
         } else if (action.type == 'cancelOrder') {
           final orderId = action.payload['orderId'] as String;
           await _delegate.cancelOrder(orderId);
-        } else if (action.type == 'deleteAllOrders') {
-          final tenantId = action.payload['tenantId'] as String;
-          await _delegate.deleteAllOrders(tenantId);
         }
 
         // Successfully synchronized, remove from persistent queue
@@ -503,9 +504,6 @@ class OfflineFirstOrdersRepository implements OrdersRepository {
         if (idx != -1) {
           list[idx] = list[idx].copyWith(status: OrderStatus.cancelled);
         }
-      } else if (action.type == 'deleteAllOrders') {
-        final tenantId = action.payload['tenantId'] as String;
-        list.removeWhere((o) => o.tenantId == tenantId);
       }
     }
 

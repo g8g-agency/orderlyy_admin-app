@@ -147,7 +147,7 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
 final menuItemsProvider =
     StateNotifierProvider<MenuItemsNotifier, MenuItemsState>((ref) {
       final repo = ref.watch(menuItemsRepositoryProvider);
-      return MenuItemsNotifier(repo);
+      return MenuItemsNotifier(repo)..loadMenuItems();
     });
 
 // Selector for a specific category's items

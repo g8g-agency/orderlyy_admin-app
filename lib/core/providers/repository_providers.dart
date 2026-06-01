@@ -14,6 +14,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../auth/app_auth_provider.dart';
+import '../providers/branch_context_service.dart';
 
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/menu_repository.dart';
@@ -82,31 +84,42 @@ final menuRepositoryProvider = Provider<MenuRepository>((ref) {
 // ── Categories Repository Provider ────────────────────────────────────────────
 final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return ApiCategoriesRepository(dioClient);
+  final ctx = ref.watch(appContextProvider);
+  final tenantId = ctx?.tenant.id ?? '';
+  final currentBranch = ref.watch(currentBranchProvider).value;
+  return ApiCategoriesRepository(dioClient, tenantId, branchId: currentBranch?.id);
 });
 
 // ── Menu Items Repository Provider ────────────────────────────────────────────
 final menuItemsRepositoryProvider = Provider<MenuItemsRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return ApiMenuItemsRepository(dioClient);
+  final ctx = ref.watch(appContextProvider);
+  final tenantId = ctx?.tenant.id ?? '';
+  return ApiMenuItemsRepository(dioClient, tenantId);
 });
 
 // ── Pricing Repository Provider ───────────────────────────────────────────────
 final pricingRepositoryProvider = Provider<PricingRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return ApiPricingRepository(dioClient);
+  final ctx = ref.watch(appContextProvider);
+  final tenantId = ctx?.tenant.id ?? '';
+  return ApiPricingRepository(dioClient, tenantId);
 });
 
 // ── Tax Repository Provider ───────────────────────────────────────────────────
 final taxRepositoryProvider = Provider<TaxRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return ApiTaxRepository(dioClient);
+  final ctx = ref.watch(appContextProvider);
+  final tenantId = ctx?.tenant.id ?? '';
+  return ApiTaxRepository(dioClient, tenantId);
 });
 
 // ── Modifier Repository Provider ──────────────────────────────────────────────
 final modifierRepositoryProvider = Provider<ModifierRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return ApiModifierRepository(dioClient);
+  final ctx = ref.watch(appContextProvider);
+  final tenantId = ctx?.tenant.id ?? '';
+  return ApiModifierRepository(dioClient, tenantId);
 });
 
 // ── Tables Repository Provider (Phase 9) ────────────────────────────────────

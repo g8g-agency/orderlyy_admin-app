@@ -7,7 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/auth/app_auth_provider.dart';
 import '../../core/data/dtos/menu_dto.dart';
-import '../../core/providers/menu_providers.dart';
+import '../../core/providers/categories_provider.dart';
+import '../../core/providers/menu_items_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/admin_shell.dart';
@@ -50,7 +51,8 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
   Future<void> _toggleItemAvailability(MenuItemDto item) async {
     final currentVal = item.isAvailable;
     try {
-      await ref.read(toggleMenuItemAvailabilityProvider)(item.id, !currentVal);
+      final updatedItem = item.copyWith(isAvailable: !currentVal);
+      await ref.read(menuItemsProvider.notifier).updateMenuItem(updatedItem);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -119,10 +121,9 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
                   );
 
                   try {
-                    await ref.read(createMenuCategoryProvider)(newCategory);
+                    await ref.read(categoriesProvider.notifier).createCategory(newCategory);
 
-                    // Invalidate caches to refresh UI instantly
-                    ref.invalidate(menuCategoriesFutureProvider);
+                    // Refetch data is handled by the state notifier if needed
                     ref.invalidate(onboardingNotifierProvider);
 
                     if (ctx.mounted) {
@@ -262,121 +263,144 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(menuCategoriesFutureProvider);
-    final menuItemsAsync = ref.watch(menuItemsStreamProvider);
+    final categoriesState = ref.watch(categoriesProvider);
+    final menuItemsState = ref.watch(menuItemsProvider);
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
     return AdminShell(
       title: 'Menu Manager',
       disablePadding: true,
-      actions: [
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ModifierMatrixScreen()),
-            );
-          },
-          icon: Icon(Icons.tune_rounded, size: 16.r, color: AppTheme.primary),
-          label: Text(
-            'Modifier Studio',
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 11.sp,
-              color: AppTheme.primary,
-            ),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(
-              color: AppTheme.primaryContainer.withValues(alpha: 0.3),
-            ),
-            minimumSize: Size(125.w, 38.h),
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
-        ),
-        SizedBox(width: 8.w),
-        ElevatedButton.icon(
-          onPressed: () => _showAddCategorySheet(context),
-          icon: Icon(
-            Icons.create_new_folder_rounded,
-            size: 16.r,
-            color: Colors.white,
-          ),
-          label: Text(
-            'Add Category',
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 11.sp,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: Colors.white,
-            minimumSize: Size(120.w, 38.h),
-            padding: EdgeInsets.symmetric(horizontal: 14.w),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
-        ),
-        if (isDesktop && _selectedCategoryId != null) ...[
-          SizedBox(width: 8.w),
-          ElevatedButton.icon(
-            onPressed: () =>
-                _showItemEditSheet(context, null, _selectedCategoryId!),
-            icon: Icon(Icons.add_rounded, size: 16.r, color: Colors.white),
-            label: Text(
-              'Add Item',
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11.sp,
+      actions: isDesktop
+          ? [
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ModifierMatrixScreen()),
+                  );
+                },
+                icon: Icon(Icons.tune_rounded, size: 16.r, color: AppTheme.primary),
+                label: Text(
+                  'Modifier Studio',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.sp,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: AppTheme.primaryContainer.withValues(alpha: 0.3),
+                  ),
+                  minimumSize: Size(125.w, 38.h),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryContainer,
-              foregroundColor: Colors.white,
-              minimumSize: Size(100.w, 38.h),
-              padding: EdgeInsets.symmetric(horizontal: 14.w),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+              SizedBox(width: 8.w),
+              ElevatedButton.icon(
+                onPressed: () => _showAddCategorySheet(context),
+                icon: Icon(
+                  Icons.create_new_folder_rounded,
+                  size: 16.r,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  'Add Category',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.sp,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: Size(120.w, 38.h),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
-      ],
+              if (_selectedCategoryId != null) ...[
+                SizedBox(width: 8.w),
+                ElevatedButton.icon(
+                  onPressed: () =>
+                      _showItemEditSheet(context, null, _selectedCategoryId!),
+                  icon: Icon(Icons.add_rounded, size: 16.r, color: Colors.white),
+                  label: Text(
+                    'Add Item',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryContainer,
+                    foregroundColor: Colors.white,
+                    minimumSize: Size(100.w, 38.h),
+                    padding: EdgeInsets.symmetric(horizontal: 14.w),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                ),
+              ],
+            ]
+          : [
+              IconButton(
+                icon: Icon(Icons.tune_rounded, color: AppTheme.primary, size: 22.r),
+                tooltip: 'Modifier Studio',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ModifierMatrixScreen()),
+                  );
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.create_new_folder_rounded, color: AppTheme.primary, size: 22.r),
+                tooltip: 'Add Category',
+                onPressed: () => _showAddCategorySheet(context),
+              ),
+            ],
       body: isDesktop
-          ? _buildTwoColumnLayout(categoriesAsync, menuItemsAsync)
-          : _buildStackedLayout(categoriesAsync, menuItemsAsync),
+          ? _buildTwoColumnLayout(categoriesState, menuItemsState)
+          : _buildStackedLayout(categoriesState, menuItemsState),
     );
   }
 
   // ── 2-Column Desktop Layout ───────────────────────────────────────────────
   Widget _buildTwoColumnLayout(
-    AsyncValue<List<MenuCategoryDto>> categoriesAsync,
-    AsyncValue<List<MenuItemDto>> menuItemsAsync,
+    CategoriesState categoriesState,
+    MenuItemsState menuItemsState,
   ) {
-    return categoriesAsync.when(
-      loading: () => const Center(
+    if (categoriesState.isLoading && !categoriesState.isInitialized) {
+      return const Center(
         child: CircularProgressIndicator(color: AppTheme.primary),
-      ),
-      error: (err, stack) => Center(
+      );
+    }
+
+    if (categoriesState.error != null) {
+      return Center(
         child: Text(
-          'Failed to load categories: $err',
+          'Failed to load categories: ${categoriesState.error}',
           style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
         ),
-      ),
-      data: (categories) {
-        if (categories.isEmpty) {
-          return Center(
-            child: Text(
-              'No categories found. Create one to get started!',
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
-            ),
-          );
-        }
+      );
+    }
+
+    final categories = categoriesState.byId.values.toList();
+    if (categories.isEmpty) {
+      return Center(
+        child: Text(
+          'No categories found. Create one to get started!',
+          style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+        ),
+      );
+    }
 
         // Auto-select first category if none selected
         if (_selectedCategoryId == null && categories.isNotEmpty) {
@@ -474,17 +498,20 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
 
             // Right Panel - Items List
             Expanded(
-              child: menuItemsAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
-                ),
-                error: (err, stack) => Center(
-                  child: Text(
-                    'Failed to load menu: $err',
-                    style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
-                  ),
-                ),
-                data: (menuItems) {
+              child: menuItemsState.isLoading && !menuItemsState.isInitialized
+                  ? const Center(
+                      child: CircularProgressIndicator(color: AppTheme.primary),
+                    )
+                  : menuItemsState.error != null
+                      ? Center(
+                          child: Text(
+                            'Failed to load menu: ${menuItemsState.error}',
+                            style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
+                          ),
+                        )
+                      : Builder(
+                          builder: (context) {
+                            final menuItems = menuItemsState.byId.values.toList();
                   final catItems = menuItems
                       .where((i) => i.categoryId == _selectedCategoryId)
                       .toList();
@@ -550,77 +577,82 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
             ),
           ],
         );
-      },
-    );
   }
 
   // ── Stacked Mobile Layout (Fallback) ──────────────────────────────────────
   Widget _buildStackedLayout(
-    AsyncValue<List<MenuCategoryDto>> categoriesAsync,
-    AsyncValue<List<MenuItemDto>> menuItemsAsync,
+    CategoriesState categoriesState,
+    MenuItemsState menuItemsState,
   ) {
     final expandedCategories = ref.watch(expandedCategoriesProvider);
     final categoryVisibility = ref.watch(categoryVisibilityProvider);
     final categorySchedules = ref.watch(categorySchedulesProvider);
 
-    return categoriesAsync.when(
-      loading: () => const Center(
+    if (categoriesState.isLoading && !categoriesState.isInitialized) {
+      return const Center(
         child: CircularProgressIndicator(color: AppTheme.primary),
-      ),
-      error: (err, stack) => Center(
+      );
+    }
+
+    if (categoriesState.error != null) {
+      return Center(
         child: Text(
-          'Failed to load categories: $err',
+          'Failed to load categories: ${categoriesState.error}',
           style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
         ),
-      ),
-      data: (categories) {
-        return menuItemsAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
-          ),
-          error: (err, stack) => Center(
-            child: Text(
-              'Failed to load menu: $err',
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
-            ),
-          ),
-          data: (menuItems) {
-            if (categories.isEmpty) {
-              return Center(
-                child: Text(
-                  'No categories found. Create one to get started!',
-                  style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
-                ),
-              );
-            }
+      );
+    }
 
-            return ReorderableListView.builder(
-              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
-              itemCount: categories.length,
-              onReorderItem: (oldIdx, newIdx) {},
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final catId = category.id;
-                final catName = category.name;
-                final isExpanded = expandedCategories[catId] ?? true;
-                final isVisible = categoryVisibility[catId] ?? true;
-                final schedule = categorySchedules[catId];
-                final catItems = menuItems
-                    .where((i) => i.categoryId == catId)
-                    .toList();
+    if (menuItemsState.isLoading && !menuItemsState.isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppTheme.primary),
+      );
+    }
 
-                return _buildCategoryAccordionCard(
-                  key: ValueKey(catId),
-                  catId: catId,
-                  catName: catName,
-                  items: catItems,
-                  isExpanded: isExpanded,
-                  isVisible: isVisible,
-                  schedule: schedule,
-                );
-              },
-            );
-          },
+    if (menuItemsState.error != null) {
+      return Center(
+        child: Text(
+          'Failed to load menu: ${menuItemsState.error}',
+          style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
+        ),
+      );
+    }
+
+    final categories = categoriesState.byId.values.toList();
+    final menuItems = menuItemsState.byId.values.toList();
+
+    if (categories.isEmpty) {
+      return Center(
+        child: Text(
+          'No categories found. Create one to get started!',
+          style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary),
+        ),
+      );
+    }
+
+    return ReorderableListView.builder(
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
+      itemCount: categories.length,
+      onReorderItem: (oldIdx, newIdx) {},
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        final catId = category.id;
+        final catName = category.name;
+        final isExpanded = expandedCategories[catId] ?? true;
+        final isVisible = categoryVisibility[catId] ?? true;
+        final schedule = categorySchedules[catId];
+        final catItems = menuItems
+            .where((i) => i.categoryId == catId)
+            .toList();
+
+        return _buildCategoryAccordionCard(
+          key: ValueKey(catId),
+          catId: catId,
+          catName: catName,
+          items: catItems,
+          isExpanded: isExpanded,
+          isVisible: isVisible,
+          schedule: schedule,
         );
       },
     );
@@ -1111,7 +1143,7 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
           tags: [],
           versionNum: 1,
         );
-        await ref.read(createMenuItemProvider)(newItem);
+        await ref.read(menuItemsProvider.notifier).createMenuItem(newItem);
       } else {
         // Update
         final updated = MenuItemDto(
@@ -1131,7 +1163,7 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
           tags: widget.item!.tags,
           versionNum: widget.item!.versionNum,
         );
-        await ref.read(updateMenuItemProvider)(updated);
+        await ref.read(menuItemsProvider.notifier).updateMenuItem(updated);
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -1176,7 +1208,7 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     if (confirm != true) return;
 
     try {
-      await ref.read(deleteMenuItemProvider)(widget.item!.id);
+      await ref.read(menuItemsProvider.notifier).deleteMenuItem(widget.item!.id);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {

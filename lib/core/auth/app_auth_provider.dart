@@ -211,7 +211,7 @@ class AppContextNotifier extends StateNotifier<AppContextDto?> {
     await resolveContext();
   }
 
-  /// Complete onboarding step (mock implementation)
+  /// Complete onboarding step and persist to database
   Future<void> completeOnboardingStep(
     String tenantId,
     String stepName,
@@ -231,18 +231,42 @@ class AppContextNotifier extends StateNotifier<AppContextDto?> {
       currentSteps.add(stepName);
     }
 
+    try {
+      final client = Supabase.instance.client;
+      await client.from('onboarding_state').upsert(
+        {
+          'tenant_id': tenantId,
+          'steps_completed': currentSteps,
+          'is_complete': isLastStep,
+          'is_skipped': false,
+        },
+        onConflict: 'tenant_id',
+      );
+      debugPrint('[AppContext] 💾 Saved onboarding step $stepName to database.');
+    } catch (e) {
+      debugPrint('[AppContext] ❌ Failed to save onboarding step to database: $e');
+    }
+
     // Update local state
     final newOnboarding = OnboardingContextDto(
       isComplete: isLastStep,
-      isSkipped: state!.onboarding.isSkipped,
+      isSkipped: false,
       stepsCompleted: currentSteps,
+    );
+
+    // If onboarding is complete, flags should also reflect that onboarding is no longer required
+    final newFlags = ContextFlagsDto(
+      mustChangePassword: state!.flags.mustChangePassword,
+      subscriptionExpired: state!.flags.subscriptionExpired,
+      accountSuspended: state!.flags.accountSuspended,
+      onboardingRequired: !isLastStep,
     );
 
     state = AppContextDto(
       tenant: state!.tenant,
       user: state!.user,
       onboarding: newOnboarding,
-      flags: state!.flags,
+      flags: newFlags,
     );
 
     debugPrint(
