@@ -25,9 +25,9 @@ class DioClient {
        _dio = Dio(
          BaseOptions(
            baseUrl: AppConfig.instance.apiBaseUrl,
-           connectTimeout: const Duration(seconds: 15),
-           receiveTimeout: const Duration(seconds: 15),
-           sendTimeout: const Duration(seconds: 15),
+           connectTimeout: const Duration(seconds: 30),
+           receiveTimeout: const Duration(seconds: 30),
+           sendTimeout: const Duration(seconds: 30),
            headers: {
              'Content-Type': 'application/json',
              'Accept': 'application/json',
@@ -102,8 +102,9 @@ class DioClient {
     ErrorInterceptorHandler handler,
   ) async {
     if (_isRefreshing) {
-      // Queue the request
-      _retryQueue.add({'err': err, 'handler': handler});
+      // Avoid unresolved futures when a 401 occurs while refresh is already in-flight.
+      // Failing fast here prevents deadlocks in callers awaiting Dio futures.
+      handler.next(err);
       return;
     }
 

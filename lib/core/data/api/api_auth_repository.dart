@@ -167,19 +167,30 @@ class ApiAuthRepository implements AuthRepository {
   @override
   Future<Result<AppContextDto?>> resolveContext() async {
     try {
+      debugPrint('[ApiAuth] 📡 Calling GET ${ApiConstants.currentTenant}');
       final res = await _dioClient.get(ApiConstants.currentTenant);
+      debugPrint('[ApiAuth] 📡 Response received. Status: ${res.statusCode}');
+      debugPrint('[ApiAuth] 📡 Response data: ${res.data}');
 
       if (res.data['success'] == true) {
-        return Success(AppContextDto.fromJson(res.data['data']));
+        debugPrint('[ApiAuth] ✅ Success response, parsing context...');
+        final context = AppContextDto.fromJson(res.data['data']);
+        debugPrint('[ApiAuth] ✅ Context parsed successfully');
+        return Success(context);
       }
+      debugPrint('[ApiAuth] ⚠️ Success=false or missing, returning null');
       return const Success(null);
     } on ApiException catch (e) {
+      debugPrint('[ApiAuth] ❌ ApiException: ${e.message} (code: ${e.code})');
       if (e.code == ApiErrorCode.unauthorized) {
+        debugPrint('[ApiAuth] 🔒 Unauthorized, signing out...');
         await signOut();
         return const Success(null);
       }
       return Failure(ApiFailure(e.message, e.code));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[ApiAuth] 💥 Unexpected error: $e');
+      debugPrint('[ApiAuth] 💥 Stack trace: $stackTrace');
       return Failure(ApiFailure(e.toString()));
     }
   }

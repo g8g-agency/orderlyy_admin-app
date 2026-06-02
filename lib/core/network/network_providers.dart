@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/logger.dart';
-import '../providers/repository_providers.dart';
 import 'dio_client.dart';
 import 'network_info.dart';
 import 'offline_queue.dart';
@@ -44,7 +45,9 @@ final Provider<DioClient> dioClientProvider = Provider<DioClient>((ref) {
           lowerMsg.contains('invalid session') ||
           lowerMsg.contains('revoked')) {
         logWarning('[DioClient] 🚨 Force signing out due to invalid session.');
-        ref.read(authRepositoryProvider).signOut();
+        unawaited(
+          Supabase.instance.client.auth.signOut().catchError((_) {}),
+        );
       }
     },
   );

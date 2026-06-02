@@ -36,24 +36,69 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
 
   final Ref _ref;
 
+  /// Coalesces duplicate resolve() calls (e.g. signIn + Supabase onAuthStateChange).
+  Future<void>? _activeResolve;
+  int _resolveGeneration = 0;
+
   /// Called by AuthNotifier after a successful sign-in or session restore.
   ///
   /// [authenticatedUserId] — the newly authenticated user's ID.
   /// This MUST be called before any runtime provider initialises.
-  Future<void> resolve(String authenticatedUserId) async {
-    debugPrint('[Bootstrap] 🔍 Resolving bootstrap for userId=$authenticatedUserId');
+  Future<void> resolve(String authenticatedUserId, {bool force = false}) async {
+    if (!force &&
+        (state.status == BootstrapStatus.tenantReady ||
+            state.status == BootstrapStatus.onboardingRequired)) {
+      debugPrint('[Bootstrap] ⏭️ Already resolved (${state.status}) — skipping');
+      return;
+    }
+
+    if (_activeResolve != null) {
+      debugPrint('[Bootstrap] ⏭️ Resolve already in flight — joining existing call');
+      return _activeResolve!;
+    }
+
+    _activeResolve = _resolveOnce(authenticatedUserId);
+    try {
+      await _activeResolve;
+    } finally {
+      _activeResolve = null;
+    }
+  }
+
+  Future<void> _resolveOnce(String authenticatedUserId) async {
+    final generation = ++_resolveGeneration;
+    debugPrint('[Bootstrap] 🔍 Resolving bootstrap for userId=$authenticatedUserId (gen=$generation)');
     state = const BootstrapState.loading();
 
     // ── Phase 5: User-consistency validation ──────────────────────────────
     await _validateUserConsistency(authenticatedUserId);
+    if (generation != _resolveGeneration) {
+      debugPrint('[Bootstrap] ⏭️ Stale resolve after validation (gen=$generation)');
+      return;
+    }
 
     // ── Call bootstrap endpoint ────────────────────────────────────────────
     try {
+      debugPrint('[Bootstrap] 📡 Calling resolveContext API...');
       final repo = _ref.read(authRepositoryProvider);
-      final result = await repo.resolveContext();
+      final result = await repo.resolveContext().timeout(
+        const Duration(seconds: 25),
+        onTimeout: () => Failure<AppContextDto?>(
+          ApiFailure(
+            'Workspace verification timed out. Check your connection and try again.',
+            ApiErrorCode.networkError,
+          ),
+        ),
+      );
+      if (generation != _resolveGeneration) {
+        debugPrint('[Bootstrap] ⏭️ Stale resolve after API (gen=$generation)');
+        return;
+      }
+      debugPrint('[Bootstrap] 📡 API call completed. Result type: ${result.runtimeType}');
 
       if (result is Success<AppContextDto?>) {
         final ctx = result.value;
+        debugPrint('[Bootstrap] ✅ Success result received. Context is null: ${ctx == null}');
 
         if (ctx == null) {
           // Backend returned success=true but no data — treat as bootstrap failure
@@ -83,6 +128,7 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
       } else if (result is Failure<AppContextDto?>) {
         final failure = result.error;
         debugPrint('[Bootstrap] ❌ resolveContext failed: ${failure.message}');
+        debugPrint('[Bootstrap] ❌ Error code: ${failure.code}');
 
         // Distinguish network from server errors
         if (failure.code == ApiErrorCode.networkError) {
@@ -90,9 +136,19 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
         } else {
           state = BootstrapState.bootstrapFailure(failure.message);
         }
+      } else {
+        debugPrint('[Bootstrap] ⚠️ Unexpected result type: ${result.runtimeType}');
+        state = const BootstrapState.bootstrapFailure(
+          'Workspace data could not be loaded. Please try again.',
+        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      if (generation != _resolveGeneration) {
+        debugPrint('[Bootstrap] ⏭️ Stale resolve after error (gen=$generation)');
+        return;
+      }
       debugPrint('[Bootstrap] 💥 Unexpected error: $e');
+      debugPrint('[Bootstrap] 💥 Stack trace: $stackTrace');
       state = BootstrapState.networkFailure(
         'Could not reach the server. Check your connection and try again.',
       );
@@ -109,6 +165,8 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
   /// Also clears AppContextDto from the provider.
   void reset() {
     debugPrint('[Bootstrap] 🗑️ Resetting bootstrap state');
+    _resolveGeneration++;
+    _activeResolve = null;
     _ref.read(appContextProvider.notifier).clearContext();
     state = const BootstrapState.idle();
   }
