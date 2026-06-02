@@ -135,12 +135,14 @@ class UserContextDto {
   final String fullName;
   final String role;
   final bool mustChangePassword;
+  final bool isFirstLogin;
 
   const UserContextDto({
     required this.id,
     required this.fullName,
     required this.role,
     required this.mustChangePassword,
+    required this.isFirstLogin,
   });
 
   factory UserContextDto.fromJson(Map<String, dynamic> json) => UserContextDto(
@@ -148,6 +150,7 @@ class UserContextDto {
     fullName: json['full_name'] as String,
     role: json['role'] as String,
     mustChangePassword: json['must_change_password'] as bool? ?? false,
+    isFirstLogin: json['is_first_login'] as bool? ?? false,
   );
 }
 
@@ -158,6 +161,7 @@ class TenantContextDto {
   final String plan;
   final String status;
   final bool isActive;
+  final bool dismissedQrBanner;
   final String? nextBillingDate;
 
   const TenantContextDto({
@@ -167,6 +171,7 @@ class TenantContextDto {
     required this.plan,
     required this.status,
     required this.isActive,
+    required this.dismissedQrBanner,
     this.nextBillingDate,
   });
 
@@ -178,6 +183,7 @@ class TenantContextDto {
         plan: json['plan'] as String,
         status: json['status'] as String,
         isActive: json['is_active'] as bool? ?? true,
+        dismissedQrBanner: json['dismissed_qr_banner'] as bool? ?? false,
         nextBillingDate: json['next_billing_date'] as String?,
       );
 }
@@ -185,11 +191,13 @@ class TenantContextDto {
 class OnboardingContextDto {
   final bool isComplete;
   final bool isSkipped;
+  final int step;
   final List<String> stepsCompleted;
 
   const OnboardingContextDto({
     required this.isComplete,
     required this.isSkipped,
+    required this.step,
     required this.stepsCompleted,
   });
 
@@ -197,6 +205,7 @@ class OnboardingContextDto {
       OnboardingContextDto(
         isComplete: json['is_complete'] as bool? ?? false,
         isSkipped: json['is_skipped'] as bool? ?? false,
+        step: json['step'] as int? ?? 1,
         stepsCompleted: List<String>.from(
           json['steps_completed'] as List? ?? [],
         ),
@@ -205,12 +214,14 @@ class OnboardingContextDto {
 
 class ContextFlagsDto {
   final bool mustChangePassword;
+  final bool isFirstLogin;
   final bool subscriptionExpired;
   final bool accountSuspended;
   final bool onboardingRequired;
 
   const ContextFlagsDto({
     required this.mustChangePassword,
+    required this.isFirstLogin,
     required this.subscriptionExpired,
     required this.accountSuspended,
     required this.onboardingRequired,
@@ -219,6 +230,7 @@ class ContextFlagsDto {
   factory ContextFlagsDto.fromJson(Map<String, dynamic> json) =>
       ContextFlagsDto(
         mustChangePassword: json['must_change_password'] as bool? ?? false,
+        isFirstLogin: json['is_first_login'] as bool? ?? false,
         subscriptionExpired: json['subscription_expired'] as bool? ?? false,
         accountSuspended: json['account_suspended'] as bool? ?? false,
         onboardingRequired: json['onboarding_required'] as bool? ?? false,

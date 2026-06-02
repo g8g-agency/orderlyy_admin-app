@@ -12,6 +12,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/dtos/order_dto.dart';
 import '../../core/providers/orders_providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/providers/tables_provider.dart';
+import '../../core/providers/menu_items_provider.dart';
+import 'data/repositories/dashboard_repository.dart';
 import '../orders/admin_orders_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../../core/widgets/admin_shell.dart';
@@ -741,11 +744,17 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
 
     final allOrders = ordersState.ordersById.values.toList();
     final today = _todayOrders(allOrders);
-    final totalSales = today.fold<double>(
-      0,
-      (s, o) => s + (o.totalAmount / 100),
-    ); // Use minor units divided by 100
-    final activeDinersCount = today.map((o) => o.tableId).toSet().length;
+    final todaysOrdersCount = today.length;
+    
+    final tablesState = ref.watch(tablesProvider);
+    final activeTablesCount = tablesState.tablesById.length;
+
+    final menuItemsState = ref.watch(menuItemsProvider);
+    final menuItemsCount = menuItemsState.byId.length;
+    final isMenuEmpty = menuItemsCount == 0;
+
+    final appCtx = ref.read(appContextProvider);
+    final dismissedQrBanner = appCtx?.tenant.dismissedQrBanner ?? false;
 
     const activeStatuses = [
       OrderStatus.pending,
@@ -794,6 +803,23 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                         color: AppTheme.onSurface,
                       ),
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: isMenuEmpty ? AppTheme.error.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: isMenuEmpty ? AppTheme.error : Colors.green, width: 1),
+                    ),
+                    child: Text(
+                      isMenuEmpty ? '⚠ Setup Required' : '✓ Ready for Orders',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isMenuEmpty ? AppTheme.error : Colors.green,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -859,6 +885,12 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // ── Store Header + Greeting ───────────────────────────
+                    // ── Onboarding Banners ────────────────────────────────────
+                    if (!dismissedQrBanner)
+                      _buildFirstDashboardBanner(context, ref),
+                    if (isMenuEmpty)
+                      _buildSetupChecklist(context),
+
                     // ── Primary App Actions ───────────────────────────
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -966,17 +998,17 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                           childAspectRatio: isDesktop(context) ? 1.6 : 1.3,
                           children: [
                             _PulseCard(
-                              title: 'Active Diners',
-                              value: '$activeDinersCount',
-                              subtitle: '', // Placeholder removed for live data
-                              icon: Icons.groups_rounded,
+                              title: 'Tables Active',
+                              value: '$activeTablesCount',
+                              subtitle: 'Currently occupied',
+                              icon: Icons.table_restaurant_rounded,
                               color: AppTheme.primary,
                             ),
                             _PulseCard(
-                              title: "Today's GMV",
-                              value: _fmtCurrency(totalSales),
-                              subtitle: '', // Placeholder removed for live data
-                              icon: Icons.payments_rounded,
+                              title: "Today's Orders",
+                              value: '$todaysOrdersCount',
+                              subtitle: _fmtCurrency(totalSales),
+                              icon: Icons.receipt_long_rounded,
                               color: AppTheme.primary,
                             ),
                             _PulseCard(
@@ -1910,6 +1942,121 @@ class _LiveOrderCard extends StatelessWidget {
                   ],
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildFirstDashboardBanner(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 24.h),
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.celebration_rounded, color: AppTheme.primary, size: 28.r),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome to your Orderlyy Dashboard!',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.onPrimaryContainer,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Your restaurant floor plan is initialized. Before you can start accepting orders, you need to add items to your menu.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14.sp,
+                    color: AppTheme.onPrimaryContainer.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close_rounded, color: AppTheme.onPrimaryContainer),
+            onPressed: () async {
+              try {
+                await ref.read(dashboardRepositoryProvider).dismissQrBanner();
+                // refresh app context
+                ref.read(bootstrapProvider.notifier).retry(ref.read(currentUserProvider)?.id ?? '');
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSetupChecklist(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 24.h),
+      padding: EdgeInsets.all(24.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3), width: 1.w),
+        boxShadow: const [BoxShadow(color: Color(0x05000000), blurRadius: 10, offset: Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_rounded, color: AppTheme.error, size: 24.r),
+              SizedBox(width: 12.w),
+              Text(
+                'Action Required: Finish Setup',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Your restaurant cannot process orders until you have at least one active menu item. Please head over to the Menu section to add your first item.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14.sp,
+              color: AppTheme.secondary,
+            ),
+          ),
+          SizedBox(height: 20.h),
+          ElevatedButton.icon(
+            onPressed: () {
+              ref.read(currentNavIndexProvider.notifier).state = 1; // Assuming 1 is Menu index
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+            ),
+            icon: const Icon(Icons.restaurant_menu_rounded),
+            label: Text(
+              'Go to Menu Setup',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
             ),
           ),
         ],

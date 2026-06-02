@@ -6,6 +6,7 @@ class ApiConstants {
   static const String logout = '$apiVersion/auth/logout';
   static const String refreshToken = '$apiVersion/auth/refresh';
   static const String changePassword = '$apiVersion/auth/change-password';
+  static const String setFirstLoginPassword = '$apiVersion/auth/set-password';
 
   // Restaurant Context Endpoints
   static const String restaurantContext = '$apiVersion/context/bootstrap';
