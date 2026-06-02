@@ -221,6 +221,31 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> setFirstLoginPassword(String newPassword) async {
+    try {
+      final res = await _dioClient.post(
+        ApiConstants.setFirstLoginPassword,
+        data: {
+          'new_password': newPassword,
+          'confirm_password': newPassword,
+        },
+      );
+
+      if (res.data != null && res.data['success'] == true) {
+        return const Success(null);
+      } else {
+        return Failure(
+          ApiFailure(res.data?['message'] ?? 'Failed to configure password'),
+        );
+      }
+    } on ApiException catch (e) {
+      return Failure(ApiFailure(e.message, e.code));
+    } catch (e) {
+      return Failure(ApiFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Result<void>> signOut() async {
     try {
       await _dioClient.post(ApiConstants.logout);

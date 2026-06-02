@@ -199,6 +199,7 @@ class SupabaseAuthRepository implements AuthRepository {
               fullName: staff.name,
               role: staff.role,
               mustChangePassword: false,
+              isFirstLogin: false,
             ),
             tenant: TenantContextDto(
               id: staff.tenantId,
@@ -215,6 +216,7 @@ class SupabaseAuthRepository implements AuthRepository {
             ),
             flags: const ContextFlagsDto(
               mustChangePassword: false,
+              isFirstLogin: false,
               subscriptionExpired: false,
               accountSuspended: false,
               onboardingRequired: false,
@@ -271,6 +273,11 @@ class SupabaseAuthRepository implements AuthRepository {
       return Failure(ApiFailure('Re-login failed after password change'));
     }
     return const Success(null);
+  }
+
+  @override
+  Future<Result<void>> setFirstLoginPassword(String newPassword) async {
+    return Failure(ApiFailure('Not supported on legacy repository.'));
   }
 
   @override
