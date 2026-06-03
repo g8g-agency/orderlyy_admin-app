@@ -93,7 +93,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
       // Force bootstrap reload to get new onboarding_step and context
       final appContext = ref.read(appContextProvider);
       if (appContext != null) {
-        await ref.read(bootstrapProvider.notifier).resolve(appContext.user.id);
+        await ref.read(bootstrapProvider.notifier).silentResolve(appContext.user.id);
       }
 
       if (mounted) {
@@ -147,7 +147,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -188,7 +188,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedBusinessType,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('Business Type *'),
                         items: _businessTypes.map((bt) {
                           return DropdownMenuItem(
@@ -207,7 +207,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedCurrency,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('Currency *'),
                         items: _commonCurrencies.map((c) {
                           return DropdownMenuItem(
@@ -225,7 +225,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _taxIdController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('Tax Registration Number (Optional)'),
                       ),
                       const SizedBox(height: 40),

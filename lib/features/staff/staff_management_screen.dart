@@ -1,165 +1,148 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_colors.dart';
+import 'presentation/providers/staff_provider.dart';
+import 'presentation/widgets/staff_dialog.dart';
+import '../../core/data/dtos/staff_dto.dart';
 
 class StaffManagementScreen extends ConsumerWidget {
   const StaffManagementScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final staffState = ref.watch(staffNotifierProvider);
     final textColor = Theme.of(context).brightness == Brightness.dark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final subtitleColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: 500.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(24.r),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryContainer.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.primaryContainer.withValues(alpha: 0.15),
-                        width: 2.w,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.people_outline_rounded,
-                      size: 64.r,
-                      color: AppTheme.primary,
-                    ),
-                  ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
-                  SizedBox(height: 32.h),
-                  Text(
-                    'Staff Directory',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 28.sp,
-                      fontWeight: FontWeight.w800,
-                      color: textColor,
-                      letterSpacing: -0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 200.ms),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'Staff & RBAC management is currently under development.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 300.ms),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'Enable your team to manage orders, coordinate tables, and track active shifts with fine-grained localized permissions and PIN code authorization.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.sp,
-                      height: 1.5,
-                      color: subtitleColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 400.ms),
-                  SizedBox(height: 40.h),
-                  Container(
-                    padding: EdgeInsets.all(20.r),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.darkSurface
-                          : AppColors.lightSurface,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: AppTheme.surfaceContainerHigh,
-                        width: 1.w,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFeatureBullet(context, 'Role-Based Access Control (RBAC)', 'Define exact manager, kitchen, and waiter permission boundaries.'),
-                        SizedBox(height: 16.h),
-                        _buildFeatureBullet(context, 'Secure PIN Authorization', 'Fast lockscreen login for POS, waitstaff, and kitchen displays.'),
-                        SizedBox(height: 16.h),
-                        _buildFeatureBullet(context, 'Shift & Productivity Monitoring', 'Track order response times, table turnovers, and shifts dynamically.'),
-                      ],
-                    ),
-                  ).animate().slideY(begin: 0.1, delay: 500.ms).fadeIn(delay: 500.ms),
-                ],
-              ),
-            ),
+      appBar: AppBar(
+        title: Text(
+          'Staff Directory',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            color: textColor,
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.read(staffNotifierProvider.notifier).refresh(),
+          ),
+          SizedBox(width: 16.w),
+        ],
+      ),
+      body: staffState.when(
+        data: (staffList) {
+          if (staffList.isEmpty) {
+            return const Center(child: Text('No staff found. Add one!'));
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16.r),
+            itemCount: staffList.length,
+            itemBuilder: (context, index) {
+              final staff = staffList[index];
+              return Card(
+                elevation: 0,
+                margin: EdgeInsets.only(bottom: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                  side: BorderSide(
+                    color: AppTheme.surfaceContainerHigh,
+                    width: 1,
+                  ),
+                ),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurface
+                    : AppColors.lightSurface,
+                child: ListTile(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  leading: CircleAvatar(
+                    backgroundColor: AppTheme.primaryContainer.withValues(alpha: 0.2),
+                    child: Icon(Icons.person_rounded, color: AppTheme.primary),
+                  ),
+                  title: Text(
+                    staff.name,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${staff.role.displayLabel} • PIN: ${staff.pin}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.sp,
+                      color: staff.isActive ? Colors.green : Colors.redAccent,
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_rounded),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => StaffDialog(staff: staff),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                        onPressed: () => _confirmDelete(context, ref, staff),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, st) => Center(child: Text('Error: $err')),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (ctx) => const StaffDialog(),
+          );
+        },
+        backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: Text('Add Staff', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w600)),
       ),
     );
   }
 
-  Widget _buildFeatureBullet(BuildContext context, String title, String description) {
-    final textColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtitleColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: EdgeInsets.only(top: 2.h),
-          padding: EdgeInsets.all(4.r),
-          decoration: const BoxDecoration(
-            color: Color(0xFF10B981),
-            shape: BoxShape.circle,
+  void _confirmDelete(BuildContext context, WidgetRef ref, StaffDto staff) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Staff'),
+        content: Text('Are you sure you want to delete ${staff.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
           ),
-          child: Icon(
-            Icons.done_rounded,
-            size: 12.r,
-            color: Colors.white,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            onPressed: () {
+              ref.read(staffNotifierProvider.notifier).deleteStaff(staff.id);
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Delete'),
           ),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13.sp,
-                  color: textColor,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                description,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.sp,
-                  color: subtitleColor,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
