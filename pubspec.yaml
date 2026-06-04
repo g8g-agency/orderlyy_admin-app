@@ -77,6 +77,9 @@ dependencies:
   # Responsive design
   flutter_screenutil: ^5.9.0
 
+  # Charts & Graphs
+  fl_chart: ^0.68.0
+
   # QR Scanner
   mobile_scanner: ^6.0.5
   image_picker: ^1.2.2

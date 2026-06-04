@@ -2,7 +2,6 @@ import '../dtos/staff_dto.dart';
 import '../repositories/staff_repository.dart';
 import '../../network/dio_client.dart';
 import '../../network/api_exception.dart';
-import '../../constants/api_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiStaffRepository implements StaffRepository {
@@ -15,7 +14,7 @@ class ApiStaffRepository implements StaffRepository {
   Future<List<StaffDto>> getStaff(String tenantId) async {
     try {
       final response = await _dioClient.get(
-        '${ApiConstants.staff}?tenant_id=$tenantId',
+        '/api/v1/tenants/$tenantId/staff',
       );
 
       if (response.data['success'] == true) {
@@ -37,24 +36,14 @@ class ApiStaffRepository implements StaffRepository {
 
   @override
   Future<StaffDto?> getStaffById(String staffId) async {
-    try {
-      final response = await _dioClient.get('${ApiConstants.staff}/$staffId');
-
-      if (response.data['success'] == true && response.data['data'] != null) {
-        return StaffDto.fromJson(response.data['data']);
-      }
-      return null;
-    } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(message: e.toString(), code: ApiErrorCode.unknown);
-    }
+    throw UnimplementedError('getStaffById without tenant context not supported by backend');
   }
 
   @override
   Future<StaffDto> createStaff(StaffDto staff) async {
     try {
       final response = await _dioClient.post(
-        ApiConstants.staff,
+        '/api/v1/tenants/${staff.tenantId}/staff',
         data: staff.toJson(),
       );
 
@@ -75,9 +64,20 @@ class ApiStaffRepository implements StaffRepository {
   @override
   Future<StaffDto> updateStaff(StaffDto staff) async {
     try {
+      // Only send mutable fields accepted by UpdateStaffSchema
+      final updatePayload = {
+        'name': staff.name,
+        'role': staff.role.name,
+        'pin': staff.pin,
+        'is_active': staff.isActive,
+        'employee_id': staff.employeeId,
+        'branch_id': staff.branchId,
+        'email': staff.email,
+      };
+
       final response = await _dioClient.patch(
-        '${ApiConstants.staff}/${staff.id}',
-        data: staff.toJson(),
+        '/api/v1/tenants/${staff.tenantId}/staff/${staff.id}',
+        data: updatePayload,
       );
 
       if (response.data['success'] == true) {
@@ -95,9 +95,9 @@ class ApiStaffRepository implements StaffRepository {
   }
 
   @override
-  Future<void> deleteStaff(String staffId) async {
+  Future<void> deleteStaff(String tenantId, String staffId) async {
     try {
-      final response = await _dioClient.delete('${ApiConstants.staff}/$staffId');
+      final response = await _dioClient.delete('/api/v1/tenants/$tenantId/staff/$staffId');
 
       if (response.data['success'] != true) {
         throw ApiException(

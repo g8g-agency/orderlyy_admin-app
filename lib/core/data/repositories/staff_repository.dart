@@ -15,7 +15,7 @@ abstract class StaffRepository {
 
   Future<StaffDto> updateStaff(StaffDto staff);
 
-  Future<void> deleteStaff(String staffId);
+  Future<void> deleteStaff(String tenantId, String staffId);
 
   // ── Realtime-like stream ──────────────────────────────────────────────────
   Stream<List<StaffDto>> watchStaff(String tenantId);

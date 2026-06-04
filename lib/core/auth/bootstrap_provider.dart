@@ -40,11 +40,7 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
   Future<void>? _activeResolve;
   int _resolveGeneration = 0;
 
-  /// Called by AuthNotifier after a successful sign-in or session restore.
-  ///
-  /// [authenticatedUserId] — the newly authenticated user's ID.
-  /// This MUST be called before any runtime provider initialises.
-  Future<void> resolve(String authenticatedUserId, {bool force = false}) async {
+  Future<void> resolve(String userId, {bool force = false}) async {
     if (!force &&
         (state.status == BootstrapStatus.tenantReady ||
             state.status == BootstrapStatus.onboardingRequired)) {
@@ -53,11 +49,11 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
     }
 
     if (_activeResolve != null) {
-      debugPrint('[Bootstrap] ⏭️ Resolve already in flight — joining existing call');
+      debugPrint('[Bootstrap] ⏭️ resolveContext already in flight.');
       return _activeResolve!;
     }
 
-    _activeResolve = _resolveOnce(authenticatedUserId);
+    _activeResolve = _doResolve(userId, emitLoading: true);
     try {
       await _activeResolve;
     } finally {
@@ -65,10 +61,27 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
     }
   }
 
-  Future<void> _resolveOnce(String authenticatedUserId) async {
+  Future<void> silentResolve(String userId) async {
+    if (_activeResolve != null) {
+      debugPrint('[Bootstrap] ⏭️ resolveContext already in flight (silent).');
+      return _activeResolve!;
+    }
+
+    _activeResolve = _doResolve(userId, emitLoading: false);
+    try {
+      await _activeResolve;
+    } finally {
+      _activeResolve = null;
+    }
+  }
+
+  Future<void> _doResolve(String authenticatedUserId, {required bool emitLoading}) async {
     final generation = ++_resolveGeneration;
     debugPrint('[Bootstrap] 🔍 Resolving bootstrap for userId=$authenticatedUserId (gen=$generation)');
-    state = const BootstrapState.loading();
+    
+    if (emitLoading) {
+      state = const BootstrapState.loading();
+    }
 
     // ── Phase 5: User-consistency validation ──────────────────────────────
     await _validateUserConsistency(authenticatedUserId);
