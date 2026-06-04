@@ -176,7 +176,6 @@ class OrganizationDashboardScreen extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _HeaderActions extends StatelessWidget {
@@ -205,7 +204,9 @@ class _HeaderActions extends StatelessWidget {
         side: BorderSide(color: borderColor),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        minimumSize: isDesktop ? const Size(0, 52) : const Size(double.infinity, 48),
+        minimumSize: isDesktop
+            ? const Size(0, 52)
+            : const Size(double.infinity, 48),
       ),
       child: const Text('Manage Regions'),
     );
@@ -220,7 +221,9 @@ class _HeaderActions extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 0,
-        minimumSize: isDesktop ? const Size(0, 52) : const Size(double.infinity, 48),
+        minimumSize: isDesktop
+            ? const Size(0, 52)
+            : const Size(double.infinity, 48),
       ),
     );
 
@@ -383,7 +386,8 @@ class _BranchDirectoryTable extends ConsumerWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: branches.length,
-                  separatorBuilder: (_, __) => Divider(height: 1, color: borderColor),
+                  separatorBuilder: (_, _) =>
+                      Divider(height: 1, color: borderColor),
                   itemBuilder: (context, index) {
                     final branch = branches[index];
                     return _BranchCard(
@@ -391,10 +395,8 @@ class _BranchDirectoryTable extends ConsumerWidget {
                       textColor: textColor,
                       subTextColor: subTextColor,
                       borderColor: borderColor,
-                      onEdit: () => BranchFormSheet.show(
-                        context,
-                        initialData: branch,
-                      ),
+                      onEdit: () =>
+                          BranchFormSheet.show(context, initialData: branch),
                     );
                   },
                 );
@@ -407,7 +409,9 @@ class _BranchDirectoryTable extends ConsumerWidget {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
+                        ),
                         child: DataTable(
                           headingRowColor: WidgetStateProperty.all(
                             Theme.of(context).brightness == Brightness.dark
@@ -525,8 +529,12 @@ class _BranchDirectoryTable extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return DataRow(
@@ -542,7 +550,13 @@ class _BranchDirectoryTable extends ConsumerWidget {
           ),
         ),
         DataCell(Text(timezone, style: TextStyle(color: textColor))),
-        DataCell(_StatusChip(isOpen: isOpen, subTextColor: subTextColor, borderColor: borderColor)),
+        DataCell(
+          _StatusChip(
+            isOpen: isOpen,
+            subTextColor: subTextColor,
+            borderColor: borderColor,
+          ),
+        ),
         DataCell(
           Text(
             sales,
@@ -606,7 +620,11 @@ class _BranchCard extends StatelessWidget {
                   ),
                 ),
               ),
-              _StatusChip(isOpen: isOpen, subTextColor: subTextColor, borderColor: borderColor),
+              _StatusChip(
+                isOpen: isOpen,
+                subTextColor: subTextColor,
+                borderColor: borderColor,
+              ),
               IconButton(
                 icon: Icon(Icons.edit_outlined, color: subTextColor, size: 20),
                 onPressed: onEdit,
@@ -620,9 +638,24 @@ class _BranchCard extends StatelessWidget {
             spacing: 16,
             runSpacing: 8,
             children: [
-              _Metric(label: 'Timezone', value: branch.timezone, subTextColor: subTextColor, textColor: textColor),
-              _Metric(label: 'Today\'s Sales', value: '\$0', subTextColor: subTextColor, textColor: textColor),
-              _Metric(label: 'Orders', value: '0', subTextColor: subTextColor, textColor: textColor),
+              _Metric(
+                label: 'Timezone',
+                value: branch.timezone,
+                subTextColor: subTextColor,
+                textColor: textColor,
+              ),
+              _Metric(
+                label: 'Today\'s Sales',
+                value: '\$0',
+                subTextColor: subTextColor,
+                textColor: textColor,
+              ),
+              _Metric(
+                label: 'Orders',
+                value: '0',
+                subTextColor: subTextColor,
+                textColor: textColor,
+              ),
             ],
           ),
         ],
@@ -769,7 +802,10 @@ class _RegionsOverviewSheet extends ConsumerWidget {
                   ),
                 ),
                 error: (error, _) => Center(
-                  child: Text('Error loading regions: $error', style: const TextStyle(color: AppColors.primary)),
+                  child: Text(
+                    'Error loading regions: $error',
+                    style: const TextStyle(color: AppColors.primary),
+                  ),
                 ),
                 data: (branches) {
                   // Group branches by region
@@ -786,7 +822,9 @@ class _RegionsOverviewSheet extends ConsumerWidget {
                         padding: const EdgeInsets.all(32.0),
                         child: Text(
                           'No regions defined. Edit or onboard branches to assign regions.',
-                          style: GoogleFonts.plusJakartaSans(color: subTextColor),
+                          style: GoogleFonts.plusJakartaSans(
+                            color: subTextColor,
+                          ),
                         ),
                       ),
                     );
@@ -831,9 +869,14 @@ class _RegionsOverviewSheet extends ConsumerWidget {
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 child: Text(
@@ -849,8 +892,14 @@ class _RegionsOverviewSheet extends ConsumerWidget {
                           ),
                           children: regionBranches.map((branch) {
                             return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                              leading: const Icon(Icons.storefront_rounded, size: 20),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 4,
+                              ),
+                              leading: const Icon(
+                                Icons.storefront_rounded,
+                                size: 20,
+                              ),
                               title: Text(
                                 branch.name,
                                 style: GoogleFonts.plusJakartaSans(
@@ -859,7 +908,8 @@ class _RegionsOverviewSheet extends ConsumerWidget {
                                 ),
                               ),
                               subtitle: Text(
-                                branch.address ?? 'No physical address specified',
+                                branch.address ??
+                                    'No physical address specified',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   color: subTextColor,
@@ -868,7 +918,10 @@ class _RegionsOverviewSheet extends ConsumerWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               trailing: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: branch.status == BranchStatus.active
                                       ? Colors.green.withValues(alpha: 0.1)

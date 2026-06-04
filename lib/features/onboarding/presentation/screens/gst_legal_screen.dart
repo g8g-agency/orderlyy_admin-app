@@ -7,8 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/auth/app_auth_provider.dart';
-import '../../data/repositories/onboarding_repository.dart'
-    as onboarding_repo;
+import '../../data/repositories/onboarding_repository.dart' as onboarding_repo;
 
 class GstLegalScreen extends ConsumerStatefulWidget {
   const GstLegalScreen({super.key});
@@ -85,10 +84,9 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
       );
 
       // Force bootstrap reload to get new onboarding_step (which will be 4) and context
-      ref.read(appContextProvider.notifier).applyOnboardingProgress(
-        completedStep: 'gst_legal',
-        nextStep: 4,
-      );
+      ref
+          .read(appContextProvider.notifier)
+          .applyOnboardingProgress(completedStep: 'gst_legal', nextStep: 4);
 
       if (mounted) {
         context.go('/onboarding/tables-hours');
@@ -110,14 +108,19 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final showGstinWarning = _gstinController.text.trim().isEmpty && _selectedGstType != 'Non-GST Registered';
+    final showGstinWarning =
+        _gstinController.text.trim().isEmpty &&
+        _selectedGstType != 'Non-GST Registered';
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(
           'Step 3: GST & Legal',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold, letterSpacing: -0.5),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -129,7 +132,9 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
             constraints: const BoxConstraints(maxWidth: 650),
             child: Card(
               color: AppTheme.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Form(
@@ -165,16 +170,25 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                           decoration: BoxDecoration(
                             color: Colors.redAccent.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: Colors.redAccent.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.redAccent,
+                                size: 20,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
-                                  style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ],
@@ -182,15 +196,12 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                         ),
 
                       DropdownButtonFormField<String>(
-                        value: _selectedGstType,
+                        initialValue: _selectedGstType,
                         dropdownColor: AppTheme.surface,
                         style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('GST Type *'),
                         items: _gstTypes.map((t) {
-                          return DropdownMenuItem(
-                            value: t,
-                            child: Text(t),
-                          );
+                          return DropdownMenuItem(value: t, child: Text(t));
                         }).toList(),
                         onChanged: (val) {
                           if (val != null) {
@@ -212,10 +223,14 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                           style: const TextStyle(color: AppTheme.onSurface),
                           textCapitalization: TextCapitalization.characters,
                           onChanged: (_) => setState(() {}),
-                          decoration: _inputDecoration('GSTIN (15-digit) *Optional*'),
+                          decoration: _inputDecoration(
+                            'GSTIN (15-digit) *Optional*',
+                          ),
                           validator: (value) {
                             if (value != null && value.trim().isNotEmpty) {
-                              final regex = RegExp(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$');
+                              final regex = RegExp(
+                                r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$',
+                              );
                               if (!regex.hasMatch(value)) {
                                 return 'Invalid GSTIN format (e.g. 27AAPFU0939F1ZV)';
                               }
@@ -228,15 +243,20 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                             padding: const EdgeInsets.only(top: 8.0, left: 4.0),
                             child: Text(
                               'GST-compliant invoices and receipts cannot be generated without a valid GSTIN.',
-                              style: TextStyle(color: Colors.orange[300], fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.orange[300],
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         const SizedBox(height: 20),
                         DropdownButtonFormField<double>(
-                          value: _selectedTaxRate,
+                          initialValue: _selectedTaxRate,
                           dropdownColor: AppTheme.surface,
                           style: const TextStyle(color: AppTheme.onSurface),
-                          decoration: _inputDecoration('Default Tax Rate (%) *'),
+                          decoration: _inputDecoration(
+                            'Default Tax Rate (%) *',
+                          ),
                           items: _taxRates.map((rate) {
                             return DropdownMenuItem(
                               value: rate,
@@ -251,20 +271,28 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                             }
                           },
                         ),
-                        if (_selectedGstType == 'Intra-state' && _selectedTaxRate > 0)
+                        if (_selectedGstType == 'Intra-state' &&
+                            _selectedTaxRate > 0)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0, left: 4.0),
                             child: Text(
                               'Splits into ${(_selectedTaxRate / 2).toStringAsFixed(1)}% CGST and ${(_selectedTaxRate / 2).toStringAsFixed(1)}% SGST',
-                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        if (_selectedGstType == 'Inter-state' && _selectedTaxRate > 0)
+                        if (_selectedGstType == 'Inter-state' &&
+                            _selectedTaxRate > 0)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0, left: 4.0),
                             child: Text(
                               'Applies as ${_selectedTaxRate.toStringAsFixed(1)}% IGST',
-                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         const SizedBox(height: 20),
@@ -274,7 +302,9 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                         controller: _fssaiController,
                         style: const TextStyle(color: AppTheme.onSurface),
                         keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('FSSAI License Number (14 digits) *'),
+                        decoration: _inputDecoration(
+                          'FSSAI License Number (14 digits) *',
+                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'FSSAI License Number is required';
@@ -303,7 +333,10 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : Text(
                                   'Save & Continue',

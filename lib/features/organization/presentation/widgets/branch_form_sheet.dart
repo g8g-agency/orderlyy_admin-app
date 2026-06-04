@@ -40,8 +40,12 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialData?.name);
-    _timezoneController = TextEditingController(text: widget.initialData?.timezone ?? 'UTC');
-    _addressController = TextEditingController(text: widget.initialData?.address);
+    _timezoneController = TextEditingController(
+      text: widget.initialData?.timezone ?? 'UTC',
+    );
+    _addressController = TextEditingController(
+      text: widget.initialData?.address,
+    );
     _phoneController = TextEditingController(text: widget.initialData?.phone);
     _emailController = TextEditingController(text: widget.initialData?.email);
     _regionController = TextEditingController(text: widget.initialData?.region);
@@ -61,36 +65,56 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final isUpdating = widget.initialData != null;
     try {
       if (isUpdating) {
-        await ref.read(branchMutationProvider.notifier).updateBranch(
-          widget.initialData!.id,
-          _nameController.text.trim(),
-          _timezoneController.text.trim(),
-          _status,
-          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-          email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          region: _regionController.text.trim().isEmpty ? null : _regionController.text.trim(),
-        );
+        await ref
+            .read(branchMutationProvider.notifier)
+            .updateBranch(
+              widget.initialData!.id,
+              _nameController.text.trim(),
+              _timezoneController.text.trim(),
+              _status,
+              address: _addressController.text.trim().isEmpty
+                  ? null
+                  : _addressController.text.trim(),
+              phone: _phoneController.text.trim().isEmpty
+                  ? null
+                  : _phoneController.text.trim(),
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim(),
+              region: _regionController.text.trim().isEmpty
+                  ? null
+                  : _regionController.text.trim(),
+            );
       } else {
-        await ref.read(branchMutationProvider.notifier).createBranch(
-          _nameController.text.trim(),
-          _timezoneController.text.trim(),
-          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-          email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          region: _regionController.text.trim().isEmpty ? null : _regionController.text.trim(),
-        );
+        await ref
+            .read(branchMutationProvider.notifier)
+            .createBranch(
+              _nameController.text.trim(),
+              _timezoneController.text.trim(),
+              address: _addressController.text.trim().isEmpty
+                  ? null
+                  : _addressController.text.trim(),
+              phone: _phoneController.text.trim().isEmpty
+                  ? null
+                  : _phoneController.text.trim(),
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim(),
+              region: _regionController.text.trim().isEmpty
+                  ? null
+                  : _regionController.text.trim(),
+            );
       }
 
       final errorState = ref.read(branchMutationProvider);
       if (errorState is AsyncError) {
         throw errorState.error;
       }
-      
+
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
@@ -149,7 +173,8 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
                     labelText: 'Branch Name',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -159,7 +184,8 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
                     border: OutlineInputBorder(),
                     hintText: 'e.g. UTC, America/New_York',
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -211,7 +237,7 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
                 const SizedBox(height: 16),
                 if (widget.initialData != null)
                   DropdownButtonFormField<BranchStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       border: OutlineInputBorder(),
@@ -231,7 +257,9 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 16),
@@ -240,18 +268,26 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
-                        minimumSize: const Size(100, 44), // Ensure bounded size inside horizontal Row
+                        minimumSize: const Size(
+                          100,
+                          44,
+                        ), // Ensure bounded size inside horizontal Row
                       ),
                       child: isLoading
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : Text(widget.initialData == null ? 'Create' : 'Save'),
+                          : Text(
+                              widget.initialData == null ? 'Create' : 'Save',
+                            ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

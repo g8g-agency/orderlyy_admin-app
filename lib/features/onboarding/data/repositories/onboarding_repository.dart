@@ -62,12 +62,15 @@ class OnboardingRepository {
       );
 
       if (response.statusCode != 200 || response.data['success'] != true) {
-        throw Exception(response.data['error'] ?? 'Failed to update restaurant info');
+        throw Exception(
+          response.data['error'] ?? 'Failed to update restaurant info',
+        );
       }
     } catch (e) {
       throw Exception('Network error while updating restaurant info: $e');
     }
   }
+
   Future<void> updateBusinessConfig({
     required String currencyCode,
     String? businessType,
@@ -78,13 +81,15 @@ class OnboardingRepository {
         '/api/v1/admin/onboarding/business-config',
         data: {
           'currency_code': currencyCode,
-          if (businessType != null) 'business_type': businessType,
-          if (taxRegistrationNumber != null) 'tax_registration_number': taxRegistrationNumber,
+          'business_type': ?businessType,
+          'tax_registration_number': ?taxRegistrationNumber,
         },
       );
 
       if (response.statusCode != 200 || response.data['success'] != true) {
-        throw Exception(response.data['error'] ?? 'Failed to update business config');
+        throw Exception(
+          response.data['error'] ?? 'Failed to update business config',
+        );
       }
     } catch (e) {
       throw Exception('Network error while updating business config: $e');
@@ -115,7 +120,9 @@ class OnboardingRepository {
       );
 
       if (response.statusCode != 200 || response.data['success'] != true) {
-        throw Exception(response.data['error'] ?? 'Failed to update GST config');
+        throw Exception(
+          response.data['error'] ?? 'Failed to update GST config',
+        );
       }
     } catch (e) {
       throw Exception('Network error while updating GST config: $e');
@@ -140,7 +147,9 @@ class OnboardingRepository {
       );
 
       if (response.statusCode != 200 || response.data['success'] != true) {
-        throw Exception(response.data['error'] ?? 'Failed to update tables and hours');
+        throw Exception(
+          response.data['error'] ?? 'Failed to update tables and hours',
+        );
       }
     } catch (e) {
       throw Exception('Network error while updating tables and hours: $e');

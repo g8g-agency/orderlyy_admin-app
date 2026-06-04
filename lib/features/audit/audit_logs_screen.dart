@@ -152,8 +152,9 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                           'System Wide',
                         ],
                         onChanged: (val) {
-                          if (val != null)
+                          if (val != null) {
                             setState(() => _selectedBranch = val);
+                          }
                         },
                       ),
                     ],

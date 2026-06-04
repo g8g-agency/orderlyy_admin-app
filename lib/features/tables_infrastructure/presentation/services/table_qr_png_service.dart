@@ -9,7 +9,10 @@ import '../../data/dtos/table_dto.dart';
 
 /// Renders QR codes to PNG bytes (no widget tree required — used for ZIP export).
 class TableQrPngService {
-  Future<Uint8List> renderQrPng(String qrUrl, {double logicalSize = 220}) async {
+  Future<Uint8List> renderQrPng(
+    String qrUrl, {
+    double logicalSize = 220,
+  }) async {
     final painter = QrPainter(
       data: qrUrl,
       version: QrVersions.auto,
@@ -44,10 +47,12 @@ class TableQrPngService {
 
       final png = await renderQrPng(qrUrl);
       final floorLabel = _slugify(
-        table.floorId != null ? (floorNamesById[table.floorId!] ?? 'floor') : 'floor',
+        table.floorId != null
+            ? (floorNamesById[table.floorId!] ?? 'floor')
+            : 'floor',
       );
       final tableLabel = _slugify(table.tableNumber);
-      final fileName = '${floorLabel}-table-$tableLabel-qr.png';
+      final fileName = '$floorLabel-table-$tableLabel-qr.png';
 
       archive.addFile(ArchiveFile(fileName, png.length, png));
     }

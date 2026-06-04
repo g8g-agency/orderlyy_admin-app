@@ -22,7 +22,7 @@ class ApiMenuItemsRepository implements MenuItemsRepository {
       final queryParams = <String, dynamic>{
         'page': page,
         'limit': limit,
-        if (categoryId != null) 'category_id': categoryId,
+        'category_id': ?categoryId,
         if (search != null && search.isNotEmpty) 'search': search,
         if (includeDeleted) 'include_deleted': 'true',
       };

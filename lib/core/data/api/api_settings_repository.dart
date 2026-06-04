@@ -12,9 +12,7 @@ class ApiSettingsRepository implements SettingsRepository {
   @override
   Future<Result<TenantSettingsDto>> getSettings({String? branchId}) async {
     try {
-      final queryParams = <String, dynamic>{
-        if (branchId != null) 'branch_id': branchId,
-      };
+      final queryParams = <String, dynamic>{'branch_id': ?branchId};
 
       final response = await _dioClient.get(
         ApiConstants.settings,

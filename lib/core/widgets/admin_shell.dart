@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../data/dtos/restaurant_context_dto.dart';
-import '../runtime/runtime_switch_state.dart';
 import 'branch_guards.dart';
 import 'branch_state_debugger.dart';
 import 'package:flutter/foundation.dart';
@@ -76,7 +74,10 @@ class AdminShell extends ConsumerWidget {
                           width: _sidebarWidth,
                           child: _AdminSidebarWidget(),
                         ),
-                        Container(width: 1, color: AppTheme.surfaceContainerHigh),
+                        Container(
+                          width: 1,
+                          color: AppTheme.surfaceContainerHigh,
+                        ),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -84,7 +85,9 @@ class AdminShell extends ConsumerWidget {
                               // Desktop top header bar
                               Container(
                                 height: 72,
-                                padding: const EdgeInsets.symmetric(horizontal: 32),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppTheme.surfaceContainerLowest,
                                   border: Border(
@@ -94,7 +97,8 @@ class AdminShell extends ConsumerWidget {
                                   ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -108,7 +112,8 @@ class AdminShell extends ConsumerWidget {
                                         const BranchSwitcher(),
                                       ],
                                     ),
-                                    if (actions != null) Row(children: actions!),
+                                    if (actions != null)
+                                      Row(children: actions!),
                                   ],
                                 ),
                               ),
@@ -187,10 +192,18 @@ class BranchSwitcher extends ConsumerWidget {
 
         return branchesAsync.when(
           loading: () => _buildPill(context, currentBranch.name, const []),
-          error: (err, stack) => _buildPill(context, currentBranch.name, const []),
+          error: (err, stack) =>
+              _buildPill(context, currentBranch.name, const []),
           data: (branches) {
-            final activeBranches = branches.where((b) => b.status == BranchStatus.active).toList();
-            return _buildPill(context, currentBranch.name, activeBranches, ref: ref);
+            final activeBranches = branches
+                .where((b) => b.status == BranchStatus.active)
+                .toList();
+            return _buildPill(
+              context,
+              currentBranch.name,
+              activeBranches,
+              ref: ref,
+            );
           },
         );
       },
@@ -243,15 +256,22 @@ class BranchSwitcher extends ConsumerWidget {
                       branch.name,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? AppTheme.primary : AppTheme.onSurface,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? AppTheme.primary
+                            : AppTheme.onSurface,
                       ),
                     ),
                   ),
                   if (branch.region != null && branch.region!.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(4),
@@ -324,7 +344,6 @@ class BranchSwitcher extends ConsumerWidget {
     );
   }
 }
-
 
 // ── Shared Admin Sidebar Widget ────────────────────────────────────────────────
 // Extracted from AdminDashboardScreen._DesktopSidebar.
@@ -615,4 +634,3 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-

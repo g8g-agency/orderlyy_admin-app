@@ -7,8 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/auth/app_auth_provider.dart';
-import '../../data/repositories/onboarding_repository.dart'
-    as onboarding_repo;
+import '../../data/repositories/onboarding_repository.dart' as onboarding_repo;
 
 const List<String> _commonCurrencies = [
   'USD',
@@ -35,12 +34,13 @@ class BusinessConfigScreen extends ConsumerStatefulWidget {
   const BusinessConfigScreen({super.key});
 
   @override
-  ConsumerState<BusinessConfigScreen> createState() => _BusinessConfigScreenState();
+  ConsumerState<BusinessConfigScreen> createState() =>
+      _BusinessConfigScreenState();
 }
 
 class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   String? _selectedCurrency = 'USD';
   String? _selectedBusinessType;
   late TextEditingController _taxIdController;
@@ -82,17 +82,21 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
 
     try {
       final repo = ref.read(onboarding_repo.onboardingRepositoryProvider);
-      
+
       await repo.updateBusinessConfig(
         currencyCode: _selectedCurrency!,
         businessType: _selectedBusinessType,
-        taxRegistrationNumber: _taxIdController.text.trim().isEmpty ? null : _taxIdController.text.trim(),
+        taxRegistrationNumber: _taxIdController.text.trim().isEmpty
+            ? null
+            : _taxIdController.text.trim(),
       );
 
-      ref.read(appContextProvider.notifier).applyOnboardingProgress(
-        completedStep: 'business_config',
-        nextStep: 3,
-      );
+      ref
+          .read(appContextProvider.notifier)
+          .applyOnboardingProgress(
+            completedStep: 'business_config',
+            nextStep: 3,
+          );
 
       if (mounted) {
         context.go('/onboarding/gst-legal');
@@ -119,7 +123,10 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
       appBar: AppBar(
         title: Text(
           'Step 2: Business Config',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold, letterSpacing: -0.5),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -131,7 +138,9 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
             constraints: const BoxConstraints(maxWidth: 600),
             child: Card(
               color: AppTheme.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Form(
@@ -167,16 +176,25 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                           decoration: BoxDecoration(
                             color: Colors.redAccent.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: Colors.redAccent.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.redAccent,
+                                size: 20,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
-                                  style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ],
@@ -184,47 +202,47 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                         ),
 
                       DropdownButtonFormField<String>(
-                        value: _selectedBusinessType,
+                        initialValue: _selectedBusinessType,
                         dropdownColor: AppTheme.surface,
                         style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('Business Type *'),
                         items: _businessTypes.map((bt) {
-                          return DropdownMenuItem(
-                            value: bt,
-                            child: Text(bt),
-                          );
+                          return DropdownMenuItem(value: bt, child: Text(bt));
                         }).toList(),
                         onChanged: (val) {
                           setState(() {
                             _selectedBusinessType = val;
                           });
                         },
-                        validator: (value) => value == null || value.isEmpty ? 'Business Type is required' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Business Type is required'
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: _selectedCurrency,
+                        initialValue: _selectedCurrency,
                         dropdownColor: AppTheme.surface,
                         style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('Currency *'),
                         items: _commonCurrencies.map((c) {
-                          return DropdownMenuItem(
-                            value: c,
-                            child: Text(c),
-                          );
+                          return DropdownMenuItem(value: c, child: Text(c));
                         }).toList(),
                         onChanged: (val) {
                           setState(() {
                             _selectedCurrency = val;
                           });
                         },
-                        validator: (value) => value == null || value.isEmpty ? 'Currency is required' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Currency is required'
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _taxIdController,
                         style: const TextStyle(color: AppTheme.onSurface),
-                        decoration: _inputDecoration('Tax Registration Number (Optional)'),
+                        decoration: _inputDecoration(
+                          'Tax Registration Number (Optional)',
+                        ),
                       ),
                       const SizedBox(height: 40),
 
@@ -244,7 +262,10 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : Text(
                                   'Save & Continue',

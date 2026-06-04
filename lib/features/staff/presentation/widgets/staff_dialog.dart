@@ -33,7 +33,9 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.staff?.name ?? '');
     _pinController = TextEditingController(text: widget.staff?.pin ?? '');
-    _employeeIdController = TextEditingController(text: widget.staff?.employeeId ?? '');
+    _employeeIdController = TextEditingController(
+      text: widget.staff?.employeeId ?? '',
+    );
     _emailController = TextEditingController(text: widget.staff?.email ?? '');
     _selectedRole = widget.staff?.role ?? StaffRole.waiter;
     _isActive = widget.staff?.isActive ?? true;
@@ -59,9 +61,13 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
       role: _selectedRole,
       pin: _pinController.text.trim(),
       isActive: _isActive,
-      employeeId: _employeeIdController.text.trim().isEmpty ? null : _employeeIdController.text.trim(),
+      employeeId: _employeeIdController.text.trim().isEmpty
+          ? null
+          : _employeeIdController.text.trim(),
       branchId: _selectedBranchId,
-      email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+      email: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
     );
 
     if (widget.staff == null) {
@@ -85,9 +91,7 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
       backgroundColor: Theme.of(context).brightness == Brightness.dark
           ? AppColors.darkSurface
           : AppColors.lightSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       title: Text(
         widget.staff == null ? 'Add Staff Member' : 'Edit Staff Member',
         style: GoogleFonts.plusJakartaSans(
@@ -113,11 +117,12 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Required' : null,
                 ),
                 SizedBox(height: 16.h),
                 DropdownButtonFormField<StaffRole>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Role',
                     border: OutlineInputBorder(
@@ -137,7 +142,7 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
                 SizedBox(height: 16.h),
                 branchesAsync.when(
                   data: (branches) => DropdownButtonFormField<String>(
-                    value: _selectedBranchId,
+                    initialValue: _selectedBranchId,
                     decoration: InputDecoration(
                       labelText: 'Branch (Optional)',
                       border: OutlineInputBorder(
@@ -149,10 +154,10 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
                         value: null,
                         child: Text('All Branches / None'),
                       ),
-                      ...branches.map((b) => DropdownMenuItem(
-                            value: b.id,
-                            child: Text(b.name),
-                          )),
+                      ...branches.map(
+                        (b) =>
+                            DropdownMenuItem(value: b.id, child: Text(b.name)),
+                      ),
                     ],
                     onChanged: (val) => setState(() => _selectedBranchId = val),
                   ),
@@ -181,7 +186,8 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
                   keyboardType: TextInputType.number,
                   validator: (val) {
                     if (val == null || val.isEmpty) return 'Required';
-                    if (val.length < 4 || val.length > 10) return 'Must be 4-10 characters';
+                    if (val.length < 4 || val.length > 10)
+                      return 'Must be 4-10 characters';
                     return null;
                   },
                 ),
@@ -206,7 +212,7 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
                   ),
                   value: _isActive,
                   onChanged: (val) => setState(() => _isActive = val),
-                  activeColor: AppTheme.primary,
+                  activeThumbColor: AppTheme.primary,
                   contentPadding: EdgeInsets.zero,
                 ),
               ],

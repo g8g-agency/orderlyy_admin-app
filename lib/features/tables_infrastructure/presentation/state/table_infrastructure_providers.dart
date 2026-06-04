@@ -24,7 +24,11 @@ class TablesNotifier extends AsyncNotifier<List<TableDto>> {
     return repo.getTables(ctx.tenant.id, branch.id);
   }
 
-  Future<void> addTable(String tableNumber, int capacity, {String? floorId}) async {
+  Future<void> addTable(
+    String tableNumber,
+    int capacity, {
+    String? floorId,
+  }) async {
     final ctx = ref.read(appContextProvider);
     if (ctx == null) return;
 
@@ -49,7 +53,7 @@ class TablesNotifier extends AsyncNotifier<List<TableDto>> {
       await repo.createTable(dto);
       final list = await repo.getTables(ctx.tenant.id, branch.id);
       state = AsyncValue.data(list);
-    } catch (e, stack) {
+    } catch (e) {
       state = previousState;
       rethrow;
     }
@@ -70,7 +74,7 @@ class TablesNotifier extends AsyncNotifier<List<TableDto>> {
       await repo.deleteTable(tableId);
       final list = await repo.getTables(ctx.tenant.id, branch.id);
       state = AsyncValue.data(list);
-    } catch (e, stack) {
+    } catch (e) {
       state = previousState;
       rethrow;
     }
@@ -93,15 +97,21 @@ class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
     }
 
     final branchAsync = ref.watch(currentBranchProvider);
-    print('[FloorsNotifier.build] WATCH currentBranchProvider state: $branchAsync');
+    print(
+      '[FloorsNotifier.build] WATCH currentBranchProvider state: $branchAsync',
+    );
     final branch = branchAsync.value;
     if (branch == null) {
-      print('[FloorsNotifier.build] RETURN [] because branch is null (branchAsync.value is null)');
+      print(
+        '[FloorsNotifier.build] RETURN [] because branch is null (branchAsync.value is null)',
+      );
       return [];
     }
 
     final repo = ref.watch(tableInfrastructureRepositoryProvider);
-    print('[FloorsNotifier.build] CALL getFloors with tenant: ${ctx.tenant.id}, branch: ${branch.id}');
+    print(
+      '[FloorsNotifier.build] CALL getFloors with tenant: ${ctx.tenant.id}, branch: ${branch.id}',
+    );
     try {
       final list = await repo.getFloors(ctx.tenant.id, branch.id);
       print('[FloorsNotifier.build] SUCCESS: returned ${list.length} floors');
@@ -121,14 +131,18 @@ class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
     }
 
     final branch = ref.read(currentBranchProvider).value;
-    print('[FloorsNotifier.addFloor] READ currentBranchProvider value: $branch');
+    print(
+      '[FloorsNotifier.addFloor] READ currentBranchProvider value: $branch',
+    );
     if (branch == null) {
       print('[FloorsNotifier.addFloor] RETURN because branch is null');
       return;
     }
 
     final repo = ref.read(tableInfrastructureRepositoryProvider);
-    print('[FloorsNotifier.addFloor] CALL createFloor with branch: ${branch.id}, name: $name');
+    print(
+      '[FloorsNotifier.addFloor] CALL createFloor with branch: ${branch.id}, name: $name',
+    );
 
     final previousState = state;
     state = const AsyncValue.loading();
@@ -136,7 +150,9 @@ class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
       final newFloor = await repo.createFloor(branch.id, name);
       print('[FloorsNotifier.addFloor] createFloor SUCCESS: $newFloor');
       final list = await repo.getFloors(ctx.tenant.id, branch.id);
-      print('[FloorsNotifier.addFloor] getFloors SUCCESS: returned ${list.length} floors');
+      print(
+        '[FloorsNotifier.addFloor] getFloors SUCCESS: returned ${list.length} floors',
+      );
       state = AsyncValue.data(list);
     } catch (e, stack) {
       print('[FloorsNotifier.addFloor] ERROR: $e\n$stack');
@@ -154,7 +170,9 @@ class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
     }
 
     final branch = ref.read(currentBranchProvider).value;
-    print('[FloorsNotifier.deleteFloor] READ currentBranchProvider value: $branch');
+    print(
+      '[FloorsNotifier.deleteFloor] READ currentBranchProvider value: $branch',
+    );
     if (branch == null) {
       print('[FloorsNotifier.deleteFloor] RETURN because branch is null');
       return;
@@ -169,7 +187,9 @@ class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
       await repo.deleteFloor(floorId);
       print('[FloorsNotifier.deleteFloor] deleteFloor SUCCESS');
       final list = await repo.getFloors(ctx.tenant.id, branch.id);
-      print('[FloorsNotifier.deleteFloor] getFloors SUCCESS: returned ${list.length} floors');
+      print(
+        '[FloorsNotifier.deleteFloor] getFloors SUCCESS: returned ${list.length} floors',
+      );
       state = AsyncValue.data(list);
     } catch (e, stack) {
       print('[FloorsNotifier.deleteFloor] ERROR: $e\n$stack');
@@ -180,4 +200,3 @@ class FloorsNotifier extends AsyncNotifier<List<FloorDto>> {
 }
 
 final activeFloorIdProvider = StateProvider<String?>((ref) => null);
-
