@@ -1,21 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/branch_context_service.dart';
-import '../providers/repository_providers.dart';
-import '../providers/orders_providers.dart';
 import '../providers/tables_provider.dart';
 
-enum BranchOperationalReadiness {
-  ready,
-  needsSetup,
-  suspended,
-}
+enum BranchOperationalReadiness { ready, needsSetup, suspended }
 
 class BranchCapabilitySnapshot {
   final String branchId;
   final bool hasMenu;
   final bool hasTables;
   final bool hasActiveStaff;
-  
+
   const BranchCapabilitySnapshot({
     required this.branchId,
     required this.hasMenu,
@@ -29,16 +23,17 @@ class BranchCapabilitySnapshot {
   }
 }
 
-final branchCapabilityProvider = Provider.autoDispose<BranchCapabilitySnapshot?>((ref) {
-  final branch = ref.watch(currentBranchProvider).value;
-  if (branch == null) return null;
-  
-  final tablesState = ref.watch(tablesProvider);
-  
-  return BranchCapabilitySnapshot(
-    branchId: branch.id,
-    hasMenu: true, // TODO: Check actual menu repository
-    hasTables: tablesState.tablesById.isNotEmpty,
-    hasActiveStaff: true, // TODO: Check staff repository
-  );
-});
+final branchCapabilityProvider =
+    Provider.autoDispose<BranchCapabilitySnapshot?>((ref) {
+      final branch = ref.watch(currentBranchProvider).value;
+      if (branch == null) return null;
+
+      final tablesState = ref.watch(tablesProvider);
+
+      return BranchCapabilitySnapshot(
+        branchId: branch.id,
+        hasMenu: true, // TODO: Check actual menu repository
+        hasTables: tablesState.tablesById.isNotEmpty,
+        hasActiveStaff: true, // TODO: Check staff repository
+      );
+    });

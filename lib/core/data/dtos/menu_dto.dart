@@ -52,8 +52,8 @@ class MenuCategoryDto {
             : null,
       );
 
-  /// Converts a category name to a URL-safe slug.
-  static String _slugify(String name) {
+  /// Converts a category name to a URL-safe slug (matches backend slug rules).
+  static String slugify(String name) {
     return name
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9\s-]'), '')
@@ -61,12 +61,14 @@ class MenuCategoryDto {
         .replaceAll(RegExp(r'\s+'), '-');
   }
 
+  String get resolvedSlug => slug ?? slugify(name);
+
   Map<String, dynamic> toJson() => {
     // Omit 'id', 'path', 'depth', 'deleted_at' on insert/update as backend generates/manages them
     'tenant_id': tenantId,
     'parent_id': parentId,
     'name': name,
-    'slug': slug ?? _slugify(name),
+    'slug': slug ?? slugify(name),
     'description': description,
     'sort_order': sortOrder,
     'is_active': isActive,
@@ -78,7 +80,7 @@ class MenuCategoryDto {
     'tenant_id': tenantId,
     'parent_id': parentId,
     'name': name,
-    'slug': slug ?? _slugify(name),
+    'slug': slug ?? slugify(name),
     'description': description,
     'sort_order': sortOrder,
     'is_active': isActive,

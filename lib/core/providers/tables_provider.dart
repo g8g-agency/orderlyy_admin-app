@@ -6,7 +6,6 @@ import 'repository_providers.dart';
 import 'branch_context_service.dart';
 import '../network/cancellation_service.dart';
 import 'package:dio/dio.dart';
-import 'repository_providers.dart';
 
 class TablesState {
   final bool isLoading;
@@ -39,7 +38,8 @@ class TablesNotifier extends StateNotifier<TablesState> {
   final String _branchId;
   final CancelToken _cancelToken;
 
-  TablesNotifier(this._repository, this._branchId, this._cancelToken) : super(const TablesState());
+  TablesNotifier(this._repository, this._branchId, this._cancelToken)
+    : super(const TablesState());
 
   Future<void> loadTables({
     String? sectionId,
@@ -74,7 +74,10 @@ class TablesNotifier extends StateNotifier<TablesState> {
   Future<Result<RestaurantTableDto>> createTable(
     RestaurantTableDto table,
   ) async {
-    final result = await _repository.createTableEntity(table, branchId: _branchId);
+    final result = await _repository.createTableEntity(
+      table,
+      branchId: _branchId,
+    );
 
     if (result is Success<RestaurantTableDto>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);
@@ -88,7 +91,10 @@ class TablesNotifier extends StateNotifier<TablesState> {
   Future<Result<RestaurantTableDto>> updateTable(
     RestaurantTableDto table,
   ) async {
-    final result = await _repository.updateTableEntity(table, branchId: _branchId);
+    final result = await _repository.updateTableEntity(
+      table,
+      branchId: _branchId,
+    );
 
     if (result is Success<RestaurantTableDto>) {
       final newTables = Map<String, RestaurantTableDto>.from(state.tablesById);

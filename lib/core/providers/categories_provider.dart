@@ -96,6 +96,7 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getCategories();
+    if (!mounted) return;
 
     if (result is Success<List<MenuCategoryDto>>) {
       final newById = <String, MenuCategoryDto>{};

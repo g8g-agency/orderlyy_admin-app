@@ -25,7 +25,7 @@ class ApiTablesRepository implements TablesRepository {
         'page': page,
         'limit': limit,
         'include_deleted': includeDeleted,
-        if (sectionId != null) 'section_id': sectionId,
+        'section_id': ?sectionId,
       };
 
       final response = await _dioClient.dio.get(
@@ -116,10 +116,7 @@ class ApiTablesRepository implements TablesRepository {
     try {
       final response = await _dioClient.dio.delete(
         '${ApiConstants.tables}/$tableId',
-        queryParameters: {
-          'version_num': currentVersion,
-          'branch_id': branchId,
-        },
+        queryParameters: {'version_num': currentVersion, 'branch_id': branchId},
       );
 
       if (response.data['success'] == true) {

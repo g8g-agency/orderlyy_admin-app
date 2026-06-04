@@ -7,7 +7,6 @@ import 'repository_providers.dart';
 import 'branch_context_service.dart';
 import '../network/cancellation_service.dart';
 import 'package:dio/dio.dart';
-import 'package:uuid/uuid.dart';
 import '../data/local/offline_sync_queue.dart';
 
 // ── Orders State ──────────────────────────────────────────────────────────────
@@ -44,7 +43,8 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   final CancelToken _cancelToken;
   final _uuid = const Uuid();
 
-  OrdersNotifier(this._repository, this._branchId, this._cancelToken) : super(const OrdersState());
+  OrdersNotifier(this._repository, this._branchId, this._cancelToken)
+    : super(const OrdersState());
 
   /// Fetches backend-resolved order projections.
   Future<void> loadOrders({

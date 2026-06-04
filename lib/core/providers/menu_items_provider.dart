@@ -61,6 +61,7 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getMenuItems(categoryId: categoryId);
+    if (!mounted) return;
 
     if (result is Success<List<MenuItemDto>>) {
       final newById = forceRefresh
