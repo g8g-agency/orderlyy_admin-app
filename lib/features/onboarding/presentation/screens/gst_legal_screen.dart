@@ -85,10 +85,10 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
         igstRate: igst,
       );
 
-      // Force bootstrap reload to get new onboarding_step (which will be 4) and context
+      // Force bootstrap reload silently to get new onboarding_step and context without router interruption
       final appContext = ref.read(appContextProvider);
       if (appContext != null) {
-        await ref.read(bootstrapProvider.notifier).resolve(appContext.user.id);
+        await ref.read(bootstrapProvider.notifier).silentResolve(appContext.user.id);
       }
 
       if (mounted) {
@@ -145,7 +145,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -186,7 +186,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedGstType,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('GST Type *'),
                         items: _gstTypes.map((t) {
                           return DropdownMenuItem(
@@ -211,7 +211,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                       if (_selectedGstType != 'Non-GST Registered') ...[
                         TextFormField(
                           controller: _gstinController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.black),
                           textCapitalization: TextCapitalization.characters,
                           onChanged: (_) => setState(() {}),
                           decoration: _inputDecoration('GSTIN (15-digit) *Optional*'),
@@ -237,7 +237,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                         DropdownButtonFormField<double>(
                           value: _selectedTaxRate,
                           dropdownColor: AppTheme.surface,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.black),
                           decoration: _inputDecoration('Default Tax Rate (%) *'),
                           items: _taxRates.map((rate) {
                             return DropdownMenuItem(
@@ -274,7 +274,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
 
                       TextFormField(
                         controller: _fssaiController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         keyboardType: TextInputType.number,
                         decoration: _inputDecoration('FSSAI License Number (14 digits) *'),
                         validator: (value) {

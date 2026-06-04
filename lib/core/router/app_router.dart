@@ -96,7 +96,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── LAYER 2: Unauthenticated ────────────────────────────────────────────
       if (authState.status == AuthStatus.unauthenticated) {
-        const publicRoutes = {'/splash', '/admin/login'};
+        const publicRoutes = {'/splash', '/admin/login', '/onboarding'};
         if (!publicRoutes.contains(loc)) {
           debugPrint('[ROUTER] 🔒 Unauthenticated → /admin/login');
           return '/admin/login';
@@ -221,12 +221,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/change-password';
         }
 
-        // Onboarding complete — lock out the setup screen
-        if (loc == '/onboarding') {
-          debugPrint('[ROUTER] ✅ Onboarding done → /admin/dashboard');
-          return '/admin/dashboard';
-        }
-        
         // Prevent accessing set-password if first login is already complete
         if (loc == '/onboarding/set-password') {
           debugPrint('[ROUTER] ✅ First login already completed → /admin/dashboard');

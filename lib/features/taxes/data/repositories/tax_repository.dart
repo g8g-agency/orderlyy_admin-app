@@ -1,23 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/auth/app_auth_provider.dart';
+import '../../../../core/auth/app_context_provider.dart';
+import '../../../../core/network/network_providers.dart';
+import '../../../../core/network/dio_client.dart';
 import '../dtos/tax_dto.dart';
 import 'dart:developer' as dev;
 
 final taxRepositoryProvider = Provider<TaxRepository>((ref) {
+  final appCtx = ref.watch(appContextProvider);
   return TaxRepository(
-    Supabase.instance.client,
-    ref
-        .read(authNotifierProvider)
-        .userId, // Using userId as tenantId for single-tenant mode
+    ref.watch(dioClientProvider),
+    appCtx?.tenant.id,
   );
 });
 
 class TaxRepository {
-  final SupabaseClient _supabase;
+  final DioClient _dio;
   final String? _tenantId;
 
-  TaxRepository(this._supabase, this._tenantId);
+  TaxRepository(this._dio, this._tenantId);
 
   Future<List<TaxProfileDto>> getTaxProfiles() async {
     if (_tenantId == null) return [];
@@ -25,40 +25,20 @@ class TaxRepository {
     try {
       dev.log('[TaxRepo] Fetching tax profiles for tenant: $_tenantId');
 
-      // Fetch profiles
-      final profileRes = await _supabase
-          .from('tax_profiles')
-          .select()
-          .eq('tenant_id', _tenantId)
-          .isFilter('deleted_at', null)
-          .order('priority', ascending: false);
+      final response = await _dio.get('/api/v1/tenants/$_tenantId/tax/profiles');
+      
+      final data = response.data['data'] ?? response.data; // Handle unwrapped or wrapped format
+      final List<dynamic> profilesList = data is List ? data : [];
 
-      List<TaxProfileDto> profiles = profileRes
-          .map((p) => TaxProfileDto.fromJson(p))
-          .toList();
-
-      if (profiles.isEmpty) return [];
-
-      // Fetch active rates for these profiles
-      final profileIds = profiles.map((p) => p.id).toList();
-      final ratesRes = await _supabase
-          .from('tax_rates')
-          .select()
-          .eq('tenant_id', _tenantId)
-          .inFilter('tax_profile_id', profileIds)
-          .eq('is_active', true)
-          .isFilter('deleted_at', null);
-
-      final rates = ratesRes.map((r) => TaxRateDto.fromJson(r)).toList();
-
-      // Merge active rate into profile dto for UI display
-      return profiles.map((p) {
-        final activeRates = rates.where((r) => r.taxProfileId == p.id).toList();
+      return profilesList.map((p) {
+        final profile = TaxProfileDto.fromJson(p as Map<String, dynamic>);
+        final rates = p['tax_rates'] as List<dynamic>? ?? [];
+        final activeRates = rates.where((r) => r['is_active'] == true).toList();
         final effectiveBp = activeRates.fold<int>(
           0,
-          (sum, rate) => sum + rate.rateBasisPoints,
+          (sum, r) => sum + (r['rate_basis_points'] as int),
         );
-        return p.copyWith(effectiveBasisPoints: effectiveBp);
+        return profile.copyWith(effectiveBasisPoints: effectiveBp);
       }).toList();
     } catch (e, st) {
       dev.log(
@@ -82,32 +62,26 @@ class TaxRepository {
       dev.log('[TaxRepo] Creating tax profile: $name');
 
       // 1. Create Profile
-      final profileData = {
-        'tenant_id': _tenantId,
+      final profileRes = await _dio.post('/api/v1/tenants/$_tenantId/tax/profiles', data: {
         'name': name,
         'description': description,
         'calculation_mode': calculationMode,
         'is_active': true,
-      };
+      });
 
-      final insertedProfile = await _supabase
-          .from('tax_profiles')
-          .insert(profileData)
-          .select()
-          .single();
+      final newProfileId = profileRes.data['id'] ?? profileRes.data['data']?['id'];
 
-      final newProfileId = insertedProfile['id'] as String;
+      if (newProfileId == null) {
+        throw Exception('Failed to get profile ID from response: ${profileRes.data}');
+      }
 
       // 2. Create corresponding Rate
-      final rateData = {
-        'tenant_id': _tenantId,
+      await _dio.post('/api/v1/tenants/$_tenantId/tax/rates', data: {
         'tax_profile_id': newProfileId,
         'name': '$name Rate',
         'rate_basis_points': rateBasisPoints,
         'is_active': true,
-      };
-
-      await _supabase.from('tax_rates').insert(rateData);
+      });
     } catch (e, st) {
       dev.log('[TaxRepo] Error creating tax profile', error: e, stackTrace: st);
       rethrow;
@@ -125,30 +99,36 @@ class TaxRepository {
     if (_tenantId == null) throw Exception('No tenant context');
 
     try {
-      // 1. Update profile name/calc mode
-      await _supabase
-          .from('tax_profiles')
-          .update({
-            'name': name,
-            'description': description,
-            'calculation_mode': calculationMode,
-          })
-          .eq('id', id)
-          .eq('tenant_id', _tenantId);
+      // 1. Fetch current profile to get version_num
+      final getRes = await _dio.get('/api/v1/tenants/$_tenantId/tax/profiles/$id');
+      final versionNum = getRes.data['version_num'] ?? getRes.data['data']?['version_num'];
 
-      // 2. If rate changed, deactivate old rate and append new rate
+      // 2. Update profile name/calc mode
+      await _dio.put('/api/v1/tenants/$_tenantId/tax/profiles/$id', data: {
+        'name': name,
+        'description': description,
+        'calculation_mode': calculationMode,
+        'version_num': versionNum,
+      });
+
+      // 3. If rate changed, append new rate
       if (newRateBasisPoints != currentRateBasisPoints) {
-        // Deactivate existing
-        await _supabase
-            .from('tax_rates')
-            .update({'is_active': false})
-            .eq('tax_profile_id', id)
-            .eq('tenant_id', _tenantId)
-            .eq('is_active', true);
+        final listRes = await _dio.get('/api/v1/tenants/$_tenantId/tax/profiles');
+        final data = listRes.data['data'] ?? listRes.data;
+        final List<dynamic> profilesList = data is List ? data : [];
+        final thisProfile = profilesList.firstWhere((p) => p['id'] == id, orElse: () => null);
+        
+        if (thisProfile != null) {
+          final activeRates = (thisProfile['tax_rates'] as List<dynamic>? ?? [])
+              .where((r) => r['is_active'] == true).toList();
+          
+          for (var rate in activeRates) {
+            await _dio.delete('/api/v1/tenants/$_tenantId/tax/rates/${rate['id']}?version_num=${rate['version_num']}');
+          }
+        }
 
-        // Append new
-        await _supabase.from('tax_rates').insert({
-          'tenant_id': _tenantId,
+        // Append new rate
+        await _dio.post('/api/v1/tenants/$_tenantId/tax/rates', data: {
           'tax_profile_id': id,
           'name': '$name Rate',
           'rate_basis_points': newRateBasisPoints,
@@ -164,11 +144,17 @@ class TaxRepository {
   Future<void> toggleTaxProfile(String id, bool isActive) async {
     if (_tenantId == null) throw Exception('No tenant context');
 
-    await _supabase
-        .from('tax_profiles')
-        .update({'is_active': isActive})
-        .eq('id', id)
-        .eq('tenant_id', _tenantId);
+    try {
+      final getRes = await _dio.get('/api/v1/tenants/$_tenantId/tax/profiles/$id');
+      final versionNum = getRes.data['version_num'] ?? getRes.data['data']?['version_num'];
+
+      await _dio.put('/api/v1/tenants/$_tenantId/tax/profiles/$id', data: {
+        'is_active': isActive,
+        'version_num': versionNum,
+      });
+    } catch (e, st) {
+      dev.log('[TaxRepo] Error toggling tax profile', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 }
-

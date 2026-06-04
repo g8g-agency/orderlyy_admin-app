@@ -57,7 +57,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Text(
                 'Configure Restaurant Profile',
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+                style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.black),
               ),
               content: Form(
                 key: _formKey,
@@ -67,7 +67,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                     children: [
                       TextFormField(
                         controller: _nameController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: const InputDecoration(
                           labelText: 'Restaurant Name *',
                           labelStyle: TextStyle(color: Colors.grey),
@@ -173,7 +173,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -287,7 +287,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
             children: [
               const Icon(Icons.error_outline, color: AppTheme.error, size: 48),
               const SizedBox(height: 16),
-              Text('Failed to load setup status: $err', style: const TextStyle(color: Colors.white)),
+              Text('Failed to load setup status: $err', style: const TextStyle(color: Colors.black)),
               TextButton(
                 onPressed: () => ref.invalidate(onboardingNotifierProvider),
                 child: const Text('Retry'),
@@ -296,21 +296,22 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
           ),
         ),
         data: (status) {
-          if (status == null || appContext == null) {
-            return const Center(child: Text('Initializing...', style: TextStyle(color: Colors.white)));
-          }
+          // If unauthenticated (e.g., from "New Member"), we provide a fallback UI
+          // so the user can see the setup page as requested.
+          final isGuest = status == null || appContext == null;
 
-          // Evaluate Step Completions
-          final hasProfile = appContext.onboarding.stepsCompleted.contains('profile');
-          final hasTax = status.hasTaxProfiles;
-          final hasTables = status.hasTables;
+          final hasProfile = isGuest ? false : (appContext.onboarding.stepsCompleted.contains('restaurant_info'));
+          final hasTax = isGuest ? false : status.hasTaxProfiles;
+          final hasTables = isGuest ? false : status.hasTables;
           final isReady = hasProfile && hasTax && hasTables;
+          
+          final tenantName = isGuest ? 'New Restaurant' : appContext.tenant.name;
 
           int completedSteps = 0;
           if (hasProfile) completedSteps++;
           if (hasTax) completedSteps++;
           if (hasTables) completedSteps++;
-          if (appContext.onboarding.isComplete) completedSteps++;
+          if (!isGuest && appContext.onboarding.isComplete) completedSteps++;
 
           final progress = completedSteps / 4.0;
 
@@ -323,11 +324,11 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome to Orderlli, ${appContext.tenant.name}',
+                      'Welcome to Orderlli, $tenantName',
                       style: GoogleFonts.inter(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: Colors.black,
                         letterSpacing: -0.8,
                       ),
                     ),
@@ -363,7 +364,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Colors.black,
                                 ),
                               ),
                               Text(
@@ -404,7 +405,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -415,10 +416,17 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                       description: 'Configure restaurant identity, primary location address, and phone.',
                       isCompleted: hasProfile,
                       icon: Icons.storefront_rounded,
-                      onTap: () => _showProfileDialog(
-                        appContext.tenant.id,
-                        appContext.tenant.name,
-                      ),
+                      onTap: () {
+                        if (isGuest) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in or sign up to configure this.')));
+                          return;
+                        }
+                        if (!hasProfile) {
+                          _showProfileDialog(appContext.tenant.id, appContext.tenant.name);
+                        } else {
+                          context.go('/onboarding/restaurant-info');
+                        }
+                      },
                     ),
 
                     // Step 2: GST and Legal Compliance
@@ -428,7 +436,11 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                       isCompleted: hasTax,
                       icon: Icons.gavel_rounded,
                       onTap: () {
-                        context.push('/admin/taxes');
+                        if (isGuest) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in or sign up to configure this.')));
+                          return;
+                        }
+                        context.push('/onboarding/gst-legal');
                       },
                     ),
 
@@ -439,7 +451,11 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                       isCompleted: hasTables,
                       icon: Icons.table_bar_rounded,
                       onTap: () {
-                        context.push('/admin/tables');
+                        if (isGuest) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in or sign up to configure this.')));
+                          return;
+                        }
+                        context.push('/onboarding/tables-hours');
                       },
                     ),
 
@@ -447,10 +463,14 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                     _ChecklistCard(
                       title: 'Step 4: Launch Center',
                       description: 'All steps verified. Complete the wizard and go live.',
-                      isCompleted: appContext.onboarding.isComplete,
+                      isCompleted: !isGuest && appContext.onboarding.isComplete,
                       icon: Icons.rocket_launch_rounded,
                       isEnabled: isReady,
                       onTap: () {
+                        if (isGuest) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in or sign up to launch.')));
+                          return;
+                        }
                         if (isReady) {
                           _launchReadyScreen(appContext.tenant.id);
                         }
@@ -462,6 +482,10 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                       padding: const EdgeInsets.only(top: 36),
                       child: InkWell(
                         onTap: () async {
+                          if (isGuest) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in or sign up to configure this.')));
+                            return;
+                          }
                           try {
                             final repo = ref.read(
                               tableos_admin_onboarding_repository_provider.onboardingRepositoryProvider,
@@ -581,7 +605,7 @@ class _ChecklistCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
             fontSize: 15,
             decoration: isCompleted ? TextDecoration.lineThrough : null,
-            color: isCompleted ? Colors.grey : (finalEnabled ? Colors.white : Colors.grey),
+            color: isCompleted ? Colors.grey : (finalEnabled ? Colors.black : Colors.grey),
           ),
         ),
         subtitle: Padding(
@@ -597,7 +621,7 @@ class _ChecklistCard extends StatelessWidget {
         trailing: Icon(
           isCompleted ? Icons.verified : Icons.arrow_forward_ios_rounded,
           size: 16,
-          color: isCompleted ? Colors.green : (finalEnabled ? Colors.white54 : Colors.grey),
+          color: isCompleted ? Colors.green : (finalEnabled ? Colors.black54 : Colors.grey),
         ),
         onTap: finalEnabled ? onTap : null,
       ),

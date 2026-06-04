@@ -1,13 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
-import '../../../core/network/api_exception.dart';
-import '../../../core/auth/bootstrap_provider.dart';
-import '../../../core/auth/app_auth_provider.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/network_providers.dart';
+import '../../../../core/network/api_exception.dart';
+import '../../../../core/auth/bootstrap_provider.dart';
+import '../../../../core/auth/app_auth_provider.dart';
 
 final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
   final dio = ref.watch(dioClientProvider);
-  return DashboardRepository(dio);
+  return DashboardRepository(dio.dio);
 });
 
 class DashboardRepository {

@@ -96,7 +96,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
       // Force bootstrap reload to get new onboarding_step and context
       final appContext = ref.read(appContextProvider);
       if (appContext != null) {
-        await ref.read(bootstrapProvider.notifier).resolve(appContext.user.id);
+        await ref.read(bootstrapProvider.notifier).silentResolve(appContext.user.id);
       }
 
       if (mounted) {
@@ -152,7 +152,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -192,7 +192,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
 
                       TextFormField(
                         controller: _nameController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('Restaurant Display Name *'),
                         validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                       ),
@@ -202,7 +202,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _cityController,
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.black),
                               decoration: _inputDecoration('City *'),
                               validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                             ),
@@ -211,7 +211,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _stateController,
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.black),
                               decoration: _inputDecoration('State/Region *'),
                               validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                             ),
@@ -221,7 +221,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _addressController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('Full Physical Address *'),
                         maxLines: 3,
                         validator: (value) => value == null || value.isEmpty ? 'Required' : null,
@@ -231,7 +231,7 @@ class _RestaurantInfoScreenState extends ConsumerState<RestaurantInfoScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: _selectedTimezone,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         decoration: _inputDecoration('Timezone (IANA) *'),
                         items: _commonTimezones.map((tz) {
                           return DropdownMenuItem(
