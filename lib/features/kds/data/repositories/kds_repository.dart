@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/auth/app_auth_provider.dart';
+import '../../../../core/auth/app_context_provider.dart';
+import '../../../../core/providers/repository_providers.dart';
 import '../dtos/kitchen_station_dto.dart';
 import 'dart:developer' as dev;
 
 final kdsRepositoryProvider = Provider<KdsRepository>((ref) {
+  final appCtx = ref.watch(appContextProvider);
   return KdsRepository(
-    Supabase.instance.client,
-    ref.read(authNotifierProvider).userId,
+    ref.read(supabaseClientProvider),
+    appCtx?.tenant.id,
   );
 });
 
