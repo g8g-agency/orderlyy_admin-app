@@ -48,6 +48,11 @@ final deleteStaffProvider = Provider<Future<void> Function(String staffId)>((
   ref,
 ) {
   final repo = ref.read(staffRepositoryProvider);
-  return (staffId) async => repo.deleteStaff(staffId);
+  final ctx = ref.read(appContextProvider);
+  return (staffId) async {
+    if (ctx != null) {
+      await repo.deleteStaff(ctx.tenant.id, staffId);
+    }
+  };
 });
 
