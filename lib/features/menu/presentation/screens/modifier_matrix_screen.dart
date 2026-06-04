@@ -947,30 +947,33 @@ class _ModifierMatrixScreenState extends ConsumerState<ModifierMatrixScreen> {
                             ),
                             SizedBox(height: 4.h),
                           ],
-                          CheckboxListTile(
-                            title: Text(
-                              item.name,
-                              style: AppTheme.bodyMd.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.sp,
+                          Material(
+                            color: Colors.transparent,
+                            child: CheckboxListTile(
+                              title: Text(
+                                item.name,
+                                style: AppTheme.bodyMd.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.sp,
+                                ),
                               ),
+                              subtitle: Text(
+                                menu,
+                                style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
+                              ),
+                              value: isChecked,
+                              activeColor: AppTheme.primary,
+                              contentPadding: EdgeInsets.zero,
+                              controlAffinity: ListTileControlAffinity.leading,
+                              dense: true,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _mappedItemIds[item.id] = val;
+                                  });
+                                }
+                              },
                             ),
-                            subtitle: Text(
-                              menu,
-                              style: AppTheme.bodySm.copyWith(fontSize: 10.sp),
-                            ),
-                            value: isChecked,
-                            activeColor: AppTheme.primary,
-                            contentPadding: EdgeInsets.zero,
-                            controlAffinity: ListTileControlAffinity.leading,
-                            dense: true,
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  _mappedItemIds[item.id] = val;
-                                });
-                              }
-                            },
                           ),
                         ],
                       );

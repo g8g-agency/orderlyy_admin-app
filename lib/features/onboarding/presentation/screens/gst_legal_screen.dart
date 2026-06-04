@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/auth/app_auth_provider.dart';
-import '../../../../core/auth/bootstrap_provider.dart';
 import '../../data/repositories/onboarding_repository.dart'
     as onboarding_repo;
 
@@ -86,14 +85,13 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
       );
 
       // Force bootstrap reload to get new onboarding_step (which will be 4) and context
-      final appContext = ref.read(appContextProvider);
-      if (appContext != null) {
-        await ref.read(bootstrapProvider.notifier).resolve(appContext.user.id);
-      }
+      ref.read(appContextProvider.notifier).applyOnboardingProgress(
+        completedStep: 'gst_legal',
+        nextStep: 4,
+      );
 
       if (mounted) {
-        // App router will redirect to Step 4 (Branch setup) automatically
-        context.go('/onboarding');
+        context.go('/onboarding/tables-hours');
       }
     } catch (e) {
       if (mounted) {
@@ -145,7 +143,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: AppTheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -186,7 +184,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedGstType,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('GST Type *'),
                         items: _gstTypes.map((t) {
                           return DropdownMenuItem(
@@ -211,7 +209,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                       if (_selectedGstType != 'Non-GST Registered') ...[
                         TextFormField(
                           controller: _gstinController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppTheme.onSurface),
                           textCapitalization: TextCapitalization.characters,
                           onChanged: (_) => setState(() {}),
                           decoration: _inputDecoration('GSTIN (15-digit) *Optional*'),
@@ -237,7 +235,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
                         DropdownButtonFormField<double>(
                           value: _selectedTaxRate,
                           dropdownColor: AppTheme.surface,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppTheme.onSurface),
                           decoration: _inputDecoration('Default Tax Rate (%) *'),
                           items: _taxRates.map((rate) {
                             return DropdownMenuItem(
@@ -274,7 +272,7 @@ class _GstLegalScreenState extends ConsumerState<GstLegalScreen> {
 
                       TextFormField(
                         controller: _fssaiController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppTheme.onSurface),
                         keyboardType: TextInputType.number,
                         decoration: _inputDecoration('FSSAI License Number (14 digits) *'),
                         validator: (value) {

@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/network/api_exception.dart';
-import '../../../../core/providers/branch_context_service.dart';
-import '../services/qr_export_service.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../services/table_qr_file_save.dart';
+import '../services/table_qr_png_service.dart';
+import '../widgets/table_qr_bottom_sheet.dart';
 import '../../data/dtos/table_dto.dart';
 import '../../data/dtos/floor_dto.dart';
 import '../../data/repositories/table_infrastructure_repository.dart';
@@ -887,11 +887,9 @@ class TableInfrastructureScreen extends ConsumerWidget {
             .read(tablePositionsProvider.notifier)
             .updatePosition(table.id, dx, dy);
       },
-      onTap: () {
+      onTap: () => _showTableQrSheet(context, ref, table),
+      onLongPress: () {
         ref.read(tablePositionsProvider.notifier).selectNode(table.id);
-      },
-      onDoubleTap: () {
-        _showQrCodeDialog(context, ref, table);
       },
       child: Transform.rotate(
         angle: pos.angle,
@@ -1065,241 +1063,20 @@ class TableInfrastructureScreen extends ConsumerWidget {
     );
   }
 
-  // ── Single QR Code Dialog ──────────────────────────────────────────────────
-  void _showQrCodeDialog(BuildContext context, WidgetRef ref, TableDto table) {
-    showDialog(
+  void _showTableQrSheet(BuildContext context, WidgetRef ref, TableDto table) {
+    final floors = ref.read(floorsFutureProvider).value ?? [];
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) {
-        return _SingleQrCodeDialog(table: table);
-      },
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => TableQrBottomSheet(
+        table: table,
+        floorName: floorNameForTable(table, floors),
+      ),
     );
   }
 }
 
-class _SingleQrCodeDialog extends ConsumerStatefulWidget {
-  final TableDto table;
-  const _SingleQrCodeDialog({required this.table});
-
-  @override
-  ConsumerState<_SingleQrCodeDialog> createState() =>
-      _SingleQrCodeDialogState();
-}
-
-class _SingleQrCodeDialogState extends ConsumerState<_SingleQrCodeDialog> {
-  bool _isLoading = true;
-  String? _qrToken;
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() => _fetchOrRotateToken());
-  }
-
-  Future<void> _fetchOrRotateToken({bool forceRotate = false}) async {
-    if (!_isLoading) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-    }
-    try {
-      // final repo = ref.read(tableInfrastructureRepositoryProvider);
-      if (forceRotate ||
-          widget.table.qrCodeToken == null ||
-          widget.table.qrCodeToken!.isEmpty) {
-        // _qrToken = await repo.rotateQrCode(widget.table.id);
-        _qrToken = 'mock-qr-token';
-      } else {
-        // Technically backend rotation is the easiest way to generate one if it's missing,
-        // but we'll use the existing token if present unless force rotate is true.
-        _qrToken = widget.table.qrCodeToken;
-      }
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    try {
-      final domain = 'https://tableos.app/table';
-      final qrData = _qrToken != null ? '$domain/$_qrToken' : '';
-
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Table ${widget.table.tableNumber} QR Code',
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20, color: AppTheme.secondary),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_isLoading)
-              const SizedBox(
-                width: 200,
-                height: 200,
-                child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
-                ),
-              )
-            else if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
-                      color: AppTheme.error,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppTheme.error),
-                    ),
-                  ],
-                ),
-              )
-            else if (_qrToken != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.surfaceContainerHigh),
-                ),
-                child: QrImageView(
-                  data: qrData,
-                  version: QrVersions.auto,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: Colors.black87,
-                  ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: Colors.black87,
-                  ),
-                ),
-              )
-            else
-              const Text('No QR Token available.'),
-            const SizedBox(height: 16),
-            Text(
-              'Token: ${_qrToken ?? 'N/A'}',
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 11,
-                color: AppTheme.secondary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _isLoading
-                      ? null
-                      : () => _fetchOrRotateToken(forceRotate: true),
-                  icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: const Text('Rotate Token'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.error,
-                    side: const BorderSide(color: AppTheme.error),
-                    minimumSize: const Size(0, 40),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _qrToken == null || _isLoading
-                      ? null
-                      : () async {
-                          setState(() => _isLoading = true);
-                          try {
-                            final branch = ref.read(currentBranchProvider).value;
-                            final branchName = branch?.name ?? 'Orderlli';
-                            final exportService = ref.read(qrExportServiceProvider);
-                            final pdfBytes = await exportService.generateSingleQrPdf(
-                              widget.table,
-                              branchName,
-                              qrData,
-                            );
-                            await exportService.printOrSharePdf(
-                              pdfBytes,
-                              'Table_${widget.table.tableNumber}_QR.pdf',
-                            );
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to download QR PDF: $e')),
-                              );
-                            }
-                          } finally {
-                            if (mounted) {
-                              setState(() => _isLoading = false);
-                            }
-                          }
-                        },
-                  icon: const Icon(Icons.download_rounded, size: 16),
-                  label: const Text('Download'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(0, 40),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    } catch (e, stackTrace) {
-      return AlertDialog(
-        title: const Text('Error Rendering Dialog'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('An error occurred during build:\n$e', style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 16),
-              Text('Stack Trace:\n$stackTrace', style: const TextStyle(fontSize: 10)),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      );
-    }
-  }
-}
-
-// Separate StatefulWidget to handle internal checkbox state and generation progress
 class _MassQrBuilderPanel extends ConsumerStatefulWidget {
   @override
   ConsumerState<_MassQrBuilderPanel> createState() =>
@@ -1308,84 +1085,65 @@ class _MassQrBuilderPanel extends ConsumerStatefulWidget {
 
 class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
   bool _isBuilding = false;
-  double _buildProgress = 0.0;
+  final _pngService = TableQrPngService();
 
-  void _startPdfBuildSequence(Set<String> selectedTableIds) async {
-    setState(() {
-      _isBuilding = true;
-      _buildProgress = 0.0;
-    });
-
-    // Simulated progress build sequence
-    for (int i = 0; i <= 10; i++) {
-      await Future.delayed(200.ms);
-      if (mounted) {
-        setState(() {
-          _buildProgress = i / 10.0;
-        });
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tables = ref.read(tablesFutureProvider).value;
+      if (tables != null && ref.read(checkedQrTablesProvider).isEmpty) {
+        ref.read(checkedQrTablesProvider.notifier).state =
+            tables.map((t) => t.id).toSet();
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isBuilding = false;
-      });
-      Navigator.pop(context);
-      _showBuildSuccessDialog(selectedTableIds.length);
-    }
+    });
   }
 
-  void _showBuildSuccessDialog(int count) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
+  Future<void> _downloadZip(
+    List<TableDto> allTables,
+    Set<String> selectedIds,
+  ) async {
+    setState(() => _isBuilding = true);
+    try {
+      final repo = ref.read(tableInfrastructureRepositoryProvider);
+      final floors = ref.read(floorsFutureProvider).value ?? [];
+      final floorNames = {for (final f in floors) f.id: f.name};
+
+      final selected = allTables.where((t) => selectedIds.contains(t.id)).toList();
+
+      Future<String> resolveUrl(TableDto table) async {
+        if (table.qrUrl != null && table.qrUrl!.isNotEmpty) {
+          return table.qrUrl!;
+        }
+        final updated = await repo.generateQr(table.id);
+        return updated.qrUrl ?? '';
+      }
+
+      final zipBytes = await _pngService.buildZipArchive(
+        tables: selected,
+        floorNamesById: floorNames,
+        resolveQrUrl: resolveUrl,
+      );
+
+      await saveBytesAsDownload(zipBytes, 'orderlli-qr-codes.zip');
+      ref.invalidate(tablesFutureProvider);
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Downloaded ${selected.length} QR codes as ZIP'),
         ),
-        title: Text(
-          'QR Package Ready!',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.picture_as_pdf_rounded,
-              color: AppTheme.primary,
-              size: 48.r,
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'Successfully compiled $count high-resolution tables access cards.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 13.sp,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              'File: orderlyy_qr_package.pdf (1.2 MB)',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 10.sp,
-                color: AppTheme.secondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(120, 40),
-            ),
-            child: const Text('Download PDF'),
-          ),
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('ZIP export failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isBuilding = false);
+    }
   }
 
   @override
@@ -1433,7 +1191,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                       ),
                       SizedBox(width: 8.w),
                       Text(
-                        'Mass QR Code PDF Builder',
+                        'Mass QR Builder',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w800,
@@ -1454,7 +1212,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Generate styled PDF table packages automatically. Secure access URL is generated for each card.',
+                'Select tables and download PNG QR codes in a single ZIP file.',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12.sp,
                   color: AppTheme.secondary,
@@ -1473,7 +1231,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                       const CircularProgressIndicator(color: AppTheme.primary),
                       SizedBox(height: 12.h),
                       Text(
-                        'Compiling high-resolution PDF cards...',
+                        'Building QR ZIP...',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w700,
@@ -1481,14 +1239,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
                         ),
                       ),
                       SizedBox(height: 6.h),
-                      SizedBox(
-                        width: 200.w,
-                        child: LinearProgressIndicator(
-                          value: _buildProgress,
-                          color: AppTheme.primary,
-                          backgroundColor: AppTheme.surfaceContainerLow,
-                        ),
-                      ),
+                      const LinearProgressIndicator(color: AppTheme.primary),
                     ],
                   ),
                 ),
@@ -1575,14 +1326,14 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
 
                 // Trigger generation button
                 ElevatedButton(
-                  onPressed: checkedSet.isEmpty
+                  onPressed: checkedSet.isEmpty || _isBuilding
                       ? null
-                      : () => _startPdfBuildSequence(checkedSet),
+                      : () => _downloadZip(tables, checkedSet),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     disabledBackgroundColor: AppTheme.surfaceContainerHigh,
                   ),
-                  child: Text('Generate QR Packages (${checkedSet.length})'),
+                  child: Text('Download all as ZIP (${checkedSet.length})'),
                 ),
               ],
             ],

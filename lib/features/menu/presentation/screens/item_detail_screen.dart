@@ -10,6 +10,7 @@ import '../../../../core/providers/menu_items_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/auth/app_auth_provider.dart';
+import '../../../../core/network/api_exception.dart';
 import 'package:uuid/uuid.dart';
 
 const uuid = Uuid();
@@ -95,6 +96,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
     setState(() => _isSaving = true);
     try {
+      final Result<MenuItemDto> result;
       if (widget.item != null) {
         final updated = MenuItemDto(
           id: widget.item!.id,
@@ -112,7 +114,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           tags: widget.item!.tags,
           versionNum: widget.item!.versionNum,
         );
-        await ref.read(menuItemsProvider.notifier).updateMenuItem(updated);
+        result = await ref.read(menuItemsProvider.notifier).updateMenuItem(updated);
       } else {
         final tenantId = ref.read(appContextProvider)?.tenant.id ?? '';
         final newItem = MenuItemDto(
@@ -131,23 +133,30 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           tags: [],
           versionNum: 1,
         );
-        await ref.read(menuItemsProvider.notifier).createMenuItem(newItem);
+        result = await ref.read(menuItemsProvider.notifier).createMenuItem(newItem);
       }
 
-      // Force a manual refresh is no longer needed locally as it updates local state,
-      // but if you want to be sure it syncs with remote changes from others, you can trigger a reload.
-      // ref.read(menuItemsProvider.notifier).loadMenuItems(forceRefresh: true);
+      if (!mounted) return;
 
-      if (mounted) {
+      if (result is Failure<MenuItemDto>) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Item "$name" saved successfully.'),
+            content: Text('Error saving: ${result.error.message}'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.success,
+            backgroundColor: AppTheme.error,
           ),
         );
-        Navigator.pop(context);
+        return;
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Item "$name" saved successfully.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.success,
+        ),
+      );
+      Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -475,11 +484,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   SizedBox(height: 12.h),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(color: AppTheme.surfaceContainerHigh),
                     ),
-                    child: SwitchListTile(
+                    clipBehavior: Clip.antiAlias,
+                    child: Material(
+                      color: AppTheme.surfaceContainerLowest,
+                      child: SwitchListTile(
                       title: Text(
                         'Available on Menu',
                         style: AppTheme.bodyMd.copyWith(
@@ -493,6 +504,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       value: _available,
                       activeThumbColor: AppTheme.primary,
                       onChanged: (val) => setState(() => _available = val),
+                    ),
                     ),
                   ),
 

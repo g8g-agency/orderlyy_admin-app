@@ -17,7 +17,7 @@ class OnboardingRepository {
 
   Future<OnboardingStatusModel> getOnboardingStatus() async {
     try {
-      final response = await _dio.get('/v1/admin/onboarding/status');
+      final response = await _dio.get('/api/v1/admin/onboarding/status');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         return OnboardingStatusModel.fromJson(response.data['data']);
@@ -33,7 +33,7 @@ class OnboardingRepository {
 
   Future<void> skipOnboarding() async {
     try {
-      final response = await _dio.post('/v1/admin/onboarding/skip');
+      final response = await _dio.post('/api/v1/admin/onboarding/skip');
       if (response.statusCode != 200 || response.data['success'] != true) {
         throw Exception('Failed to skip onboarding: ${response.data['error']}');
       }
@@ -51,7 +51,7 @@ class OnboardingRepository {
   }) async {
     try {
       final response = await _dio.put(
-        '/v1/admin/onboarding/restaurant-info',
+        '/api/v1/admin/onboarding/restaurant-info',
         data: {
           'display_name': displayName,
           'city': city,
@@ -75,7 +75,7 @@ class OnboardingRepository {
   }) async {
     try {
       final response = await _dio.put(
-        '/v1/admin/onboarding/business-config',
+        '/api/v1/admin/onboarding/business-config',
         data: {
           'currency_code': currencyCode,
           if (businessType != null) 'business_type': businessType,
@@ -102,7 +102,7 @@ class OnboardingRepository {
   }) async {
     try {
       final response = await _dio.put(
-        '/v1/admin/onboarding/gst-legal',
+        '/api/v1/admin/onboarding/gst-legal',
         data: {
           if (gstin != null && gstin.isNotEmpty) 'gstin': gstin,
           'fssai_license_number': fssaiLicenseNumber,
@@ -130,7 +130,7 @@ class OnboardingRepository {
   }) async {
     try {
       final response = await _dio.put(
-        '/v1/admin/onboarding/tables-hours',
+        '/api/v1/admin/onboarding/tables-hours',
         data: {
           'number_of_tables': numberOfTables,
           'table_prefix': tablePrefix,

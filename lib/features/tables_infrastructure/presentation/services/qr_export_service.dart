@@ -36,7 +36,7 @@ class QRExportService {
           final List<pw.Widget> gridItems = tokenDataList.map((data) {
             final TableDto table = data['table'];
             final String token = data['token'];
-            final qrUrl = 'https://orderlli.com/qr/$token';
+            final qrUrl = 'https://app.orderlli.com/t/$token';
 
             return pw.Container(
               decoration: pw.BoxDecoration(

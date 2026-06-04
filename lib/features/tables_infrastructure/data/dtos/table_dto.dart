@@ -6,6 +6,7 @@ class TableDto {
   final String? displayName;
   final int capacity;
   final String? qrCodeToken;
+  final String? qrUrl;
   final String? floorId;
   final String? sectionId;
   final bool isActive;
@@ -21,6 +22,7 @@ class TableDto {
     this.displayName,
     required this.capacity,
     this.qrCodeToken,
+    this.qrUrl,
     this.floorId,
     this.sectionId,
     required this.isActive,
@@ -37,6 +39,7 @@ class TableDto {
     String? displayName,
     int? capacity,
     String? qrCodeToken,
+    String? qrUrl,
     String? floorId,
     String? sectionId,
     bool? isActive,
@@ -52,6 +55,7 @@ class TableDto {
       displayName: displayName ?? this.displayName,
       capacity: capacity ?? this.capacity,
       qrCodeToken: qrCodeToken ?? this.qrCodeToken,
+      qrUrl: qrUrl ?? this.qrUrl,
       floorId: floorId ?? this.floorId,
       sectionId: sectionId ?? this.sectionId,
       isActive: isActive ?? this.isActive,
@@ -68,7 +72,8 @@ class TableDto {
     tableNumber: json['table_number'] as String,
     displayName: json['display_name'] as String?,
     capacity: json['capacity'] as int,
-    qrCodeToken: json['qr_code_token'] as String?,
+    qrCodeToken: (json['qr_token'] ?? json['qr_code_token']) as String?,
+    qrUrl: json['qr_url'] as String?,
     floorId: json['floor_id'] as String?,
     sectionId: json['section_id'] as String?,
     isActive: json['is_active'] as bool? ?? true,
@@ -89,6 +94,7 @@ class TableDto {
     'display_name': displayName,
     'capacity': capacity,
     'qr_code_token': qrCodeToken,
+    'qr_url': qrUrl,
     'floor_id': floorId,
     'section_id': sectionId,
     'is_active': isActive,

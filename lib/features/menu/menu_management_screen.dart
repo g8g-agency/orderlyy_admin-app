@@ -11,6 +11,7 @@ import '../../core/providers/categories_provider.dart';
 import '../../core/providers/menu_items_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/widgets/admin_shell.dart';
 import 'presentation/screens/item_detail_screen.dart';
 import 'presentation/screens/modifier_matrix_screen.dart';
@@ -108,50 +109,86 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
             ElevatedButton(
               onPressed: () async {
                 final name = controller.text.trim();
-                if (name.isNotEmpty) {
-                  final tenantId =
-                      ref.read(appContextProvider)?.tenant.id ?? '';
-                  final newCategory = MenuCategoryDto(
-                    id: uuid.v4(),
-                    tenantId: tenantId,
-                    name: name,
-                    isActive: true,
-                    sortOrder: 0,
-                    versionNum: 1,
-                  );
+                if (name.isEmpty) return;
 
-                  try {
-                    await ref.read(categoriesProvider.notifier).createCategory(newCategory);
-
-                    // Refetch data is handled by the state notifier if needed
-                    ref.invalidate(onboardingNotifierProvider);
-
-                    if (ctx.mounted) {
-                      Navigator.pop(ctx);
-                    }
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Category "$name" created successfully.',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to create category: $e'),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: AppTheme.error,
-                        ),
-                      );
-                    }
+                final tenantId = ref.read(appContextProvider)?.tenant.id ?? '';
+                if (tenantId.isEmpty) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No tenant context. Please sign in again.'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: AppTheme.error,
+                      ),
+                    );
                   }
+                  return;
                 }
+
+                final slug = MenuCategoryDto.slugify(name);
+                final categoriesState = ref.read(categoriesProvider);
+                final duplicate = categoriesState.byId.values.any(
+                  (c) => c.resolvedSlug == slug,
+                );
+                if (duplicate) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Category "$name" already exists. Use the existing category or pick a different name.',
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: AppTheme.error,
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                final newCategory = MenuCategoryDto(
+                  id: uuid.v4(),
+                  tenantId: tenantId,
+                  name: name,
+                  isActive: true,
+                  sortOrder: 0,
+                  versionNum: 1,
+                );
+
+                final result = await ref
+                    .read(categoriesProvider.notifier)
+                    .createCategory(newCategory);
+
+                if (!context.mounted) return;
+
+                if (result is Failure<MenuCategoryDto>) {
+                  final message = result.error.code == ApiErrorCode.conflict
+                      ? 'Category "$name" already exists.'
+                      : 'Failed to create category: ${result.error.message}';
+                  await ref
+                      .read(categoriesProvider.notifier)
+                      .loadCategories(forceRefresh: true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(message),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppTheme.error,
+                    ),
+                  );
+                  return;
+                }
+
+                ref.invalidate(onboardingNotifierProvider);
+
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Category "$name" created successfully.'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppColors.success,
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryContainer,
@@ -1123,10 +1160,13 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
     setState(() => _isSaving = true);
     try {
       final appContext = ref.read(appContextProvider);
-      final tenantId = appContext?.tenant.id ?? 'tenant-mock';
+      final tenantId = appContext?.tenant.id ?? '';
+      if (tenantId.isEmpty) {
+        throw StateError('No tenant context');
+      }
 
+      final Result<MenuItemDto> result;
       if (widget.item == null) {
-        // Create
         final newItem = MenuItemDto(
           id: 'menu-item-${uuid.v4()}',
           tenantId: tenantId,
@@ -1143,9 +1183,8 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
           tags: [],
           versionNum: 1,
         );
-        await ref.read(menuItemsProvider.notifier).createMenuItem(newItem);
+        result = await ref.read(menuItemsProvider.notifier).createMenuItem(newItem);
       } else {
-        // Update
         final updated = MenuItemDto(
           id: widget.item!.id,
           tenantId: widget.item!.tenantId,
@@ -1163,9 +1202,23 @@ class _MenuItemSheetState extends ConsumerState<_MenuItemSheet> {
           tags: widget.item!.tags,
           versionNum: widget.item!.versionNum,
         );
-        await ref.read(menuItemsProvider.notifier).updateMenuItem(updated);
+        result = await ref.read(menuItemsProvider.notifier).updateMenuItem(updated);
       }
-      if (mounted) Navigator.pop(context);
+
+      if (!mounted) return;
+
+      if (result is Failure<MenuItemDto>) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving: ${result.error.message}'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
+
+      Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

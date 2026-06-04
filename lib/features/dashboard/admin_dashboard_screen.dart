@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -419,251 +418,219 @@ class _MoreTab extends ConsumerWidget {
         ? name[0].toUpperCase() + name.substring(1)
         : 'Chef';
 
-    final tiles = [
-      (
-        icon: Icons.business_rounded,
-        label: 'Organization',
-        sub: 'Tenant & branches',
-        route: '/admin/organization',
-        color: const Color(0xFF0369A1),
-      ),
-      (
-        icon: Icons.restaurant_menu_rounded,
-        label: 'Menu Catalog',
-        sub: 'Items & categories',
-        route: '/admin/menu',
-        color: AppTheme.primary,
-      ),
-      (
-        icon: Icons.grid_view_rounded,
-        label: 'Table & Floor Monitor',
-        sub: 'Dining room & patio',
-        route: '/admin/live-floorplan',
-        color: const Color(0xFF0F766E),
-      ),
-      (
-        icon: Icons.qr_code_rounded,
-        label: 'Tables & QR',
-        sub: 'Floorplan designer',
-        route: '/admin/tables',
-        color: const Color(0xFF0F766E),
-      ),
-      (
-        icon: Icons.group_rounded,
-        label: 'Staff Directory',
-        sub: 'Team & active shifts',
-        route: '/admin/staff',
-        color: const Color(0xFF2563EB),
-      ),
-      (
-        icon: Icons.people_outline_rounded,
-        label: 'Live Sessions',
-        sub: 'Active diner carts',
-        route: '/admin/guest-sessions',
-        color: const Color(0xFFD97706),
-      ),
-      (
-        icon: Icons.devices_rounded,
-        label: 'Device Manager',
-        sub: 'KDS & terminal sync',
-        route: '/admin/devices',
-        color: const Color(0xFF4B5563),
-      ),
-      (
-        icon: Icons.monetization_on_rounded,
-        label: 'Dynamic Pricing',
-        sub: 'Happy hour & shifts',
-        route: '/admin/pricing',
-        color: const Color(0xFF16A34A),
-      ),
-      (
-        icon: Icons.percent_rounded,
-        label: 'Tax Matrix',
-        sub: 'Vat & service rules',
-        route: '/admin/taxes',
-        color: const Color(0xFFF59E0B),
-      ),
-      (
-        icon: Icons.alt_route_rounded,
-        label: 'Inheritance',
-        sub: 'Branch inheritance',
-        route: '/admin/overrides',
-        color: const Color(0xFF0D9488),
-      ),
-      (
-        icon: Icons.receipt_long_rounded,
-        label: 'Audit Log Ledger',
-        sub: 'Immutable audit trail',
-        route: '/admin/audit',
-        color: const Color(0xFF4F46E5),
-      ),
-      (
-        icon: Icons.sync_problem_rounded,
-        label: 'OCC Resolution',
-        sub: 'Resolve sync logs',
-        route: '/admin/occ-conflict',
-        color: const Color(0xFFE11D48),
-      ),
-      (
-        icon: Icons.settings_rounded,
-        label: 'App Settings',
-        sub: 'Theme & config',
-        route: '/admin/settings',
-        color: AppTheme.secondary,
-      ),
-    ];
-
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.surfaceContainerLowest,
       body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Header Profile row
-            SliverToBoxAdapter(
-              child: Container(
-                color: AppTheme.surfaceContainerLowest,
-                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
-                child: Row(
+        child: Column(
+          children: [
+            // Top branding/header
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 24.w),
+              child: Row(
+                children: [
+                  Icon(Icons.store_rounded, color: AppTheme.primary, size: 26.r),
+                  SizedBox(width: 10.w),
+                  Text(
+                    'Orderlli',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // List
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 24.r,
-                      backgroundColor: AppTheme.primary,
-                      child: Text(
-                        initial,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
+                    // CORE OPERATIONS
+                    _buildSectionHeader('CORE OPERATIONS'),
+                    _SidebarItem(
+                      icon: Icons.dashboard_rounded,
+                      label: 'Dashboard',
+                      onTap: () => ref.read(currentNavIndexProvider.notifier).state = 0,
                     ),
-                    SizedBox(width: 14.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            capitalizedName,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.onSurface,
-                            ),
-                          ),
-                          Text(
-                            email,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.sp,
-                              color: AppTheme.secondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                    _SidebarItem(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Live Orders',
+                      onTap: () => ref.read(currentNavIndexProvider.notifier).state = 1,
                     ),
-                    IconButton(
-                      icon: Icon(Icons.logout_rounded, color: AppTheme.error),
-                      onPressed: () async {
-                        final authService = ref.read(authServiceProvider);
-                        await authService.signOut();
-                        if (context.mounted) context.go('/admin/login');
-                      },
-                      tooltip: 'Logout',
+                    _SidebarItem(
+                      icon: Icons.bar_chart_rounded,
+                      label: 'Analytics',
+                      onTap: () => ref.read(currentNavIndexProvider.notifier).state = 2,
                     ),
+                    SizedBox(height: 16.h),
+
+                    // STUDIO CONFIG
+                    _buildSectionHeader('STUDIO CONFIG'),
+                    _SidebarItem(
+                      icon: Icons.restaurant_menu_rounded,
+                      label: 'Menu Manager',
+                      onTap: () => context.push('/admin/menu'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.table_restaurant_rounded,
+                      label: 'Tables & QR',
+                      onTap: () => context.push('/admin/tables'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.grid_view_rounded,
+                      label: 'Table & Floor Monitor',
+                      onTap: () => context.push('/admin/live-floorplan'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.group_rounded,
+                      label: 'Staff & Team',
+                      onTap: () => context.push('/admin/staff'),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // FINANCIALS
+                    _buildSectionHeader('FINANCIALS'),
+                    _SidebarItem(
+                      icon: Icons.percent_rounded,
+                      label: 'Tax Matrix',
+                      onTap: () => context.push('/admin/taxes'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.monetization_on_rounded,
+                      label: 'Dynamic Pricing',
+                      onTap: () => context.push('/admin/pricing'),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // SYSTEM
+                    _buildSectionHeader('SYSTEM'),
+                    _SidebarItem(
+                      icon: Icons.business_rounded,
+                      label: 'Organization',
+                      onTap: () => context.push('/admin/organization'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.settings_rounded,
+                      label: 'Settings',
+                      onTap: () => context.push('/admin/settings'),
+                    ),
+                    
+                    // ADVANCED
+                    SizedBox(height: 16.h),
+                    _buildSectionHeader('ADVANCED'),
+                    _SidebarItem(
+                      icon: Icons.people_outline_rounded,
+                      label: 'Live Sessions',
+                      onTap: () => context.push('/admin/guest-sessions'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.devices_rounded,
+                      label: 'Device Manager',
+                      onTap: () => context.push('/admin/devices'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.alt_route_rounded,
+                      label: 'Inheritance',
+                      onTap: () => context.push('/admin/overrides'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Audit Log Ledger',
+                      onTap: () => context.push('/admin/audit'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.sync_problem_rounded,
+                      label: 'OCC Resolution',
+                      onTap: () => context.push('/admin/occ-conflict'),
+                    ),
+                    
+                    SizedBox(height: 32.h),
                   ],
                 ),
               ),
             ),
-
-            // Grid items
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  Text(
-                    'MANAGEMENT CONSOLE',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.secondary,
-                      letterSpacing: 1.2,
+            
+            // Profile row
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                border: Border(top: BorderSide(color: AppTheme.surfaceContainerHigh, width: 1.w)),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20.r,
+                    backgroundColor: AppTheme.primary,
+                    child: Text(
+                      initial,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  SizedBox(height: 12.h),
-
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: tiles.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12.w,
-                      mainAxisSpacing: 12.h,
-                      childAspectRatio: 1.5,
-                    ),
-                    itemBuilder: (context, idx) {
-                      final t = tiles[idx];
-                      return GestureDetector(
-                        onTap: () => context.push(t.route),
-                        child: Container(
-                          padding: EdgeInsets.all(12.r),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceContainerLowest,
-                            borderRadius: BorderRadius.circular(16.r),
-                            border: Border.all(
-                              color: AppTheme.surfaceContainerHigh,
-                              width: 1.w,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x03000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          capitalizedName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.onSurface,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 32.r,
-                                height: 32.r,
-                                decoration: BoxDecoration(
-                                  color: t.color.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: Icon(t.icon, color: t.color, size: 18.r),
-                              ),
-                              const Spacer(),
-                              Text(
-                                t.label,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                t.sub,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10.sp,
-                                  color: AppTheme.secondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      );
-                    },
+                        Text(
+                          email,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11.sp,
+                            color: AppTheme.secondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ]),
+                  IconButton(
+                    icon: Icon(Icons.logout_rounded, color: AppTheme.error, size: 22.r),
+                    onPressed: () async {
+                      final authService = ref.read(authServiceProvider);
+                      await authService.signOut();
+                      if (context.mounted) context.go('/admin/login');
+                    },
+                    tooltip: 'Logout',
+                  ),
+                ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: EdgeInsets.only(left: 12.w, bottom: 8.h, top: 12.h),
+      child: Text(
+        title,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w800,
+          color: AppTheme.secondary,
+          letterSpacing: 1.0,
         ),
       ),
     );
@@ -679,12 +646,7 @@ class _DashboardHome extends ConsumerStatefulWidget {
 }
 
 class _DashboardHomeState extends ConsumerState<_DashboardHome> {
-  String get _greeting {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
+
 
   static DateTime get _todayMidnight {
     final now = DateTime.now();
@@ -714,9 +676,6 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
     final user = ref.watch(currentUserProvider);
     final email = user?.email ?? 'chef.alex@orderlli.com';
     final name = email.split('@').first;
-    final capitalizedName = name.isNotEmpty
-        ? name[0].toUpperCase() + name.substring(1)
-        : 'Chef Alex';
 
     final ordersState = ref.watch(ordersProvider);
 
@@ -745,7 +704,11 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
     final allOrders = ordersState.ordersById.values.toList();
     final today = _todayOrders(allOrders);
     final todaysOrdersCount = today.length;
-    
+    final totalSales = today.fold<double>(
+      0,
+      (sum, order) => sum + order.totalAmount,
+    );
+
     final tablesState = ref.watch(tablesProvider);
     final activeTablesCount = tablesState.tablesById.length;
 
@@ -889,7 +852,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                     if (!dismissedQrBanner)
                       _buildFirstDashboardBanner(context, ref),
                     if (isMenuEmpty)
-                      _buildSetupChecklist(context),
+                      _buildSetupChecklist(context, ref),
 
                     // ── Primary App Actions ───────────────────────────
                     Column(
@@ -1479,6 +1442,131 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
       ],
     );
   }
+
+  Widget _buildFirstDashboardBanner(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 24.h),
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.celebration_rounded, color: AppTheme.primary, size: 28.r),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome to your Orderlyy Dashboard!',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.onPrimary,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Your restaurant floor plan is initialized. Before you can start accepting orders, you need to add items to your menu.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14.sp,
+                    color: AppTheme.onPrimary.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close_rounded, color: AppTheme.onPrimary),
+            onPressed: () async {
+              try {
+                await ref.read(dashboardRepositoryProvider).dismissQrBanner();
+                final userId = ref.read(currentUserProvider)?.id;
+                if (userId != null) {
+                  await ref.read(bootstrapProvider.notifier).retry(userId);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: AppTheme.error,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSetupChecklist(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 24.h),
+      padding: EdgeInsets.all(24.r),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3), width: 1.w),
+        boxShadow: const [
+          BoxShadow(color: Color(0x05000000), blurRadius: 10, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_rounded, color: AppTheme.error, size: 24.r),
+              SizedBox(width: 12.w),
+              Text(
+                'Action Required: Finish Setup',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Your restaurant cannot process orders until you have at least one active menu item. Please head over to the Menu section to add your first item.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14.sp,
+              color: AppTheme.secondary,
+            ),
+          ),
+          SizedBox(height: 20.h),
+          ElevatedButton.icon(
+            onPressed: () {
+              ref.read(currentNavIndexProvider.notifier).state = 1;
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            icon: const Icon(Icons.restaurant_menu_rounded),
+            label: Text(
+              'Go to Menu Setup',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Pulse Card ────────────────────────────────────────────────────────────────
@@ -1659,132 +1747,7 @@ class _PulseCard extends StatelessWidget {
 
 // ── Alert Item Widget ────────────────────────────────────────────────────────
 
-class _AlertItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String actionText;
-  final VoidCallback onTap;
-  final bool isWarning;
-  final bool isSecondary;
-  const _AlertItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.actionText,
-    required this.onTap,
-    this.isWarning = false,
-    this.isSecondary = false,
-  });
 
-  @override
-  Widget build(BuildContext context) {
-    Color bgCircle = AppTheme.background;
-    Color iconCol = AppTheme.secondary;
-    Color borderCol = AppTheme.surfaceContainerHigh;
-
-    if (isWarning) {
-      bgCircle = AppTheme.errorContainer;
-      iconCol = AppTheme.error;
-      borderCol = AppTheme.error.withValues(alpha: 0.1);
-    }
-
-    return Container(
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: isWarning
-            ? AppTheme.errorContainer.withValues(alpha: 0.15)
-            : AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: borderCol, width: 1.w),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 18.r,
-            backgroundColor: bgCircle,
-            child: Icon(icon, color: iconCol, size: 18.r),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.onSurface,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.sp,
-                    color: AppTheme.secondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: onTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isSecondary
-                          ? AppTheme.surfaceContainerLowest
-                          : AppTheme.primaryContainer,
-                      foregroundColor: isSecondary
-                          ? AppTheme.onSurface
-                          : AppTheme.onPrimary,
-                      elevation: 0,
-                      minimumSize: Size(110.w, 32.h),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 6.h,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.r),
-                        side: isSecondary
-                            ? BorderSide(
-                                color: AppTheme.surfaceContainerHigh,
-                                width: 1.w,
-                              )
-                            : BorderSide.none,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          actionText,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Icon(
-                          isSecondary
-                              ? Icons.edit_rounded
-                              : Icons.chevron_right_rounded,
-                          size: 14.r,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 
 // ── Live Order Card Widget ────────────────────────────────────────────────────
@@ -1942,121 +1905,6 @@ class _LiveOrderCard extends StatelessWidget {
                   ],
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  Widget _buildFirstDashboardBanner(BuildContext context, WidgetRef ref) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 24.h),
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.celebration_rounded, color: AppTheme.primary, size: 28.r),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome to your Orderlyy Dashboard!',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.onPrimaryContainer,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Your restaurant floor plan is initialized. Before you can start accepting orders, you need to add items to your menu.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.sp,
-                    color: AppTheme.onPrimaryContainer.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.close_rounded, color: AppTheme.onPrimaryContainer),
-            onPressed: () async {
-              try {
-                await ref.read(dashboardRepositoryProvider).dismissQrBanner();
-                // refresh app context
-                ref.read(bootstrapProvider.notifier).retry(ref.read(currentUserProvider)?.id ?? '');
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-                  );
-                }
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSetupChecklist(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 24.h),
-      padding: EdgeInsets.all(24.r),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3), width: 1.w),
-        boxShadow: const [BoxShadow(color: Color(0x05000000), blurRadius: 10, offset: Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.warning_rounded, color: AppTheme.error, size: 24.r),
-              SizedBox(width: 12.w),
-              Text(
-                'Action Required: Finish Setup',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Your restaurant cannot process orders until you have at least one active menu item. Please head over to the Menu section to add your first item.',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14.sp,
-              color: AppTheme.secondary,
-            ),
-          ),
-          SizedBox(height: 20.h),
-          ElevatedButton.icon(
-            onPressed: () {
-              ref.read(currentNavIndexProvider.notifier).state = 1; // Assuming 1 is Menu index
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
-            icon: const Icon(Icons.restaurant_menu_rounded),
-            label: Text(
-              'Go to Menu Setup',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
             ),
           ),
         ],

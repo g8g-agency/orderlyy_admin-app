@@ -48,7 +48,9 @@ class OrganizationDashboardScreen extends ConsumerWidget {
       );
     }
 
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final width = MediaQuery.of(context).size.width;
+    final isDesktop = width >= 900;
+    final isCompact = !isDesktop;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -147,90 +149,20 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     if (!isDesktop) const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        if (isDesktop)
-                          OutlinedButton(
-                            onPressed: () => _showRegionsOverview(context),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: textColor,
-                              side: BorderSide(color: borderColor),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              minimumSize: const Size(0, 52), // Bounded size inside Row to prevent infinite width crash
-                            ),
-                            child: const Text('Manage Regions'),
-                          )
-                        else
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => _showRegionsOverview(context),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: textColor,
-                                side: BorderSide(color: borderColor),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text('Manage Regions'),
-                            ),
-                          ),
-                        const SizedBox(width: 12),
-                        if (isDesktop)
-                          ElevatedButton.icon(
-                            onPressed: () => BranchFormSheet.show(context),
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Add New Branch'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              elevation: 0,
-                              minimumSize: const Size(0, 52), // Bounded size inside Row to prevent infinite width crash
-                            ),
-                          )
-                        else
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => BranchFormSheet.show(context),
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Add New Branch'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                elevation: 0,
-                              ),
-                            ),
-                          ),
-                      ],
+                    _HeaderActions(
+                      isDesktop: isDesktop,
+                      isCompact: isCompact,
+                      textColor: textColor,
+                      borderColor: borderColor,
+                      onManageRegions: () => _showRegionsOverview(context),
+                      onAddBranch: () => BranchFormSheet.show(context),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
                 // Branch Directory
                 _BranchDirectoryTable(
+                  isCompact: isCompact,
                   surfaceColor: surfaceColor,
                   borderColor: borderColor,
                   textColor: textColor,
@@ -247,13 +179,92 @@ class OrganizationDashboardScreen extends ConsumerWidget {
 
 }
 
+class _HeaderActions extends StatelessWidget {
+  final bool isDesktop;
+  final bool isCompact;
+  final Color textColor;
+  final Color borderColor;
+  final VoidCallback onManageRegions;
+  final VoidCallback onAddBranch;
+
+  const _HeaderActions({
+    required this.isDesktop,
+    required this.isCompact,
+    required this.textColor,
+    required this.borderColor,
+    required this.onManageRegions,
+    required this.onAddBranch,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final manageRegionsButton = OutlinedButton(
+      onPressed: onManageRegions,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: textColor,
+        side: BorderSide(color: borderColor),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        minimumSize: isDesktop ? const Size(0, 52) : const Size(double.infinity, 48),
+      ),
+      child: const Text('Manage Regions'),
+    );
+
+    final addBranchButton = ElevatedButton.icon(
+      onPressed: onAddBranch,
+      icon: const Icon(Icons.add, size: 18),
+      label: const Text('Add New Branch'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 0,
+        minimumSize: isDesktop ? const Size(0, 52) : const Size(double.infinity, 48),
+      ),
+    );
+
+    if (isDesktop) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          manageRegionsButton,
+          const SizedBox(width: 12),
+          addBranchButton,
+        ],
+      );
+    }
+
+    if (isCompact) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          manageRegionsButton,
+          const SizedBox(height: 12),
+          addBranchButton,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: manageRegionsButton),
+        const SizedBox(width: 12),
+        Expanded(child: addBranchButton),
+      ],
+    );
+  }
+}
+
 class _BranchDirectoryTable extends ConsumerWidget {
+  final bool isCompact;
   final Color surfaceColor;
   final Color borderColor;
   final Color textColor;
   final Color subTextColor;
 
   const _BranchDirectoryTable({
+    required this.isCompact,
     required this.surfaceColor,
     required this.borderColor,
     required this.textColor,
@@ -277,16 +288,14 @@ class _BranchDirectoryTable extends ConsumerWidget {
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 16,
-              runSpacing: 16,
+            padding: EdgeInsets.all(isCompact ? 16 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Branch Directory',
@@ -296,11 +305,10 @@ class _BranchDirectoryTable extends ConsumerWidget {
                     color: textColor,
                   ),
                 ),
+                const SizedBox(height: 16),
                 Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 250,
+                    Expanded(
                       child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Search branches...',
@@ -326,7 +334,7 @@ class _BranchDirectoryTable extends ConsumerWidget {
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 0,
+                            vertical: 12,
                           ),
                         ),
                       ),
@@ -359,96 +367,130 @@ class _BranchDirectoryTable extends ConsumerWidget {
               message: error.toString(),
               onRetry: () => ref.invalidate(branchesProvider),
             ),
-            data: (branches) => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[900]
-                      : Colors.grey[50],
-                ),
-                columns: [
-                  DataColumn(
-                    label: Text(
-                      'Branch Name',
-                      style: TextStyle(
-                        color: subTextColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+            data: (branches) {
+              if (branches.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  child: Text(
+                    'No branches found',
+                    style: TextStyle(color: subTextColor),
                   ),
-                  DataColumn(
-                    label: Text(
-                      'Timezone',
-                      style: TextStyle(
-                        color: subTextColor,
-                        fontWeight: FontWeight.w600,
+                );
+              }
+
+              if (isCompact) {
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: branches.length,
+                  separatorBuilder: (_, __) => Divider(height: 1, color: borderColor),
+                  itemBuilder: (context, index) {
+                    final branch = branches[index];
+                    return _BranchCard(
+                      branch: branch,
+                      textColor: textColor,
+                      subTextColor: subTextColor,
+                      borderColor: borderColor,
+                      onEdit: () => BranchFormSheet.show(
+                        context,
+                        initialData: branch,
                       ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Status',
-                      style: TextStyle(
-                        color: subTextColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Today\'s Sales',
-                      style: TextStyle(
-                        color: subTextColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Orders',
-                      style: TextStyle(
-                        color: subTextColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Actions',
-                      style: TextStyle(
-                        color: subTextColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-                rows: branches.isEmpty
-                    ? [
-                        DataRow(
-                          cells: [
-                            DataCell(Text('No branches found', style: TextStyle(color: subTextColor))),
-                            const DataCell(Text('')),
-                            const DataCell(Text('')),
-                            const DataCell(Text('')),
-                            const DataCell(Text('')),
-                            const DataCell(Text('')),
+                    );
+                  },
+                );
+              }
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return Scrollbar(
+                    thumbVisibility: constraints.maxWidth < 900,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                        child: DataTable(
+                          headingRowColor: WidgetStateProperty.all(
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[900]
+                                : Colors.grey[50],
+                          ),
+                          columnSpacing: 24,
+                          columns: [
+                            DataColumn(
+                              label: Text(
+                                'Branch Name',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Timezone',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Status',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Today\'s Sales',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Orders',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Actions',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ],
-                        )
-                      ]
-                    : branches.map((branch) {
-                        return _buildRow(
-                          context,
-                          branch,
-                          branch.name,
-                          branch.timezone,
-                          branch.status == BranchStatus.active,
-                          '\$0',
-                          '0',
-                        );
-                      }).toList(),
-              ),
-            ),
+                          rows: branches
+                              .map(
+                                (branch) => _buildRow(
+                                  context,
+                                  branch,
+                                  branch.name,
+                                  branch.timezone,
+                                  branch.status == BranchStatus.active,
+                                  '\$0',
+                                  '0',
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
           Divider(height: 1, color: borderColor),
           if (branchesAsync.hasValue && branchesAsync.value!.length > 5)
@@ -500,25 +542,7 @@ class _BranchDirectoryTable extends ConsumerWidget {
           ),
         ),
         DataCell(Text(timezone, style: TextStyle(color: textColor))),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: isOpen
-                  ? AppColors.primary.withValues(alpha: 0.1)
-                  : borderColor.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Text(
-              isOpen ? 'Open' : 'Closed',
-              style: TextStyle(
-                color: isOpen ? AppColors.primary : subTextColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
+        DataCell(_StatusChip(isOpen: isOpen, subTextColor: subTextColor, borderColor: borderColor)),
         DataCell(
           Text(
             sales,
@@ -541,6 +565,138 @@ class _BranchDirectoryTable extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _BranchCard extends StatelessWidget {
+  final BranchEntity branch;
+  final Color textColor;
+  final Color subTextColor;
+  final Color borderColor;
+  final VoidCallback onEdit;
+
+  const _BranchCard({
+    required this.branch,
+    required this.textColor,
+    required this.subTextColor,
+    required this.borderColor,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isOpen = branch.status == BranchStatus.active;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  branch.name,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: textColor,
+                  ),
+                ),
+              ),
+              _StatusChip(isOpen: isOpen, subTextColor: subTextColor, borderColor: borderColor),
+              IconButton(
+                icon: Icon(Icons.edit_outlined, color: subTextColor, size: 20),
+                onPressed: onEdit,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              _Metric(label: 'Timezone', value: branch.timezone, subTextColor: subTextColor, textColor: textColor),
+              _Metric(label: 'Today\'s Sales', value: '\$0', subTextColor: subTextColor, textColor: textColor),
+              _Metric(label: 'Orders', value: '0', subTextColor: subTextColor, textColor: textColor),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color subTextColor;
+  final Color textColor;
+
+  const _Metric({
+    required this.label,
+    required this.value,
+    required this.subTextColor,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: subTextColor),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: textColor,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final bool isOpen;
+  final Color subTextColor;
+  final Color borderColor;
+
+  const _StatusChip({
+    required this.isOpen,
+    required this.subTextColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isOpen
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : borderColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        isOpen ? 'Open' : 'Closed',
+        style: TextStyle(
+          color: isOpen ? AppColors.primary : subTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

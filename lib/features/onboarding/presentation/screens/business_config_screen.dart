@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/auth/app_auth_provider.dart';
-import '../../../../core/auth/bootstrap_provider.dart';
 import '../../data/repositories/onboarding_repository.dart'
     as onboarding_repo;
 
@@ -90,14 +89,13 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
         taxRegistrationNumber: _taxIdController.text.trim().isEmpty ? null : _taxIdController.text.trim(),
       );
 
-      // Force bootstrap reload to get new onboarding_step and context
-      final appContext = ref.read(appContextProvider);
-      if (appContext != null) {
-        await ref.read(bootstrapProvider.notifier).resolve(appContext.user.id);
-      }
+      ref.read(appContextProvider.notifier).applyOnboardingProgress(
+        completedStep: 'business_config',
+        nextStep: 3,
+      );
 
       if (mounted) {
-        context.go('/onboarding');
+        context.go('/onboarding/gst-legal');
       }
     } catch (e) {
       if (mounted) {
@@ -147,7 +145,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: AppTheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -188,7 +186,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedBusinessType,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('Business Type *'),
                         items: _businessTypes.map((bt) {
                           return DropdownMenuItem(
@@ -207,7 +205,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedCurrency,
                         dropdownColor: AppTheme.surface,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('Currency *'),
                         items: _commonCurrencies.map((c) {
                           return DropdownMenuItem(
@@ -225,7 +223,7 @@ class _BusinessConfigScreenState extends ConsumerState<BusinessConfigScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _taxIdController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppTheme.onSurface),
                         decoration: _inputDecoration('Tax Registration Number (Optional)'),
                       ),
                       const SizedBox(height: 40),

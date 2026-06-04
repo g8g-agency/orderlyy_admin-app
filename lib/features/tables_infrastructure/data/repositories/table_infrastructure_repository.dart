@@ -17,6 +17,7 @@ abstract class TableInfrastructureRepository {
   Future<TableDto> updateTable(TableDto table);
   Future<void> deleteTable(String tableId);
   Future<String> rotateQrCode(String tableId);
+  Future<TableDto> generateQr(String tableId);
 
   // Floor management
   Future<List<FloorDto>> getFloors(String tenantId, String branchId);
@@ -79,6 +80,12 @@ class ApiTableInfrastructureRepository
   Future<String> rotateQrCode(String tableId) async {
     final res = await _dio.post('/v1/admin/tables/$tableId/qr/rotate');
     return res.data['token'] as String;
+  }
+
+  @override
+  Future<TableDto> generateQr(String tableId) async {
+    final res = await _dio.post('/v1/admin/tables/$tableId/generate-qr');
+    return TableDto.fromJson(res.data['data'] as Map<String, dynamic>);
   }
 
   // Floors implementation

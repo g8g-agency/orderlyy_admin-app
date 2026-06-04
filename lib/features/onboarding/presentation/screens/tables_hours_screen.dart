@@ -106,15 +106,11 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
         closingTime: _formatTimeOfDay(_closingTime!),
       );
 
-      // Force bootstrap reload to get new onboarding_step
-      final appContext = ref.read(appContextProvider);
-      if (appContext != null) {
-        await ref.read(bootstrapProvider.notifier).resolve(appContext.user.id);
-      }
+      ref.read(appContextProvider.notifier).markOnboardingFinished();
+      ref.read(bootstrapProvider.notifier).markTenantReady();
 
       if (mounted) {
-        // App router will redirect to Step 5 automatically
-        context.go('/onboarding');
+        context.go('/admin/dashboard');
       }
     } catch (e) {
       if (mounted) {
@@ -164,7 +160,7 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: AppTheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -229,7 +225,7 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _tablesController,
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: AppTheme.onSurface),
                               keyboardType: TextInputType.number,
                               decoration: _inputDecoration('Number of Tables *'),
                               validator: (value) {
@@ -245,7 +241,7 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _prefixController,
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: AppTheme.onSurface),
                               textCapitalization: TextCapitalization.characters,
                               decoration: _inputDecoration('Table Prefix *'),
                               validator: (value) {
@@ -263,7 +259,7 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppTheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -277,7 +273,7 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
                                 decoration: _inputDecoration('Opening Time *'),
                                 child: Text(
                                   _openingTime != null ? _formatTimeOfDay(_openingTime!) : 'Select Time',
-                                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                                  style: const TextStyle(color: AppTheme.onSurface, fontSize: 16),
                                 ),
                               ),
                             ),
@@ -291,7 +287,7 @@ class _TablesHoursScreenState extends ConsumerState<TablesHoursScreen> {
                                 decoration: _inputDecoration('Closing Time *'),
                                 child: Text(
                                   _closingTime != null ? _formatTimeOfDay(_closingTime!) : 'Select Time',
-                                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                                  style: const TextStyle(color: AppTheme.onSurface, fontSize: 16),
                                 ),
                               ),
                             ),

@@ -5,11 +5,10 @@ import '../dtos/tax_dto.dart';
 import 'dart:developer' as dev;
 
 final taxRepositoryProvider = Provider<TaxRepository>((ref) {
+  final tenantId = ref.watch(appContextProvider)?.tenant.id;
   return TaxRepository(
     Supabase.instance.client,
-    ref
-        .read(authNotifierProvider)
-        .userId, // Using userId as tenantId for single-tenant mode
+    tenantId,
   );
 });
 
