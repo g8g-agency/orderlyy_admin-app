@@ -208,10 +208,12 @@ class SupabaseAuthRepository implements AuthRepository {
               plan: 'standard',
               status: 'active',
               isActive: true,
+              dismissedQrBanner: false,
             ),
             onboarding: const OnboardingContextDto(
               isComplete: true,
               isSkipped: false,
+              step: 1,
               stepsCompleted: [],
             ),
             flags: const ContextFlagsDto(

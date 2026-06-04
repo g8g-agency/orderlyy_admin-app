@@ -157,6 +157,15 @@ class RouterNotifier extends ChangeNotifier {
       );
       notifyListeners();
     });
+    _ref.listen<AppContextDto?>(appContextProvider, (previous, next) {
+      if (previous?.onboarding.step != next?.onboarding.step ||
+          previous?.onboarding.stepsCompleted.length !=
+              next?.onboarding.stepsCompleted.length ||
+          previous?.flags.onboardingRequired != next?.flags.onboardingRequired) {
+        debugPrint('[RouterNotifier] 🔔 App context onboarding changed');
+        notifyListeners();
+      }
+    });
   }
 
   final Ref _ref;
@@ -274,6 +283,69 @@ class AppContextNotifier extends StateNotifier<AppContextDto?> {
     debugPrint(
       '[AppContext] 📋 Onboarding state updated: ${currentSteps.length} steps completed',
     );
+  }
+
+  /// After a backend onboarding API saves a step, sync local step so routing updates
+  /// without a full bootstrap reload (which is skipped when already onboardingRequired).
+  void applyOnboardingProgress({
+    required String completedStep,
+    required int nextStep,
+  }) {
+    if (state == null) return;
+
+    final steps = List<String>.from(state!.onboarding.stepsCompleted);
+    if (!steps.contains(completedStep)) {
+      steps.add(completedStep);
+    }
+
+    state = AppContextDto(
+      tenant: state!.tenant,
+      user: state!.user,
+      flags: state!.flags,
+      onboarding: OnboardingContextDto(
+        isComplete: state!.onboarding.isComplete,
+        isSkipped: state!.onboarding.isSkipped,
+        step: nextStep,
+        stepsCompleted: steps,
+      ),
+    );
+    debugPrint(
+      '[AppContext] 📋 Onboarding progress: $completedStep done → step $nextStep',
+    );
+  }
+
+  /// Mark onboarding finished locally (e.g. after final step API succeeds).
+  void markOnboardingFinished() {
+    if (state == null) return;
+
+    final steps = List<String>.from(state!.onboarding.stepsCompleted);
+    for (final key in [
+      'restaurant_info',
+      'business_config',
+      'gst_legal',
+      'tables_hours',
+    ]) {
+      if (!steps.contains(key)) steps.add(key);
+    }
+
+    state = AppContextDto(
+      tenant: state!.tenant,
+      user: state!.user,
+      onboarding: OnboardingContextDto(
+        isComplete: true,
+        isSkipped: false,
+        step: 5,
+        stepsCompleted: steps,
+      ),
+      flags: ContextFlagsDto(
+        mustChangePassword: state!.flags.mustChangePassword,
+        isFirstLogin: state!.flags.isFirstLogin,
+        subscriptionExpired: state!.flags.subscriptionExpired,
+        accountSuspended: state!.flags.accountSuspended,
+        onboardingRequired: false,
+      ),
+    );
+    debugPrint('[AppContext] ✅ Onboarding marked complete locally');
   }
 
   void clearContext() {

@@ -5,7 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/app_config.dart';
-import 'core/network/secure_storage.dart';
+import 'core/network/supabase_auth_storage.dart';
 import 'core/network/network_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -46,7 +46,9 @@ Future<void> main() async {
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
-    authOptions: FlutterAuthClientOptions(localStorage: SecureLocalStorage()),
+    authOptions: FlutterAuthClientOptions(
+      localStorage: createSupabaseLocalStorage(supabaseUrl),
+    ),
   );
 
   // ── PHASE 2: Hard User Validation & Schema Version Check Before Hydration ──────────

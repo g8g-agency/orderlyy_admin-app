@@ -155,6 +155,13 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
     }
   }
 
+  /// After the final onboarding step, transition bootstrap without re-fetching.
+  void markTenantReady() {
+    if (state.status == BootstrapStatus.tenantReady) return;
+    debugPrint('[Bootstrap] ✅ Marking tenant ready after onboarding');
+    state = const BootstrapState.tenantReady();
+  }
+
   /// Retry bootstrap after a failure. Only valid when in a failure state.
   Future<void> retry(String authenticatedUserId) async {
     if (!state.isFailure) return;

@@ -55,21 +55,22 @@ class DioClient {
             options.headers['Idempotency-Key'] ??= _uuid.v4();
           }
 
-          // 4. Inject Auth Token
-          try {
-            final session = Supabase.instance.client.auth.currentSession;
-            if (session != null) {
-              options.headers['Authorization'] =
-                  'Bearer ${session.accessToken}';
-            }
-          } catch (_) {
-            options.headers['Authorization'] = 'Bearer mock-jwt-token';
+          // 4. Inject Auth Token (only when a Supabase session exists)
+          final session = Supabase.instance.client.auth.currentSession;
+          if (session != null) {
+            options.headers['Authorization'] =
+                'Bearer ${session.accessToken}';
           }
 
           return handler.next(options);
         },
         onError: (DioException err, handler) async {
           if (err.response?.statusCode == 401) {
+            final path = err.requestOptions.path;
+            // Logout without a token is expected after session clear — do not refresh/retry.
+            if (path.contains('/auth/logout')) {
+              return handler.next(err);
+            }
             return _handleTokenRefresh(err, handler);
           }
           return handler.next(err);
@@ -110,6 +111,11 @@ class DioClient {
 
     _isRefreshing = true;
     try {
+      final currentSession = Supabase.instance.client.auth.currentSession;
+      if (currentSession?.refreshToken == null) {
+        throw Exception('No refresh token');
+      }
+
       final response = await Supabase.instance.client.auth.refreshSession();
       final newSession = response.session;
 
@@ -134,6 +140,9 @@ class DioClient {
       }
     } catch (e) {
       _retryQueue.clear();
+      try {
+        await Supabase.instance.client.auth.signOut();
+      } catch (_) {}
       onUnauthorized?.call('Session expired. Please log in again.');
       handler.next(err);
     } finally {

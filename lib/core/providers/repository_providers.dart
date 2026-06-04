@@ -15,7 +15,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/app_auth_provider.dart';
-import '../providers/branch_context_service.dart';
 
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/menu_repository.dart';
@@ -86,8 +85,9 @@ final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
   final dioClient = ref.watch(dioClientProvider);
   final ctx = ref.watch(appContextProvider);
   final tenantId = ctx?.tenant.id ?? '';
-  final currentBranch = ref.watch(currentBranchProvider).value;
-  return ApiCategoriesRepository(dioClient, tenantId, branchId: currentBranch?.id);
+  // Admin menu management needs all tenant categories; branch visibility
+  // is applied at order-time, not when editing the catalog.
+  return ApiCategoriesRepository(dioClient, tenantId);
 });
 
 // ── Menu Items Repository Provider ────────────────────────────────────────────

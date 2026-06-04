@@ -57,20 +57,51 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> restoreSession() async {
-    // For admin users, the Supabase SDK automatically restores the session.
-    // In the future, we could call an API endpoint to validate the session.
-    final session = _supabaseClient.auth.currentSession;
-    if (session != null) {
-      _currentUserId = session.user.id;
-      _currentStaff = null;
-      _authStateController.add(_currentUserId);
-      debugPrint('[ApiAuth] Restored admin session: $_currentUserId');
-    } else {
-      _currentUserId = null;
-      _currentStaff = null;
-      _authStateController.add(null);
+    var session = _supabaseClient.auth.currentSession;
+    if (session == null) {
+      _clearLocalAuthState();
       debugPrint('[ApiAuth] No active session restored.');
+      return;
     }
+
+    if (session.isExpired) {
+      if (session.refreshToken == null) {
+        debugPrint('[ApiAuth] Expired session without refresh token — signing out.');
+        await _signOutSilently();
+        return;
+      }
+      try {
+        final refreshed = await _supabaseClient.auth.refreshSession();
+        session = refreshed.session;
+        if (session == null) {
+          debugPrint('[ApiAuth] Refresh returned no session — signing out.');
+          await _signOutSilently();
+          return;
+        }
+      } catch (e) {
+        debugPrint('[ApiAuth] Failed to refresh expired session: $e');
+        await _signOutSilently();
+        return;
+      }
+    }
+
+    _currentUserId = session.user.id;
+    _currentStaff = null;
+    _authStateController.add(_currentUserId);
+    debugPrint('[ApiAuth] Restored admin session: $_currentUserId');
+  }
+
+  void _clearLocalAuthState() {
+    _currentUserId = null;
+    _currentStaff = null;
+    _authStateController.add(null);
+  }
+
+  Future<void> _signOutSilently() async {
+    try {
+      await _supabaseClient.auth.signOut();
+    } catch (_) {}
+    _clearLocalAuthState();
   }
 
   @override
@@ -183,9 +214,8 @@ class ApiAuthRepository implements AuthRepository {
     } on ApiException catch (e) {
       debugPrint('[ApiAuth] ❌ ApiException: ${e.message} (code: ${e.code})');
       if (e.code == ApiErrorCode.unauthorized) {
-        debugPrint('[ApiAuth] 🔒 Unauthorized, signing out...');
-        await signOut();
-        return const Success(null);
+        // Do not sign out here — bootstrap handles auth errors without clearing session.
+        return Failure(ApiFailure(e.message, e.code));
       }
       return Failure(ApiFailure(e.message, e.code));
     } catch (e, stackTrace) {
@@ -247,10 +277,15 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<Result<void>> signOut() async {
-    try {
-      await _dioClient.post(ApiConstants.logout);
-    } catch (_) {
-      // Ignore network errors on logout
+    // Backend logout requires a valid JWT — skip if session was already cleared
+    // (e.g. forced sign-out from Dio 401 handler during bootstrap failure).
+    final session = _supabaseClient.auth.currentSession;
+    if (session?.accessToken != null) {
+      try {
+        await _dioClient.post(ApiConstants.logout);
+      } catch (_) {
+        // Ignore network errors on logout
+      }
     }
 
     try {

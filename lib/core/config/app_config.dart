@@ -44,7 +44,7 @@ class AppConfig {
           websocketUrl ??
           const String.fromEnvironment(
             'WEBSOCKET_URL',
-            defaultValue: 'ws://localhost:3001/ws',
+            defaultValue: 'ws://localhost:3001/api/v1/realtime',
           ),
       enableLogging:
           enableLogging ??

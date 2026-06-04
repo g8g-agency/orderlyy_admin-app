@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -39,15 +38,9 @@ final Provider<DioClient> dioClientProvider = Provider<DioClient>((ref) {
       // DO NOT logout if missing fingerprint
       if (lowerMsg.contains('fingerprint')) return;
 
-      // ONLY logout on actual token issues
-      if (lowerMsg.contains('jwt') ||
-          lowerMsg.contains('expired') ||
-          lowerMsg.contains('invalid session') ||
-          lowerMsg.contains('revoked')) {
-        logWarning('[DioClient] 🚨 Force signing out due to invalid session.');
-        unawaited(
-          Supabase.instance.client.auth.signOut().catchError((_) {}),
-        );
+      if (lowerMsg.contains('session expired')) {
+        logWarning('[DioClient] 🚨 Session refresh failed — signing out.');
+        Supabase.instance.client.auth.signOut();
       }
     },
   );
