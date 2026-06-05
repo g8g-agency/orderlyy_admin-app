@@ -16,6 +16,7 @@ class TableQrPngService {
     final painter = QrPainter(
       data: qrUrl,
       version: QrVersions.auto,
+      emptyColor: Colors.white,
       eyeStyle: const QrEyeStyle(
         eyeShape: QrEyeShape.square,
         color: Colors.black,
