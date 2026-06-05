@@ -78,13 +78,13 @@ Future<void> main() async {
         offlineQueueBoxProvider.overrideWithValue(offlineQueueBox),
         deviceFingerprintProvider.overrideWithValue(fingerprint),
       ],
-      child: const OrderlliApp(),
+      child: const OrderlyyApp(),
     ),
   );
 }
 
-class OrderlliApp extends ConsumerWidget {
-  const OrderlliApp({super.key});
+class OrderlyyApp extends ConsumerWidget {
+  const OrderlyyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -95,7 +95,7 @@ class OrderlliApp extends ConsumerWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => MaterialApp.router(
-        title: 'Orderlli',
+        title: 'Orderlyy',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         routerConfig: router,

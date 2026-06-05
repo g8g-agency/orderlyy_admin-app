@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:orderlli_admin/core/auth/app_auth_provider.dart';
-import 'package:orderlli_admin/core/providers/branch_context_service.dart';
-import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/table_dto.dart';
-import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/floor_dto.dart';
-import 'package:orderlli_admin/features/tables_infrastructure/data/repositories/table_infrastructure_repository.dart';
+import '../../../../core/auth/app_auth_provider.dart';
+import '../../../../core/providers/branch_context_service.dart';
+import '../../data/dtos/table_dto.dart';
+import '../../data/dtos/floor_dto.dart';
+import '../../data/repositories/table_infrastructure_repository.dart';
 
 final tablesFutureProvider =
     AsyncNotifierProvider<TablesNotifier, List<TableDto>>(() {

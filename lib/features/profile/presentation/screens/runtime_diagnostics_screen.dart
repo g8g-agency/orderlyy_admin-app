@@ -190,7 +190,7 @@ class _RuntimeDiagnosticsScreenState
     HapticFeedback.heavyImpact();
     final report =
         '''
-ORDERLLI DIAGNOSTICS REPORT
+ORDERLYY DIAGNOSTICS REPORT
 ----------------------------
 App Version: ${data.appVersion}
 Device ID: anon-8f3a2c

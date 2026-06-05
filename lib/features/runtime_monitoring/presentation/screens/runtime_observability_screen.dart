@@ -37,7 +37,7 @@ class RuntimeObservabilityScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'ORDERLLI · RUNTIME INFRASTRUCTURE',
+              'ORDERLYY · RUNTIME INFRASTRUCTURE',
               style: TextStyle(
                 color: Color(0xFF8B949E),
                 fontSize: 9,

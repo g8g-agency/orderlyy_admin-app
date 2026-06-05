@@ -354,7 +354,7 @@ class _AdminSidebarWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final email = user?.email ?? 'admin@orderlli.com';
+    final email = user?.email ?? 'admin@orderlyy.com';
     final initial = email.isNotEmpty ? email[0].toUpperCase() : 'A';
     final name = email.split('@').first;
     final capitalizedName = name.isNotEmpty
@@ -381,7 +381,7 @@ class _AdminSidebarWidget extends ConsumerWidget {
                 Icon(Icons.store_rounded, color: AppTheme.primary, size: 26.r),
                 SizedBox(width: 10.w),
                 Text(
-                  'Orderlli',
+                  'Orderlyy',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w800,

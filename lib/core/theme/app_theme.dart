@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Orderlli Design System — "The Culinary Architect"
-/// Based on Stitch orderlli_crimson design tokens.
+/// Orderlyy Design System — "The Culinary Architect"
+/// Based on Stitch orderlyy_crimson design tokens.
 class AppTheme {
-  // ── Primary Palette  // Bright, high-contrast, confident red for Orderlli.
+  // ── Primary Palette  // Bright, high-contrast, confident red for Orderlyy.
   static const Color primary = Color(0xFFFF2A2A); 
   static const Color primaryContainer = Color(0xFFFF5252);
   static const Color onPrimary = Color(0xFFFFFFFF);

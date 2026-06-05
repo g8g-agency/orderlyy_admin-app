@@ -239,7 +239,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                             )
                           : Text(
-                              'Launch Orderlli',
+                              'Launch Orderlyy',
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -324,7 +324,7 @@ class _SetupDashboardScreenState extends ConsumerState<SetupDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome to Orderlli, $tenantName',
+                      'Welcome to Orderlyy, $tenantName',
                       style: GoogleFonts.inter(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,

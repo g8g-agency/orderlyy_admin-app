@@ -42,7 +42,7 @@ class AdminProfileScreen extends ConsumerWidget {
               onPressed: () => context.pop(),
             ),
             title: Text(
-              'Orderlli',
+              'Orderlyy',
               style: GoogleFonts.inter(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w900,

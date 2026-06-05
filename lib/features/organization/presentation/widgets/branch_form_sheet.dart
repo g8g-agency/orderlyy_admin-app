@@ -228,7 +228,7 @@ class _BranchFormSheetState extends ConsumerState<BranchFormSheet> {
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           border: OutlineInputBorder(),
-                          hintText: 'e.g. branch@orderlli.com',
+                          hintText: 'e.g. branch@orderlyy.com',
                         ),
                       ),
                     ),

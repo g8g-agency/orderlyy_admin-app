@@ -6,7 +6,7 @@ library;
 // ── Staff role enum ───────────────────────────────────────────────────────────
 
 enum StaffRole {
-  owner,
+  kitchen,
   manager,
   waiter;
 
@@ -16,7 +16,7 @@ enum StaffRole {
   );
 
   String get displayLabel => switch (this) {
-    StaffRole.owner => 'OWNER',
+    StaffRole.kitchen => 'COOK',
     StaffRole.manager => 'MANAGER',
     StaffRole.waiter => 'WAITER',
   };
