@@ -108,7 +108,7 @@ class _InventoryScreenState extends State<InventoryScreen>
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    'Orderlli',
+                    'Orderlyy',
                     style: GoogleFonts.inter(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w900,

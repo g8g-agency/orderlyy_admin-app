@@ -7,7 +7,7 @@ void main() {
     WidgetTester tester,
   ) async {
     try {
-      await tester.pumpWidget(const ProviderScope(child: OrderlliApp()));
+      await tester.pumpWidget(const ProviderScope(child: OrderlyyApp()));
       await tester.pumpAndSettle();
     } catch (e, st) {
       print('CAUGHT EXCEPTION: $e');

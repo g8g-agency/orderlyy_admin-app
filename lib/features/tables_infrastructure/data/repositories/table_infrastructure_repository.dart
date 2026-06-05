@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/table_dto.dart';
-import 'package:orderlli_admin/features/tables_infrastructure/data/dtos/floor_dto.dart';
+import '../dtos/table_dto.dart';
+import '../dtos/floor_dto.dart';
 
 import '../../../../core/network/network_providers.dart';
 import '../../../../core/network/dio_client.dart';

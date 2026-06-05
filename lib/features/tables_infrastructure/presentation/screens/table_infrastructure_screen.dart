@@ -1125,7 +1125,7 @@ class _MassQrBuilderPanelState extends ConsumerState<_MassQrBuilderPanel> {
         resolveQrUrl: resolveUrl,
       );
 
-      await saveBytesAsDownload(zipBytes, 'orderlli-qr-codes.zip');
+      await saveBytesAsDownload(zipBytes, 'orderlyy-qr-codes.zip');
       ref.invalidate(tablesFutureProvider);
 
       if (!mounted) return;
