@@ -106,6 +106,49 @@ class _TableQrBottomSheetState extends ConsumerState<TableQrBottomSheet> {
     );
   }
 
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete Table?',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Text(
+          'Are you sure you want to delete Table ${_table.tableNumber}? This cannot be undone.',
+          style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.secondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: AppTheme.secondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(tablesFutureProvider.notifier).deleteTable(_table.id);
+              Navigator.pop(ctx); // Close dialog
+              Navigator.pop(context); // Close bottom sheet
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Table ${_table.tableNumber} deleted.'),
+                  backgroundColor: AppTheme.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('Delete', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final qrUrl = _table.qrUrl ?? '';
@@ -208,6 +251,19 @@ class _TableQrBottomSheetState extends ConsumerState<TableQrBottomSheet> {
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: 16.h),
+            TextButton.icon(
+              onPressed: _confirmDelete,
+              icon: Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 18.r),
+              label: Text(
+                'Delete Table',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.error, fontWeight: FontWeight.w700),
+              ),
+              style: TextButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              ),
             ),
           ],
         ],
