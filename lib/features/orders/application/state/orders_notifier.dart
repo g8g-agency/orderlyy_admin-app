@@ -10,18 +10,24 @@ import '../../../../shared/models/failures.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_status.dart' as domain;
 import 'orders_state.dart';
+import '../../../../core/storage/state_persistence.dart';
 import 'package:uuid/uuid.dart';
 
 final uuid = Uuid();
 
 class OrdersNotifier extends StateNotifier<OrdersState> {
   final IOrdersRepository _repository;
+  final StatePersistence _persistence;
   final String _tenantId;
+  static const String _stateKeyPrefix = 'orders_state';
+  static const int _stateEnvelopeVersion = 1;
 
   OrdersNotifier({
     required IOrdersRepository repository,
+    required StatePersistence persistence,
     required String tenantId,
   }) : _repository = repository,
+       _persistence = persistence,
        _tenantId = tenantId,
        super(OrdersState.initial()) {
     _initialize();
@@ -30,10 +36,70 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   // ── Initialize ────────────────────────────────────────────────────────────
 
   Future<void> _initialize() async {
+    // Try to restore state from persistence
+    await _hydrateState();
+
     // Load fresh data from repository
     await loadOrders();
   }
 
+  // ── State Hydration ───────────────────────────────────────────────────────
+
+  Future<void> _hydrateState() async {
+    try {
+      final json = await _persistence.loadState(_stateKey);
+      if (json == null) return;
+
+      final version = json['version'];
+      final contextScope = json['contextScope'];
+      final payload = json['payload'];
+
+      // Legacy payload compatibility (no envelope/version).
+      if (version == null) {
+        state = OrdersState.fromJson(json);
+        await _persistState();
+        return;
+      }
+
+      if (version is! int || version > _stateEnvelopeVersion) {
+        // Unsupported state version
+        state = OrdersState.initial();
+        return;
+      }
+
+      if (contextScope is! String || contextScope != _tenantId) {
+        // Context mismatch
+        state = OrdersState.initial();
+        return;
+      }
+
+      if (payload is Map) {
+        state = OrdersState.fromJson(Map<String, dynamic>.from(payload));
+      }
+    } catch (e) {
+      // If hydration fails, continue with initial state
+    }
+  }
+
+  // ── State Persistence ─────────────────────────────────────────────────────
+
+  Future<void> _persistState() async {
+    try {
+      await _persistence.saveState(_stateKey, {
+        'version': _stateEnvelopeVersion,
+        'contextScope': _tenantId,
+        'payload': state.toJson(),
+      });
+    } catch (e) {
+      // Log but don't throw - persistence failure shouldn't crash app
+    }
+  }
+
+  @override
+  set state(OrdersState value) {
+    super.state = value;
+    _persistState();
+  }
 
 
   // ── Load Orders ───────────────────────────────────────────────────────────
@@ -175,4 +241,5 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     }
   }
 
+  String get _stateKey => '$_stateKeyPrefix:$_tenantId';
 }

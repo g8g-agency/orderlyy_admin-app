@@ -10,6 +10,7 @@ import '../../domain/models/order.dart';
 import '../../domain/models/order_status.dart';
 import '../state/orders_state.dart';
 import '../state/orders_notifier.dart';
+import '../../../../core/storage/state_persistence.dart';
 
 // ── State Provider ───────────────────────────────────────────────────────────
 
@@ -17,10 +18,12 @@ final ordersStateProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((
   ref,
 ) {
   final repository = ref.watch(ordersRepositoryProvider);
+  final persistence = ref.watch(statePersistenceProvider);
   final tenantId = ref.watch(currentTenantIdProvider);
 
   return OrdersNotifier(
     repository: repository,
+    persistence: persistence,
     tenantId: tenantId,
   );
 });
