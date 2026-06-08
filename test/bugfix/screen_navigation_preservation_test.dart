@@ -228,6 +228,7 @@ class _ScreenWithCorrectTimer extends StatefulWidget {
 
 class _ScreenWithCorrectTimerState extends State<_ScreenWithCorrectTimer> {
   // Correct timer usage pattern — nullable, cancelled in dispose
+  // ignore: unused_field
   Object? _timer; // Placeholder for dart:async Timer
 
   @override

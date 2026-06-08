@@ -14,6 +14,7 @@ class RequireBranchGuard extends ConsumerWidget {
     return child;
   }
 
+  // ignore: unused_element
   Widget _buildSelectBranchPrompt(BuildContext context) {
     return Center(
       child: Column(

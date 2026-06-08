@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'environment.dart';
 
 class AppConfig {
@@ -34,17 +35,21 @@ class AppConfig {
 
     _instance = AppConfig._(
       environment: resolvedEnv,
-      apiBaseUrl:
-          apiBaseUrl ??
-          const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://localhost:3001',
+      apiBaseUrl: apiBaseUrl ??
+          _resolvePlatformLocalhost(
+            const String.fromEnvironment(
+              'API_BASE_URL',
+              defaultValue: 'http://localhost:3001',
+            ),
+            resolvedEnv,
           ),
-      websocketUrl:
-          websocketUrl ??
-          const String.fromEnvironment(
-            'WEBSOCKET_URL',
-            defaultValue: 'ws://localhost:3001/api/v1/realtime',
+      websocketUrl: websocketUrl ??
+          _resolvePlatformLocalhost(
+            const String.fromEnvironment(
+              'WEBSOCKET_URL',
+              defaultValue: 'ws://localhost:3001/api/v1/realtime',
+            ),
+            resolvedEnv,
           ),
       enableLogging:
           enableLogging ??
@@ -87,5 +92,16 @@ class AppConfig {
       default:
         return Environment.dev;
     }
+  }
+
+  static String _resolvePlatformLocalhost(String url, Environment env) {
+    // Only map local URLs in development.
+    if (env != Environment.dev) return url;
+    
+    if (kIsWeb) return url;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return url.replaceAll('localhost', '10.0.2.2').replaceAll('127.0.0.1', '10.0.2.2');
+    }
+    return url;
   }
 }

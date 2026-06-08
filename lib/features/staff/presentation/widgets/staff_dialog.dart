@@ -186,8 +186,9 @@ class _StaffDialogState extends ConsumerState<StaffDialog> {
                   keyboardType: TextInputType.number,
                   validator: (val) {
                     if (val == null || val.isEmpty) return 'Required';
-                    if (val.length < 4 || val.length > 10)
+                    if (val.length < 4 || val.length > 10) {
                       return 'Must be 4-10 characters';
+                    }
                     return null;
                   },
                 ),

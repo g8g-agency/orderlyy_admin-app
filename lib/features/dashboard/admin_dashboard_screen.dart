@@ -11,7 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/dtos/order_dto.dart';
 import '../../core/providers/orders_providers.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/providers/tables_provider.dart';
+
 import '../../core/providers/menu_items_provider.dart';
 import 'data/repositories/dashboard_repository.dart';
 import '../orders/admin_orders_screen.dart';
@@ -673,9 +673,9 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
-    final email = user?.email ?? 'chef.alex@orderlyy.com';
-    final name = email.split('@').first;
+    // final user = ref.watch(currentUserProvider);
+    // final email = user?.email ?? 'chef.alex@orderlyy.com';
+    // final name = email.split('@').first;
 
     final ordersState = ref.watch(ordersProvider);
 
@@ -709,8 +709,8 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
       (sum, order) => sum + order.totalAmount,
     );
 
-    final tablesState = ref.watch(tablesProvider);
-    final activeTablesCount = tablesState.tablesById.length;
+    // final tablesState = ref.watch(tablesProvider);
+    // final activeTablesCount = tablesState.tablesById.length;
 
     final menuItemsState = ref.watch(menuItemsProvider);
     final menuItemsCount = menuItemsState.byId.length;
