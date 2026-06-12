@@ -18,6 +18,7 @@ class ApiAnalyticsRepository implements AnalyticsRepository {
       final queryParams = <String, dynamic>{
         'date': date.toIso8601String().split('T').first,
         'branch_id': branchId,
+        'tz_offset_mins': DateTime.now().timeZoneOffset.inMinutes.toString(),
       };
 
       final response = await _dioClient.get(

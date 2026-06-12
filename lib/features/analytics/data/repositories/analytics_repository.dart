@@ -10,20 +10,21 @@ class AnalyticsRepository {
   Future<DashboardAnalyticsDto> getDashboardAnalytics(String branchId) async {
     try {
       final response = await _dio.get(
-        '/v1/admin/analytics/dashboard',
-        queryParameters: {'branch_id': branchId},
+        '/api/v1/analytics/daily',  // ✅ correct endpoint
+        queryParameters: {
+          'branch_id': branchId,
+          'date': DateTime.now().toIso8601String().split('T').first,
+        },
       );
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as Map<String, dynamic>;
-        return DashboardAnalyticsDto.fromJson(data);
+        return DashboardAnalyticsDto.fromBackend(data);
       } else {
-        throw Exception('Failed to load analytics data: ${response.data}');
+        throw Exception('Failed to load analytics: ${response.data}');
       }
     } on DioException catch (e) {
       throw Exception('Network error fetching analytics: ${e.message}');
-    } catch (e) {
-      throw Exception('Unexpected error fetching analytics: $e');
     }
   }
 }
