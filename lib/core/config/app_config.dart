@@ -12,6 +12,8 @@ class AppConfig {
   static late AppConfig _instance;
   static AppConfig get instance => _instance;
 
+  static const bool isPilotMode = true; // flip to false for full access
+
   AppConfig._({
     required this.environment,
     required this.apiBaseUrl,
@@ -39,7 +41,7 @@ class AppConfig {
           _resolvePlatformLocalhost(
             const String.fromEnvironment(
               'API_BASE_URL',
-              defaultValue: 'http://localhost:3001',
+              defaultValue: 'http://192.168.29.178:3001',
             ),
             resolvedEnv,
           ),
@@ -47,7 +49,7 @@ class AppConfig {
           _resolvePlatformLocalhost(
             const String.fromEnvironment(
               'WEBSOCKET_URL',
-              defaultValue: 'ws://localhost:3001/api/v1/realtime',
+              defaultValue: 'ws://192.168.29.178:3001/api/v1/realtime',
             ),
             resolvedEnv,
           ),

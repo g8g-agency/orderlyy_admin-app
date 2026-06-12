@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../dtos/order_dto.dart';
 import '../repositories/orders_repository.dart';
 import '../../network/dio_client.dart';
@@ -21,11 +23,11 @@ class ApiOrdersRepository implements OrdersRepository {
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        'branch_id': branchId,
+        'branchId': branchId,
         'page': page,
         'limit': limit,
         if (status != null) 'status': status.name,
-        'table_id': ?tableId,
+        if (tableId != null) 'table_id': tableId,
       };
 
       final response = await _dioClient.dio.get(
@@ -34,9 +36,15 @@ class ApiOrdersRepository implements OrdersRepository {
         cancelToken: cancelToken,
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
-        final orders = data
+      if (response.data['status'] == 'success' || response.data['success'] == true) {
+        final payload = response.data['data'];
+        List<dynamic> dataList = [];
+        if (payload is Map<String, dynamic> && payload.containsKey('orders')) {
+          dataList = payload['orders'] as List<dynamic>? ?? [];
+        } else if (payload is List<dynamic>) {
+          dataList = payload;
+        }
+        final orders = dataList
             .map((json) => OrderDto.fromJson(json as Map<String, dynamic>))
             .toList();
         return Success(orders);
@@ -173,8 +181,49 @@ class ApiOrdersRepository implements OrdersRepository {
   Future<void> cancelOrder(String orderId) => throw UnimplementedError();
 
   @override
-  Stream<List<OrderDto>> watchOrders(String tenantId) =>
-      throw UnimplementedError();
+  Stream<List<OrderDto>> watchOrders(String branchId) {
+    final controller = StreamController<List<OrderDto>>.broadcast();
+    final supabase = Supabase.instance.client;
+
+    // Initial load via existing paginated method
+    getOrdersPaginated(branchId: branchId, limit: 200).then((result) {
+      if (!controller.isClosed) {
+        if (result is Success<List<OrderDto>>) {
+          controller.add(result.value);
+        } else if (result is Failure<List<OrderDto>>) {
+          controller.addError(result.error);
+        }
+      }
+    });
+
+    // Realtime updates — same pattern as KDS
+    final channel = supabase
+      .channel('admin_orders_watch_$branchId')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'orders',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'branch_id',
+          value: branchId,
+        ),
+        callback: (_) async {
+          final result = await getOrdersPaginated(branchId: branchId, limit: 200);
+          if (result is Success<List<OrderDto>> && !controller.isClosed) {
+            controller.add(result.value);
+          }
+        },
+      )
+      .subscribe();
+
+    controller.onCancel = () {
+      supabase.removeChannel(channel);
+      controller.close();
+    };
+
+    return controller.stream;
+  }
 
   @override
   Future<Map<String, dynamic>> getDailySummary(

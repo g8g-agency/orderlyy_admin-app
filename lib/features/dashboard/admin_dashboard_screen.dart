@@ -8,15 +8,19 @@ import '../../core/auth/app_auth_provider.dart';
 import '../../core/auth/bootstrap_provider.dart';
 import '../../core/auth/bootstrap_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/data/dtos/order_dto.dart';
+import '../orders/domain/models/order.dart';
+import '../orders/domain/models/order_status.dart';
 import '../../core/providers/orders_providers.dart';
 import '../../core/theme/app_theme.dart';
-
+import '../../core/config/app_config.dart';
 import '../../core/providers/menu_items_provider.dart';
 import 'data/repositories/dashboard_repository.dart';
 import '../orders/admin_orders_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../../core/widgets/admin_shell.dart';
+import '../../core/providers/branch_context_service.dart';
+import '../orders/providers/live_active_orders_provider.dart';
+import '../../core/providers/analytics_provider.dart';
 
 // ── State Providers ──────────────────────────────────────────────────────────
 final currentNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -500,11 +504,12 @@ class _MoreTab extends ConsumerWidget {
                       label: 'Tax Matrix',
                       onTap: () => context.push('/admin/taxes'),
                     ),
-                    _SidebarItem(
-                      icon: Icons.monetization_on_rounded,
-                      label: 'Dynamic Pricing',
-                      onTap: () => context.push('/admin/pricing'),
-                    ),
+                    if (!AppConfig.isPilotMode)
+                      _SidebarItem(
+                        icon: Icons.monetization_on_rounded,
+                        label: 'Dynamic Pricing',
+                        onTap: () => context.push('/admin/pricing'),
+                      ),
                     SizedBox(height: 16.h),
 
                     // SYSTEM
@@ -521,33 +526,35 @@ class _MoreTab extends ConsumerWidget {
                     ),
                     
                     // ADVANCED
-                    SizedBox(height: 16.h),
-                    _buildSectionHeader('ADVANCED'),
-                    _SidebarItem(
-                      icon: Icons.people_outline_rounded,
-                      label: 'Live Sessions',
-                      onTap: () => context.push('/admin/guest-sessions'),
-                    ),
-                    _SidebarItem(
-                      icon: Icons.devices_rounded,
-                      label: 'Device Manager',
-                      onTap: () => context.push('/admin/devices'),
-                    ),
-                    _SidebarItem(
-                      icon: Icons.alt_route_rounded,
-                      label: 'Inheritance',
-                      onTap: () => context.push('/admin/overrides'),
-                    ),
-                    _SidebarItem(
-                      icon: Icons.receipt_long_rounded,
-                      label: 'Audit Log Ledger',
-                      onTap: () => context.push('/admin/audit'),
-                    ),
-                    _SidebarItem(
-                      icon: Icons.sync_problem_rounded,
-                      label: 'OCC Resolution',
-                      onTap: () => context.push('/admin/occ-conflict'),
-                    ),
+                    if (!AppConfig.isPilotMode) ...[
+                      SizedBox(height: 16.h),
+                      _buildSectionHeader('ADVANCED'),
+                      _SidebarItem(
+                        icon: Icons.people_outline_rounded,
+                        label: 'Live Sessions',
+                        onTap: () => context.push('/admin/guest-sessions'),
+                      ),
+                      _SidebarItem(
+                        icon: Icons.devices_rounded,
+                        label: 'Device Manager',
+                        onTap: () => context.push('/admin/devices'),
+                      ),
+                      _SidebarItem(
+                        icon: Icons.alt_route_rounded,
+                        label: 'Inheritance',
+                        onTap: () => context.push('/admin/overrides'),
+                      ),
+                      _SidebarItem(
+                        icon: Icons.receipt_long_rounded,
+                        label: 'Audit Log Ledger',
+                        onTap: () => context.push('/admin/audit'),
+                      ),
+                      _SidebarItem(
+                        icon: Icons.sync_problem_rounded,
+                        label: 'OCC Resolution',
+                        onTap: () => context.push('/admin/occ-conflict'),
+                      ),
+                    ],
                     
                     SizedBox(height: 32.h),
                   ],
@@ -653,7 +660,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
     return DateTime(now.year, now.month, now.day);
   }
 
-  static List<OrderDto> _todayOrders(List<OrderDto> all) =>
+  static List<Order> _todayOrders(List<Order> all) =>
       all.where((o) => o.createdAt.toLocal().isAfter(_todayMidnight)).toList();
 
   static String _fmtCurrency(double v) {
@@ -662,7 +669,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
     return '₹${v.toStringAsFixed(0)}';
   }
 
-  void _showNotifications(BuildContext context, List<OrderDto> urgent) {
+  void _showNotifications(BuildContext context, List<Order> urgent) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -673,26 +680,36 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
 
   @override
   Widget build(BuildContext context) {
-    // final user = ref.watch(currentUserProvider);
-    // final email = user?.email ?? 'chef.alex@orderlyy.com';
-    // final name = email.split('@').first;
+    final activeBranch = ref.watch(currentBranchProvider).value;
+    final liveOrdersAsync = ref.watch(liveActiveOrdersProvider);
+    final summary = ref.watch(dailySummaryProvider({
+      'date': _todayMidnight,
+      'branchId': activeBranch?.id,
+    }));
 
-    final ordersState = ref.watch(ordersProvider);
+    // Trigger fetch if not loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (activeBranch != null) {
+        ref.read(analyticsProvider.notifier).fetchDailySummary(
+          date: _todayMidnight,
+          branchId: activeBranch.id,
+        );
+      }
+    });
 
-
-    if (ordersState.error != null) {
+    if (liveOrdersAsync.hasError) {
       return Scaffold(
         backgroundColor: AppTheme.background,
         body: Center(
           child: Text(
-            'Sync Error: ${ordersState.error}',
+            'Sync Error: ${liveOrdersAsync.error}',
             style: GoogleFonts.plusJakartaSans(color: AppTheme.error),
           ),
         ),
       );
     }
 
-    if (ordersState.isLoading && ordersState.ordersById.isEmpty) {
+    if (liveOrdersAsync.isLoading && !liveOrdersAsync.hasValue) {
       return const Scaffold(
         backgroundColor: AppTheme.background,
         body: Center(
@@ -701,13 +718,10 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
       );
     }
 
-    final allOrders = ordersState.ordersById.values.toList();
-    final today = _todayOrders(allOrders);
-    final todaysOrdersCount = today.length;
-    final totalSales = today.fold<double>(
-      0,
-      (sum, order) => sum + order.totalAmount,
-    );
+    final allLiveOrders = liveOrdersAsync.value ?? [];
+    
+    final todaysOrdersCount = summary?.totalOrderCount ?? 0;
+    final totalSales = (summary?.totalRevenueAmount ?? 0) / 100.0;
 
     // final tablesState = ref.watch(tablesProvider);
     // final activeTablesCount = tablesState.tablesById.length;
@@ -724,13 +738,13 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
       OrderStatus.preparing,
       OrderStatus.ready,
     ];
-    final unresolvedOrders = allOrders
+    final unresolvedOrders = allLiveOrders
         .where((o) => activeStatuses.contains(o.status))
         .toList();
 
     // Feed orders (live processing, max 3)
     final liveOrders =
-        allOrders
+        allLiveOrders
             .where(
               (o) =>
                   o.status != OrderStatus.served &&
@@ -968,9 +982,9 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                               color: AppTheme.primary,
                             ),
                             _PulseCard(
-                              title: 'Revenue Today',
+                              title: 'Total Sales',
                               value: _fmtCurrency(totalSales),
-                              subtitle: 'Total sales',
+                              subtitle: 'Order value today',
                               icon: Icons.monetization_on_rounded,
                               color: AppTheme.primary,
                             ),
@@ -1155,7 +1169,7 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Revenue Pulse',
+                    'Total Sales Trend',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w800,
@@ -1331,8 +1345,8 @@ class _DashboardHomeState extends ConsumerState<_DashboardHome> {
   Widget _buildLiveOrdersList(
     BuildContext context,
     WidgetRef ref,
-    List<OrderDto> feedOrders,
-    List<OrderDto> liveOrders,
+    List<Order> feedOrders,
+    List<Order> liveOrders,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1752,7 +1766,7 @@ class _PulseCard extends StatelessWidget {
 
 // ── Live Order Card Widget ────────────────────────────────────────────────────
 class _LiveOrderCard extends StatelessWidget {
-  final OrderDto order;
+  final Order order;
   const _LiveOrderCard({required this.order});
 
   Color get _statusColor => switch (order.status) {
@@ -1895,7 +1909,7 @@ class _LiveOrderCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '₹${order.totalAmount.toStringAsFixed(0)}',
+                      '₹${(order.totalAmount.amountInCents / 100).toStringAsFixed(0)}',
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w800,
@@ -1915,7 +1929,7 @@ class _LiveOrderCard extends StatelessWidget {
 
 // ── Notification Sheet ────────────────────────────────────────────────────────
 class _NotificationSheet extends StatelessWidget {
-  final List<OrderDto> urgentOrders;
+  final List<Order> urgentOrders;
   const _NotificationSheet({required this.urgentOrders});
 
   @override
@@ -2048,7 +2062,7 @@ class _NotificationSheet extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '₹${o.totalAmount.toStringAsFixed(0)} · ${o.items.length} items',
+                                '₹${(o.totalAmount.amountInCents / 100).toStringAsFixed(0)} · ${o.items.length} items',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11.sp,
                                   color: AppTheme.secondary,

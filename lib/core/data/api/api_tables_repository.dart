@@ -2,7 +2,6 @@ import '../dtos/table_dto.dart';
 import '../repositories/tables_repository.dart';
 import '../../network/dio_client.dart';
 import '../../network/api_exception.dart';
-import '../../constants/api_constants.dart';
 import 'package:dio/dio.dart';
 
 class ApiTablesRepository implements TablesRepository {
@@ -16,27 +15,34 @@ class ApiTablesRepository implements TablesRepository {
     CancelToken? cancelToken,
     String? sectionId,
     int page = 1,
-    int limit = 200,
+    int limit = 100,
     bool includeDeleted = false,
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        'branch_id': branchId,
+        'branchId': branchId,
         'page': page,
         'limit': limit,
-        'include_deleted': includeDeleted,
-        'section_id': ?sectionId,
+        'includeDeleted': includeDeleted,
+        if (sectionId != null) 'sectionId': sectionId,
       };
 
+      final endpoint = '/api/v1/admin/tables';
       final response = await _dioClient.dio.get(
-        ApiConstants.tables,
+        endpoint,
         queryParameters: queryParams,
         cancelToken: cancelToken,
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
-        final tables = data
+      if (response.data['status'] == 'success' || response.data['success'] == true) {
+        final payload = response.data['data'];
+        List<dynamic> dataList = [];
+        if (payload is Map<String, dynamic> && payload.containsKey('tables')) {
+          dataList = payload['tables'] as List<dynamic>? ?? [];
+        } else if (payload is List<dynamic>) {
+          dataList = payload;
+        }
+        final tables = dataList
             .map(
               (json) =>
                   RestaurantTableDto.fromJson(json as Map<String, dynamic>),
@@ -62,7 +68,7 @@ class ApiTablesRepository implements TablesRepository {
   }) async {
     try {
       final response = await _dioClient.dio.post(
-        ApiConstants.tables,
+        '/api/v1/admin/tables',
         queryParameters: {'branch_id': branchId},
         data: table.toJson(),
       );
@@ -88,7 +94,7 @@ class ApiTablesRepository implements TablesRepository {
   }) async {
     try {
       final response = await _dioClient.dio.put(
-        '${ApiConstants.tables}/${table.id}',
+        '/api/v1/admin/tables/${table.id}',
         queryParameters: {'branch_id': branchId},
         data: table.toJson(),
       );
@@ -115,7 +121,7 @@ class ApiTablesRepository implements TablesRepository {
   }) async {
     try {
       final response = await _dioClient.dio.delete(
-        '${ApiConstants.tables}/$tableId',
+        '/api/v1/admin/tables/$tableId',
         queryParameters: {'version_num': currentVersion, 'branch_id': branchId},
       );
 

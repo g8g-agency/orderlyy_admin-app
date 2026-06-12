@@ -1,11 +1,11 @@
-// lib/features/orders/presentation/screens/active_orders_feed_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/order.dart';
-import '../../providers/orders_providers.dart';
+import '../../domain/models/order.dart';
+import '../../domain/models/order_status.dart';
+import '../providers/live_active_orders_provider.dart';
 
 enum OrderSlaStatus { safe, stage1, stage2, stage3 }
 
@@ -52,10 +52,10 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
   int _getSlaLimit(Order order) {
     int slaLimit = 3;
     for (final item in order.items) {
-      if (item.product.category == 'Mains') {
+      final category = item.menuItemName.toLowerCase();
+      if (category.contains('grill') || category.contains('mains')) {
         return 15;
-      } else if (item.product.category == 'Sides' ||
-          item.product.category == 'Greens') {
+      } else if (category.contains('fries') || category.contains('salad') || category.contains('sides') || category.contains('greens')) {
         slaLimit = 10;
       }
     }
@@ -90,7 +90,6 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
 
   @override
   Widget build(BuildContext context) {
-    final repository = ref.watch(ordersRepositoryProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -120,81 +119,67 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
           const SizedBox(width: 8),
         ],
       ),
-      body: StreamBuilder<List<Order>>(
-        stream: repository.watchActiveOrders(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+      body: Consumer(
+        builder: (context, ref, _) {
+          final ordersAsync = ref.watch(liveActiveOrdersProvider);
+          return ordersAsync.when(
+            loading: () => const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+            ),
+            error: (e, _) => Center(child: Text('Error: $e')),
+            data: (rawOrders) {
+              var orders = rawOrders
+                  .where((o) =>
+                      o.status != OrderStatus.completed &&
+                      o.status != OrderStatus.cancelled)
+                  .toList();
 
-          var orders = snapshot.data ?? [];
-          // Filter out completed and cancelled orders
-          orders = orders
-              .where(
-                (o) =>
-                    o.status != OrderStatus.completed &&
-                    o.status != OrderStatus.cancelled,
-              )
-              .toList();
+              if (_statusFilter != null) {
+                orders = orders.where((o) => o.status == _statusFilter).toList();
+              }
 
-          // Apply Category Filter Chips
-          if (_statusFilter != null) {
-            orders = orders.where((o) => o.status == _statusFilter).toList();
-          }
+              if (_sortBy == ActiveOrderSort.elapsed) {
+                orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              } else {
+                orders.sort((a, b) =>
+                    _calculateSla(b).index.compareTo(_calculateSla(a).index));
+              }
 
-          // Sort Orders
-          if (_sortBy == ActiveOrderSort.elapsed) {
-            orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          } else {
-            orders.sort(
-              (a, b) =>
-                  _calculateSla(b).index.compareTo(_calculateSla(a).index),
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildFilterChips(theme, isDark),
-              Expanded(
-                child: orders.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.assignment_turned_in_rounded,
-                              size: 64,
-                              color: Colors.grey[400],
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFilterChips(theme, isDark),
+                  Expanded(
+                    child: orders.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.assignment_turned_in_rounded,
+                                    size: 64, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                const Text('No active orders found.'),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            const Text('No active orders found.'),
-                          ],
-                        ),
-                      )
-                    : CustomScrollView(
-                        slivers: [
-                          SliverPadding(
-                            padding: const EdgeInsets.all(16),
-                            sliver: SliverList(
-                              delegate: SliverChildBuilderDelegate((
-                                context,
-                                index,
-                              ) {
-                                final order = orders[index];
-                                return _buildOrderCard(order, theme, isDark);
-                              }, childCount: orders.length),
-                            ),
+                          )
+                        : CustomScrollView(
+                            slivers: [
+                              SliverPadding(
+                                padding: const EdgeInsets.all(16),
+                                sliver: SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) =>
+                                        _buildOrderCard(orders[index], theme, isDark),
+                                    childCount: orders.length,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-              ),
-            ],
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -340,14 +325,8 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                         ),
                         Expanded(
                           child: Text(
-                            item.product.name,
+                            item.menuItemName,
                             style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        Text(
-                          item.status.name.toUpperCase(),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 10,
                           ),
                         ),
                       ],

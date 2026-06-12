@@ -39,7 +39,11 @@ class TablesNotifier extends StateNotifier<TablesState> {
   final CancelToken _cancelToken;
 
   TablesNotifier(this._repository, this._branchId, this._cancelToken)
-    : super(const TablesState());
+    : super(const TablesState()) {
+    if (_branchId.isNotEmpty) {
+      loadTables();
+    }
+  }
 
   Future<void> loadTables({
     String? sectionId,

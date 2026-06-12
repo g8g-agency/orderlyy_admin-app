@@ -65,7 +65,7 @@ class RestaurantTableDto {
       RestaurantTableDto(
         id: json['id'] as String,
         tenantId: json['tenant_id'] as String,
-        label: (json['label'] ?? json['table_num'] ?? '') as String,
+        label: (json['label'] ?? json['display_name'] ?? json['table_number'] ?? json['table_num'] ?? '') as String,
         capacity: json['capacity'] as int? ?? 4,
         status: TableStatus.fromString(
           (json['status'] ?? 'available') as String,

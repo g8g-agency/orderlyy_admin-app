@@ -13,10 +13,14 @@ enum OrderStatus {
 
   static OrderStatus fromJson(String json) => values.byName(json);
 
-  static OrderStatus fromString(String value) => OrderStatus.values.firstWhere(
-    (e) => e.name == value,
-    orElse: () => OrderStatus.pending,
-  );
+  static OrderStatus fromString(String value) {
+    if (value == 'accepted') return OrderStatus.confirmed;
+    if (value == 'delivered' || value == 'completed') return OrderStatus.served;
+    return OrderStatus.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => OrderStatus.pending,
+    );
+  }
 
   bool get isActive =>
       this != OrderStatus.served && this != OrderStatus.cancelled;

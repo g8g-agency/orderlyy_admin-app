@@ -44,7 +44,11 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   final _uuid = const Uuid();
 
   OrdersNotifier(this._repository, this._branchId, this._cancelToken)
-    : super(const OrdersState());
+    : super(const OrdersState()) {
+    if (_branchId.isNotEmpty) {
+      loadOrders();
+    }
+  }
 
   /// Fetches backend-resolved order projections.
   Future<void> loadOrders({
@@ -53,6 +57,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     bool forceRefresh = false,
   }) async {
     if (state.isLoading) return;
+    if (_branchId.isEmpty) return;
     if (state.ordersById.isNotEmpty &&
         !forceRefresh &&
         status == null &&

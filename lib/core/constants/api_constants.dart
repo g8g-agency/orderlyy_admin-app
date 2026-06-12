@@ -21,7 +21,7 @@ class ApiConstants {
   static String modifiers(String tenantId) => '$apiVersion/tenants/$tenantId/modifier/groups';
 
   // Operational Endpoints
-  static const String tables = '$apiVersion/tables';
+  static String get tables => '$apiVersion/admin/tables';
   static const String availability = '$apiVersion/availability';
   static const String orders = '$apiVersion/orders';
   static const String staff = '$apiVersion/staff';

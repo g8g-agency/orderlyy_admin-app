@@ -1,112 +1,40 @@
-// lib/features/orders/data/mappers/order_mapper.dart
-import '../../domain/entities/menu_product.dart';
-import '../../domain/entities/order_item.dart';
-import '../../domain/entities/order.dart';
-import '../../../../shared/models/money.dart';
-import '../dtos/order_dto.dart';
+import '../../domain/models/order.dart' as domain;
+import '../../domain/models/order_item.dart' as domain_item;
+import '../../domain/models/order_status.dart' as domain_status;
+import '../../domain/models/money.dart';
+import '../../../../core/data/dtos/order_dto.dart' as dto;
 
-extension ModifierOptionMapper on ModifierOption {
-  ModifierOptionDto toDto() {
-    return ModifierOptionDto(
-      id: id,
-      name: name,
-      priceInCents: price.amountInCents,
-    );
-  }
-}
+class OrderMapper {
+  const OrderMapper._();
 
-extension ModifierOptionDtoMapper on ModifierOptionDto {
-  ModifierOption toDomain() {
-    return ModifierOption(
-      id: id,
-      name: name,
-      price: Money(amountInCents: priceInCents),
-    );
-  }
-}
+  static domain.Order toDomain(dto.OrderDto d, {String? tableLabel, String? staffName}) => domain.Order(
+    id: d.id,
+    tenantId: d.tenantId,
+    tableId: d.tableId,
+    tableLabel: tableLabel ?? d.tableLabel,
+    status: _mapStatus(d.status),
+    items: d.items.map(_mapItem).toList(),
+    totalAmount: Money(amountInCents: d.totalAmount),
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+    staffId: d.staffId,
+    staffName: staffName ?? d.staffName,
+    notes: d.notes,
+  );
 
-extension MenuProductMapper on MenuProduct {
-  MenuProductDto toDto() {
-    return MenuProductDto(
-      id: id,
-      name: name,
-      priceInCents: price.amountInCents,
-      category: category,
-      availableModifiers: availableModifiers.map((m) => m.toDto()).toList(),
+  static domain_status.OrderStatus _mapStatus(dto.OrderStatus s) =>
+    domain_status.OrderStatus.values.firstWhere(
+      (e) => e.name == s.name,
+      orElse: () => domain_status.OrderStatus.pending,
     );
-  }
-}
 
-extension MenuProductDtoMapper on MenuProductDto {
-  MenuProduct toDomain() {
-    return MenuProduct(
-      id: id,
-      name: name,
-      price: Money(amountInCents: priceInCents),
-      category: category,
-      availableModifiers: availableModifiers.map((m) => m.toDomain()).toList(),
+  static domain_item.OrderItem _mapItem(dto.OrderItemDto i) =>
+    domain_item.OrderItem(
+      id: i.id,
+      menuItemId: i.menuItemId,
+      menuItemName: i.menuItemName,
+      quantity: i.quantity,
+      unitPrice: Money(amountInCents: i.unitPriceAmount),
+      notes: i.notes,
     );
-  }
-}
-
-extension OrderItemMapper on OrderItem {
-  OrderItemDto toDto() {
-    return OrderItemDto(
-      id: id,
-      product: product.toDto(),
-      quantity: quantity,
-      selectedModifiers: selectedModifiers.map((m) => m.toDto()).toList(),
-      seatNumber: seatNumber,
-      status: status.name,
-    );
-  }
-}
-
-extension OrderItemDtoMapper on OrderItemDto {
-  OrderItem toDomain() {
-    return OrderItem(
-      id: id,
-      product: product.toDomain(),
-      quantity: quantity,
-      selectedModifiers: selectedModifiers.map((m) => m.toDomain()).toList(),
-      seatNumber: seatNumber,
-      status: OrderItemStatus.values.firstWhere(
-        (e) => e.name == status,
-        orElse: () => OrderItemStatus.queued,
-      ),
-    );
-  }
-}
-
-extension OrderMapper on Order {
-  OrderDto toDto() {
-    return OrderDto(
-      id: id,
-      tableId: tableId,
-      items: items.map((i) => i.toDto()).toList(),
-      status: status.name,
-      createdAt: createdAt.toIso8601String(),
-      updatedAt: updatedAt.toIso8601String(),
-      waiterName: waiterName,
-      cancelLogs: cancelLogs,
-    );
-  }
-}
-
-extension OrderDtoMapper on OrderDto {
-  Order toDomain() {
-    return Order(
-      id: id,
-      tableId: tableId,
-      items: items.map((i) => i.toDomain()).toList(),
-      status: OrderStatus.values.firstWhere(
-        (e) => e.name == status,
-        orElse: () => OrderStatus.draft,
-      ),
-      createdAt: DateTime.parse(createdAt),
-      updatedAt: DateTime.parse(updatedAt),
-      waiterName: waiterName,
-      cancelLogs: cancelLogs,
-    );
-  }
 }

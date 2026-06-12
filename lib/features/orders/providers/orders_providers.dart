@@ -1,24 +1,20 @@
-// lib/features/orders/providers/orders_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/repository_providers.dart'
-    show sharedPreferencesProvider;
-import '../data/datasources/orders_local_datasource.dart';
-import '../data/repositories/orders_repository_impl.dart';
-import '../domain/entities/menu_product.dart';
-import '../domain/repositories/orders_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/network/network_providers.dart';
+import '../../../../core/providers/restaurant_context_provider.dart';
+import '../data/datasources/orders_api_datasource.dart';
 
-import '../../menu/presentation/state/menu_providers.dart';
-
-final ordersLocalDatasourceProvider = Provider<OrdersLocalDatasource>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return OrdersLocalDatasourceImpl(prefs);
+final ordersApiDatasourceProvider = Provider<OrdersApiDatasource>((ref) {
+  final supabase = Supabase.instance.client;
+  final dio = ref.watch(dioClientProvider);
+  return OrdersApiDatasource(supabase, dio);
 });
 
-final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
-  final local = ref.watch(ordersLocalDatasourceProvider);
-  return OrdersRepositoryImpl(local: local);
-});
-
-final menuProductsProvider = Provider<List<MenuProduct>>((ref) {
-  return ref.watch(publicMenuProductsProvider);
+// Stream of live orders for active branch
+final liveOrdersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+  final datasource = ref.watch(ordersApiDatasourceProvider);
+  final activeBranch = ref.watch(activeBranchProvider);
+  
+  if (activeBranch == null) return Stream.value([]);
+  return datasource.watchBranchOrders(activeBranch.id);
 });

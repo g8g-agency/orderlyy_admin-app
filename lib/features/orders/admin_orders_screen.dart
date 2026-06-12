@@ -7,6 +7,7 @@ import '../../core/data/dtos/order_dto.dart';
 import '../../core/providers/orders_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/providers/tables_provider.dart';
 
 // ── Screen Class ──────────────────────────────────────────────────────────────
 class AdminOrdersScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,14 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(ordersProvider.notifier).loadOrders();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -36,6 +45,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final ordersState = ref.watch(ordersProvider);
+    final tablesState = ref.watch(tablesProvider);
     final desktop = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
@@ -84,7 +94,9 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                 child: CircularProgressIndicator(color: AppTheme.primary),
               );
             }
-            final allOrders = ordersState.ordersById.values.toList();
+            final allOrders = ordersState.ordersById.values.map((dto) {
+              return dto.copyWith(tableLabel: tablesState.tablesById[dto.tableId]?.label);
+            }).toList();
             // Apply filtering logic
             final filteredOrders = allOrders.where((order) {
               // 1. Search Query
@@ -493,8 +505,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
         ? order.id.substring(order.id.length - 8).toUpperCase()
         : order.id.toUpperCase();
     final tableLabel = order.tableLabel;
-    final waiterName = order.staffName ?? 'Sarah J.'; // Default mock fallback
-    final amount = order.totalAmount.toStringAsFixed(2);
+    final waiterName = order.staffName ?? (order.staffId == null ? 'Self-Order' : 'Unknown Staff'); // Default mock fallback
+    final amount = (order.totalAmount / 100).toStringAsFixed(2);
     final displayTime = order.displayTime;
 
     final isVoided = order.status == OrderStatus.cancelled;
@@ -705,8 +717,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
     final orderId = order.id.length >= 8
         ? order.id.substring(order.id.length - 8).toUpperCase()
         : order.id.toUpperCase();
-    final waiterName = order.staffName ?? 'Sarah J.';
-    final totalAmount = order.totalAmount.toStringAsFixed(2);
+    final waiterName = order.staffName ?? (order.staffId == null ? 'Self-Order' : 'Unknown Staff');
+    final totalAmount = (order.totalAmount / 100).toStringAsFixed(2);
 
     final isVoided = order.status == OrderStatus.cancelled;
 
@@ -734,7 +746,9 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      'Table ${order.tableLabel} • Waiter: $waiterName',
+                      order.staffId == null
+                          ? order.tableLabel
+                          : '${order.tableLabel} • Waiter: $waiterName',
                       style: AppTheme.bodyMd.copyWith(
                         color: AppTheme.secondary,
                         fontSize: 12.sp,
@@ -1334,8 +1348,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
     final orderId = order.id.length >= 8
         ? order.id.substring(order.id.length - 8).toUpperCase()
         : order.id.toUpperCase();
-    final waiterName = order.staffName ?? 'Sarah J.';
-    final totalAmount = order.totalAmount.toStringAsFixed(2);
+    final waiterName = order.staffName ?? (order.staffId == null ? 'Self-Order' : 'Unknown Staff');
+    final totalAmount = (order.totalAmount / 100).toStringAsFixed(2);
     final isVoided = order.status == OrderStatus.cancelled;
 
     return Container(
@@ -1354,7 +1368,9 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  'Table ${order.tableLabel} • Waiter: $waiterName',
+                  order.staffId == null
+                      ? order.tableLabel
+                      : '${order.tableLabel} • Waiter: $waiterName',
                   style: AppTheme.bodySm.copyWith(color: AppTheme.secondary),
                 ),
               ],

@@ -13,10 +13,14 @@ enum OrderStatus {
   served,
   cancelled;
 
-  static OrderStatus fromString(String value) => OrderStatus.values.firstWhere(
-    (e) => e.name == value,
-    orElse: () => OrderStatus.pending,
-  );
+  static OrderStatus fromString(String value) {
+    if (value == 'accepted') return OrderStatus.confirmed;
+    if (value == 'delivered' || value == 'completed') return OrderStatus.served;
+    return OrderStatus.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => OrderStatus.pending,
+    );
+  }
 }
 
 // ── Order item ────────────────────────────────────────────────────────────────
@@ -45,15 +49,24 @@ class OrderItemDto {
     this.notes,
   });
 
-  factory OrderItemDto.fromJson(Map<String, dynamic> json) => OrderItemDto(
-    id: json['id'] as String,
-    menuItemId: json['menu_item_id'] as String,
-    menuItemName: json['menu_item_name'] as String,
-    quantity: json['quantity'] as int,
-    unitPriceAmount: (json['unit_price_amount'] as num?)?.toInt() ?? 0,
-    lineTotalAmount: (json['line_total_amount'] as num?)?.toInt() ?? 0,
-    notes: json['notes'] as String?,
-  );
+  factory OrderItemDto.fromJson(Map<String, dynamic> json) {
+    final int q = (json['quantity'] ?? json['qty'] ?? 1) as int;
+    final int up = (((json['unit_price_amount'] ?? json['unit_price'] as num?)?.toDouble() ?? 0) * 100).toInt();
+    final int lt = (((json['line_total_amount'] ?? json['total_price'] as num?)?.toDouble() ?? 0) * 100).toInt();
+    
+    // If line total is still 0 (because total_price wasn't in DB), calculate it dynamically
+    final int finalLt = lt != 0 ? lt : (up * q);
+
+    return OrderItemDto(
+      id: json['id'] as String,
+      menuItemId: json['menu_item_id'] as String,
+      menuItemName: (json['menu_item_name'] ?? json['name'] ?? 'Unknown Item') as String,
+      quantity: q,
+      unitPriceAmount: up,
+      lineTotalAmount: finalLt,
+      notes: (json['notes'] ?? json['note'] ?? json['special_instructions']) as String?,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -115,12 +128,12 @@ class OrderDto {
     items: (json['items'] as List? ?? [])
         .map((e) => OrderItemDto.fromJson(e as Map<String, dynamic>))
         .toList(),
-    totalAmount: (json['total_amount'] as num?)?.toInt() ?? 0,
-    totalTaxAmount: (json['total_tax_amount'] as num?)?.toInt() ?? 0,
-    totalDiscountAmount: (json['total_discount_amount'] as num?)?.toInt() ?? 0,
+    totalAmount: (((json['total_amount'] as num?)?.toDouble() ?? 0) * 100).toInt(),
+    totalTaxAmount: (((json['total_tax_amount'] as num?)?.toDouble() ?? 0) * 100).toInt(),
+    totalDiscountAmount: (((json['total_discount_amount'] as num?)?.toDouble() ?? 0) * 100).toInt(),
     staffId: json['staff_id'] as String?,
     staffName: json['staff_name'] as String?,
-    notes: json['notes'] as String?,
+    notes: (json['notes'] ?? json['order_notes']) as String?,
     createdAt: DateTime.parse(json['created_at'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
     versionNum: json['version_num'] as int? ?? 1,
@@ -152,18 +165,20 @@ class OrderDto {
     int? totalAmount,
     int? totalTaxAmount,
     int? totalDiscountAmount,
+    String? tableLabel,
+    String? staffName,
   }) => OrderDto(
     id: id,
     tenantId: tenantId,
     tableId: tableId,
-    tableLabel: tableLabel,
+    tableLabel: tableLabel ?? this.tableLabel,
     status: status ?? this.status,
     items: items ?? this.items,
     totalAmount: totalAmount ?? this.totalAmount,
     totalTaxAmount: totalTaxAmount ?? this.totalTaxAmount,
     totalDiscountAmount: totalDiscountAmount ?? this.totalDiscountAmount,
     staffId: staffId,
-    staffName: staffName,
+    staffName: staffName ?? this.staffName,
     notes: notes,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
