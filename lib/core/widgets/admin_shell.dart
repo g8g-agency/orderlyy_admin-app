@@ -354,12 +354,16 @@ class _AdminSidebarWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final appContext = ref.watch(appContextProvider);
     final email = user?.email ?? 'admin@orderlyy.com';
     final initial = email.isNotEmpty ? email[0].toUpperCase() : 'A';
     final name = email.split('@').first;
     final capitalizedName = name.isNotEmpty
         ? name[0].toUpperCase() + name.substring(1)
         : 'Admin';
+        
+    final userRole = appContext?.user.role ?? '';
+    final isAdmin = userRole.toLowerCase() == 'admin' || userRole.toLowerCase() == 'owner';
 
     // Safely get current route
     String currentUri = '';
@@ -420,6 +424,13 @@ class _AdminSidebarWidget extends ConsumerWidget {
                     active: currentUri == '/admin/analytics',
                     onTap: () => context.go('/admin/analytics'),
                   ),
+                  if (isAdmin)
+                    _NavItem(
+                      icon: Icons.star_rate_rounded,
+                      label: 'Reviews',
+                      active: currentUri == '/admin/reviews',
+                      onTap: () => context.go('/admin/reviews'),
+                    ),
                   SizedBox(height: 16.h),
 
                   // STUDIO CONFIG

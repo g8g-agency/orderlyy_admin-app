@@ -41,7 +41,7 @@ class AppConfig {
           _resolvePlatformLocalhost(
             const String.fromEnvironment(
               'API_BASE_URL',
-              defaultValue: 'http://192.168.29.178:3001',
+              defaultValue: 'http://localhost:3001',
             ),
             resolvedEnv,
           ),
@@ -49,7 +49,7 @@ class AppConfig {
           _resolvePlatformLocalhost(
             const String.fromEnvironment(
               'WEBSOCKET_URL',
-              defaultValue: 'ws://192.168.29.178:3001/api/v1/realtime',
+              defaultValue: 'ws://localhost:3001/api/v1/realtime',
             ),
             resolvedEnv,
           ),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_item.dart';
-import '../providers/live_active_orders_provider.dart';
+import '../../providers/live_active_orders_provider.dart';
 
 class KitchenStationInfo {
   final String name;

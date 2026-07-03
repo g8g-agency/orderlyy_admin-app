@@ -53,13 +53,14 @@ import '../../features/runtime_monitoring/presentation/screens/guest_sessions_sc
 import '../../features/runtime_monitoring/presentation/screens/device_management_screen.dart';
 import '../../features/taxes/tax_management_screen.dart';
 import '../../features/branch_overrides/branch_override_screen.dart';
-import '../../features/tables_infrastructure/presentation/screens/table_management_screen.dart';
+import '../../features/tables/screens/table_management_screen.dart';
 import '../../features/kds/presentation/screens/kds_management_screen.dart';
 import '../../features/audit/audit_logs_screen.dart';
 import '../../features/menu/presentation/screens/occ_conflict_screen.dart';
 import '../../features/runtime_monitoring/presentation/screens/runtime_observability_screen.dart';
 import '../../features/runtime_monitoring/presentation/screens/historical_replay_explorer.dart';
 import '../../features/runtime_monitoring/presentation/screens/correlation_tree_explorer_screen.dart';
+import '../../features/reviews/presentation/screens/admin_reviews_screen.dart';
 import '../runtime/runtime_ready_gate.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -358,6 +359,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/analytics',
             name: 'admin-analytics',
             builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/reviews',
+            name: 'admin-reviews',
+            builder: (context, state) => const AdminReviewsScreen(),
           ),
           GoRoute(
             path: '/admin/settings',

@@ -5,11 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_status.dart';
-import '../providers/live_active_orders_provider.dart';
+import '../../providers/live_active_orders_provider.dart';
 
-enum OrderSlaStatus { safe, stage1, stage2, stage3 }
-
-enum ActiveOrderSort { elapsed, slaStatus }
 
 class ActiveOrdersFeedScreen extends ConsumerStatefulWidget {
   const ActiveOrdersFeedScreen({super.key});
@@ -19,75 +16,8 @@ class ActiveOrdersFeedScreen extends ConsumerStatefulWidget {
       _ActiveOrdersFeedScreenState();
 }
 
-class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
-    with SingleTickerProviderStateMixin {
-  ActiveOrderSort _sortBy = ActiveOrderSort.elapsed;
+class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen> {
   OrderStatus? _statusFilter;
-  Timer? _slaTimer;
-  late AnimationController _pulsingController;
-
-  @override
-  void initState() {
-    super.initState();
-    // Refresh SLA statuses every 10 seconds
-    _slaTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      setState(() {});
-    });
-
-    _pulsingController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-      lowerBound: 0.6,
-      upperBound: 1.0,
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _slaTimer?.cancel();
-    _pulsingController.dispose();
-    super.dispose();
-  }
-
-  int _getSlaLimit(Order order) {
-    int slaLimit = 3;
-    for (final item in order.items) {
-      final category = item.menuItemName.toLowerCase();
-      if (category.contains('grill') || category.contains('mains')) {
-        return 15;
-      } else if (category.contains('fries') || category.contains('salad') || category.contains('sides') || category.contains('greens')) {
-        slaLimit = 10;
-      }
-    }
-    return slaLimit;
-  }
-
-  OrderSlaStatus _calculateSla(Order order) {
-    final elapsedMins = DateTime.now().difference(order.createdAt).inMinutes;
-    final limit = _getSlaLimit(order);
-
-    if (elapsedMins >= limit + 5) {
-      return OrderSlaStatus.stage3;
-    } else if (elapsedMins >= limit + 1) {
-      return OrderSlaStatus.stage2;
-    } else if (elapsedMins >= limit * 0.8) {
-      return OrderSlaStatus.stage1;
-    }
-    return OrderSlaStatus.safe;
-  }
-
-  Color _getSlaColor(OrderSlaStatus status) {
-    switch (status) {
-      case OrderSlaStatus.stage3:
-      case OrderSlaStatus.stage2:
-        return AppColors.error;
-      case OrderSlaStatus.stage1:
-        return AppColors.warning;
-      case OrderSlaStatus.safe:
-        return AppColors.success;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -97,25 +27,7 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
       appBar: AppBar(
         title: const Text('Active Orders Feed'),
         actions: [
-          PopupMenuButton<ActiveOrderSort>(
-            icon: const Icon(Icons.sort_rounded),
-            tooltip: 'Sort Options',
-            onSelected: (sort) {
-              setState(() {
-                _sortBy = sort;
-              });
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: ActiveOrderSort.elapsed,
-                child: Text('Sort by Elapsed Time'),
-              ),
-              const PopupMenuItem(
-                value: ActiveOrderSort.slaStatus,
-                child: Text('Sort by SLA Severity'),
-              ),
-            ],
-          ),
+
           const SizedBox(width: 8),
         ],
       ),
@@ -130,7 +42,7 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
             data: (rawOrders) {
               var orders = rawOrders
                   .where((o) =>
-                      o.status != OrderStatus.completed &&
+                      o.status != OrderStatus.served &&
                       o.status != OrderStatus.cancelled)
                   .toList();
 
@@ -138,12 +50,7 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                 orders = orders.where((o) => o.status == _statusFilter).toList();
               }
 
-              if (_sortBy == ActiveOrderSort.elapsed) {
-                orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-              } else {
-                orders.sort((a, b) =>
-                    _calculateSla(b).index.compareTo(_calculateSla(a).index));
-              }
+              orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,12 +109,12 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
             },
           ),
           const SizedBox(width: 8),
-          ...[
-            OrderStatus.draft,
-            OrderStatus.sent,
+          ...<OrderStatus>[
+            OrderStatus.pending,
+            OrderStatus.confirmed,
             OrderStatus.preparing,
             OrderStatus.ready,
-          ].map((status) {
+          ].map((OrderStatus status) {
             final label =
                 status.name[0].toUpperCase() + status.name.substring(1);
             return Padding(
@@ -229,10 +136,6 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
   }
 
   Widget _buildOrderCard(Order order, ThemeData theme, bool isDark) {
-    final sla = _calculateSla(order);
-    final slaColor = _getSlaColor(sla);
-    final elapsedMinutes = DateTime.now().difference(order.createdAt).inMinutes;
-
     Widget card = Card(
       color: isDark ? AppColors.darkSurface : Colors.white,
       shape: RoundedRectangleBorder(
@@ -282,25 +185,7 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: slaColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${elapsedMinutes}m elapsed',
-                          style: TextStyle(
-                            color: slaColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
+
                     ],
                   ),
                 ],
@@ -339,31 +224,6 @@ class _ActiveOrdersFeedScreenState extends ConsumerState<ActiveOrdersFeedScreen>
         ),
       ),
     );
-
-    // Apply Pulsing border for Stage 3 critical SLA breach
-    if (sla == OrderSlaStatus.stage3) {
-      return AnimatedBuilder(
-        animation: _pulsingController,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.error.withValues(
-                    alpha: 0.4 * _pulsingController.value,
-                  ),
-                  blurRadius: 12,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: child,
-          );
-        },
-        child: card,
-      );
-    }
 
     return card;
   }

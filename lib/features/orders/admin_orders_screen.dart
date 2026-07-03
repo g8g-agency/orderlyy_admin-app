@@ -949,10 +949,6 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
     // Mismatches or events
     final time1 = '${pad(dt.hour)}:${pad(dt.minute)}:${pad(dt.second)}';
 
-    final prepTime = dt.add(const Duration(minutes: 2, seconds: 55));
-    final time2 =
-        '${pad(prepTime.hour)}:${pad(prepTime.minute)}:${pad(prepTime.second)}';
-
     final serveTime = order.updatedAt.toLocal();
     final time3 =
         '${pad(serveTime.hour)}:${pad(serveTime.minute)}:${pad(serveTime.second)}';
@@ -995,16 +991,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
             time: time1,
             title: 'Order Fired',
             subtitle: 'POS Terminal 1',
-            isLatest: !isPreparing && !isServed && !isVoided,
+            isLatest: !isServed && !isVoided,
             isCompleted: true,
-          ),
-          _buildStepLine(true),
-          _buildStepRow(
-            time: time2,
-            title: 'Prep Started',
-            subtitle: 'Grill Station KDS',
-            isLatest: isPreparing,
-            isCompleted: isPreparing || isServed,
           ),
           _buildStepLine(isServed || isVoided),
           if (isVoided)
